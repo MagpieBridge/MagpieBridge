@@ -1,10 +1,14 @@
-package magpie.magpiebridge;
+package magpiebridge.core;
 
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
-
+/**
+ * 
+ * @author Julian Dolby and Linghui Luo
+ *
+ */
 public interface AnalysisResult {
 		public Kind kind();
 		public String toString(boolean useMarkdown);

@@ -18,3 +18,4 @@ target/classes/META-INF/maven/magpie/magpiebridge/pom\.xml
 target/test-classes/magpie/magpiebridge/AppTest\.class
 
 *.class
+/target/
