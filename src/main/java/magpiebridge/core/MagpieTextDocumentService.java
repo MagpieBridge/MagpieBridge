@@ -1,7 +1,5 @@
 package magpiebridge.core;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -22,9 +20,6 @@ import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.classLoader.Module;
-import com.ibm.wala.classLoader.SourceFileModule;
-import com.ibm.wala.util.io.TemporaryFile;
 
 public class MagpieTextDocumentService implements TextDocumentService {
 
@@ -36,22 +31,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
 	@Override
 	public void didOpen(DidOpenTextDocumentParams params) {
-		System.err.println("client:\n"+params);
+		System.err.println("client didOpen:\n" + params);
 		TextDocumentItem doc = params.getTextDocument();
 		String language = doc.getLanguageId();
-		try {
-			URI uri = new URI(doc.getUri());
-			File file = File.createTempFile("temp", ".java");
-			file.deleteOnExit();
-			TemporaryFile.stringToFile(file, doc.getText());
-			Module sourceFile = new SourceFileModule(file, uri.toString(), null);
-			server.addSource(language, sourceFile, uri);
-			server.doAnalysis(language);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+		server.addSource(language, doc.getText(), doc.getUri());
+		server.doAnalysis(language);
 
 	}
 

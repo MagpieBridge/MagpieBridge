@@ -1,5 +1,6 @@
 package magpiebridge.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,7 +9,9 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.Socket;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,9 +31,11 @@ import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
@@ -44,7 +49,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.Module;
+import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.collections.Pair;
+import com.ibm.wala.util.io.TemporaryFile;
 
 /**
  * 
@@ -57,6 +64,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	protected Map<String, Map<Module, URI>> languageSourceFiles;
 	protected Map<URI, NavigableMap<Position, Hover>> hovers;
 	protected Map<URI, List<CodeLens>> codeLenses;
+	private Map<String, String> serverClientUri;
 	private Socket connectionSocket;
 
 	public MagpieServer() {
@@ -64,6 +72,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		languageSourceFiles = new HashMap<String, Map<Module, URI>>();
 		hovers = new HashMap<>();
 		codeLenses = new HashMap<>();
+		serverClientUri = new HashMap<>();
 	}
 
 	public void launchOnStdio() {
@@ -71,10 +80,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	public void launchOnStream(InputStream in, OutputStream out) {
-		Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this,
-				Logger.logStream(in, "magpieServerIn"), Logger.logStream(out, "magpieServerOut"), true,
+		Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this, in, out, true,
 				new PrintWriter(System.err));
-		System.err.println(launcher.getRemoteProxy().toString());
 		connect(launcher.getRemoteProxy());
 		launcher.startListening();
 	}
@@ -102,9 +109,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-		System.err.println("client:\n"+params);
-		ServerCapabilities caps = new ServerCapabilities();
-		caps.setHoverProvider(false);
+		System.err.println("client:\n" + params);
+		final ServerCapabilities caps = new ServerCapabilities();
+		caps.setHoverProvider(true);
 		caps.setTextDocumentSync(TextDocumentSyncKind.Full);
 		CodeLensOptions cl = new CodeLensOptions();
 		cl.setResolveProvider(true);
@@ -117,8 +124,14 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		caps.setExecuteCommandProvider(exec);
 		caps.setCodeActionProvider(true);
 		InitializeResult v = new InitializeResult(caps);
-		System.err.println("server:\n"+caps);
+		System.err.println("server:\n" + caps);
 		return CompletableFuture.completedFuture(v);
+
+	}
+
+	@Override
+	public void initialized(InitializedParams params) {
+		System.err.println("client:\n" + params);
 	}
 
 	@Override
@@ -136,13 +149,25 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		}
 	}
 
-	public boolean addSource(String language, Module sourceFile, URI uri) {
-		if (!languageSourceFiles.containsKey(language)) {
-			languageSourceFiles.put(language, new HashMap<Module, URI>());
-		}
-		if (!languageSourceFiles.get(language).containsKey(sourceFile)) {
-			languageSourceFiles.get(language).put(sourceFile, uri);
-			return true;
+	public boolean addSource(String language, String text, String clientUri) {
+		try {
+			File file = File.createTempFile("temp", ".java");
+			file.deleteOnExit();
+			TemporaryFile.stringToFile(file, text);
+			Module sourceFile = new SourceFileModule(file, clientUri.toString(), null);
+			String serverUri = Paths.get(file.toURI()).toUri().toString();
+			serverClientUri.put(serverUri, clientUri);
+			if (!languageSourceFiles.containsKey(language)) {
+				languageSourceFiles.put(language, new HashMap<Module, URI>());
+			}
+			if (!languageSourceFiles.get(language).containsKey(sourceFile)) {
+				languageSourceFiles.get(language).put(sourceFile, new URI(clientUri));
+				return true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
 		}
 		return false;
 	}
@@ -198,9 +223,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 			diagList.add(d);
 			PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
 			pdp.setDiagnostics(diagList);
-			pdp.setUri(result.position().getURL().toString());
+			String serverUri = result.position().getURL().toString();
+			if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+				// take care of uri in windows
+				if (!serverUri.startsWith("file:///"))
+					serverUri = serverUri.replace("file://", "file:///");
+			}
+			String clientUri = serverClientUri.get(serverUri);
+			pdp.setUri(clientUri);
 			client.publishDiagnostics(pdp);
-			System.err.println("server:\n"+pdp);
+			System.err.println("server:\n" + pdp);
 		};
 		return consumer;
 	}
@@ -234,7 +266,29 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
 	protected Location getLocationFrom(Position pos) {
 		Location codeLocation = new Location();
+		try {
+			codeLocation.setUri(pos.getURL().toURI().toString());
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		Range codeRange = new Range();
+		if (pos.getFirstCol() < 0)
+			codeRange.setStart(getPositionFrom(pos.getFirstLine(), 0));// imprecise
+		else
+			codeRange.setStart(getPositionFrom(pos.getFirstLine(), pos.getFirstCol()));
+		if (pos.getLastLine() < 0)
+			codeRange.setEnd(getPositionFrom(pos.getFirstLine() + 1, 0));// imprecise
+		else
+			codeRange.setEnd(getPositionFrom(pos.getLastLine(), pos.getLastCol()));
+		codeLocation.setRange(codeRange);
 		return codeLocation;
+	}
+
+	protected org.eclipse.lsp4j.Position getPositionFrom(int line, int column) {
+		org.eclipse.lsp4j.Position codeStart = new org.eclipse.lsp4j.Position();
+		codeStart.setLine(line - 1);
+		codeStart.setCharacter(column);
+		return codeStart;
 	}
 
 	@Override
@@ -244,7 +298,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
 	@Override
 	public WorkspaceService getWorkspaceService() {
-		return new MagpieWorkspaceService();
+		return new MagpieWorkspaceService(this);
 	}
 
 	protected Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
