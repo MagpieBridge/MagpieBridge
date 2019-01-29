@@ -31,6 +31,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
 	@Override
 	public void didOpen(DidOpenTextDocumentParams params) {
+		server.logger.logClientMsg(params.toString());
 		System.err.println("client didOpen:\n" + params);
 		TextDocumentItem doc = params.getTextDocument();
 		String language = doc.getLanguageId();

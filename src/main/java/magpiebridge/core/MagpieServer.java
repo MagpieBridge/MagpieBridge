@@ -62,17 +62,21 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	protected LanguageClient client;
 	protected Map<String, Collection<ServerAnalysis>> languageAnalyses;
 	protected Map<String, Map<Module, URI>> languageSourceFiles;
-	protected Map<URI, NavigableMap<Position, Hover>> hovers;
-	protected Map<URI, List<CodeLens>> codeLenses;
+	protected Map<URL, List<Diagnostic>> diagnostics;
+	protected Map<URL, NavigableMap<Position, Hover>> hovers;
+	protected Map<URL, List<CodeLens>> codeLenses;
 	private Map<String, String> serverClientUri;
 	private Socket connectionSocket;
+	protected Logger logger;
 
 	public MagpieServer() {
 		languageAnalyses = new HashMap<String, Collection<ServerAnalysis>>();
 		languageSourceFiles = new HashMap<String, Map<Module, URI>>();
+		diagnostics = new HashMap<>();
 		hovers = new HashMap<>();
 		codeLenses = new HashMap<>();
 		serverClientUri = new HashMap<>();
+		logger = new Logger();
 	}
 
 	public void launchOnStdio() {
@@ -109,6 +113,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
 	@Override
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+		logger.logClientMsg(params.toString());
 		System.err.println("client:\n" + params);
 		final ServerCapabilities caps = new ServerCapabilities();
 		caps.setHoverProvider(true);
@@ -125,19 +130,20 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		caps.setCodeActionProvider(true);
 		InitializeResult v = new InitializeResult(caps);
 		System.err.println("server:\n" + caps);
+		logger.logServerMsg(v.toString());
 		return CompletableFuture.completedFuture(v);
 
 	}
 
 	@Override
 	public void initialized(InitializedParams params) {
+		logger.logClientMsg(params.toString());
 		System.err.println("client:\n" + params);
 	}
 
 	@Override
 	public CompletableFuture<Object> shutdown() {
-		// TODO Auto-generated method stub
-		return null;
+		return CompletableFuture.completedFuture(new Object());
 	}
 
 	@Override
@@ -187,8 +193,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	public void consume(Collection<AnalysisResult> results, String source) {
-		List<Diagnostic> diagList = new ArrayList<>();
 		for (AnalysisResult result : results) {
+			URL url = result.position().getURL();
+			List<Diagnostic> diagList = null;
+			if (this.diagnostics.containsKey(url))
+				diagList = diagnostics.get(url);
+			else {
+				diagList = new ArrayList<>();
+				this.diagnostics.put(url, diagList);
+			}
 			switch (result.kind()) {
 			case Diagnostic:
 				createDiagnosticConsumer(diagList, source).accept(result);
@@ -220,7 +233,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 			}
 			d.setRelatedInformation(relatedList);
 			d.setSeverity(result.severity());
-			diagList.add(d);
+			if (!diagList.contains(d))
+				diagList.add(d);
 			PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
 			pdp.setDiagnostics(diagList);
 			String serverUri = result.position().getURL().toString();
@@ -232,6 +246,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 			String clientUri = serverClientUri.get(serverUri);
 			pdp.setUri(clientUri);
 			client.publishDiagnostics(pdp);
+			logger.logServerMsg(pdp.toString());
 			System.err.println("server:\n" + pdp);
 		};
 		return consumer;
