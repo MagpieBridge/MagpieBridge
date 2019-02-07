@@ -47,6 +47,17 @@
 			<artifactId>com.ibm.wala.cast.java</artifactId>
 			<version>1.5.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.ibm.wala</groupId>
+			<artifactId>com.ibm.wala.util</artifactId>
+			<version>1.5.1-SNAPSHOT</version>
+		</dependency>
+		<!-- eclipse lsp4j websocket -->
+		<dependency>
+			<groupId>org.eclipse.lsp4j</groupId>
+			<artifactId>org.eclipse.lsp4j.websockets</artifactId>
+			<version>0.6.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
