@@ -22,7 +22,7 @@ public class Logger {
 
 	private void log(boolean isServer, String msg) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("LOG-"+LocalTime.now());
+		sb.append("LOG-" + LocalTime.now());
 		if (isServer) {
 			sb.append(": Server sends ");
 		} else {
@@ -40,12 +40,22 @@ public class Logger {
 		}
 	}
 
-	public void logServerMsg(String msg)
-	{
+	public void logServerMsg(String msg) {
 		log(true, msg);
 	}
-	public void logClientMsg(String msg)
-	{
+
+	public void logClientMsg(String msg) {
 		log(false, msg);
+	}
+
+	public void logVerbose(String msg) {
+		try {
+			writer.write("VERBOSE-:" + msg);
+			writer.newLine();
+			writer.newLine();
+			writer.flush();
+		} catch (IOException e) {
+			assert false : e;
+		}
 	}
 }

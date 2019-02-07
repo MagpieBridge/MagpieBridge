@@ -42,7 +42,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
 	@Override
 	public void didChange(DidChangeTextDocumentParams params) {
-		// TODO Auto-generated method stub
+		server.logger.logClientMsg(params.toString());
+
 
 	}
 

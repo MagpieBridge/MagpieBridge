@@ -67,7 +67,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	protected Map<URL, List<CodeLens>> codeLenses;
 	private Map<String, String> serverClientUri;
 	private Socket connectionSocket;
-	protected Logger logger;
+	public Logger logger;
+	private String rootURI;
 
 	public MagpieServer() {
 		languageAnalyses = new HashMap<String, Collection<ServerAnalysis>>();
@@ -115,6 +116,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 		logger.logClientMsg(params.toString());
 		System.err.println("client:\n" + params);
+		this.rootURI=params.getRootUri();
 		final ServerCapabilities caps = new ServerCapabilities();
 		caps.setHoverProvider(true);
 		caps.setTextDocumentSync(TextDocumentSyncKind.Full);
@@ -132,7 +134,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		System.err.println("server:\n" + caps);
 		logger.logServerMsg(v.toString());
 		return CompletableFuture.completedFuture(v);
-
 	}
 
 	@Override
@@ -276,7 +277,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	public String getSourceCodePath() {
-		return null;
+		String rootPath=rootURI.split("://")[1];
+		//FIXME. assumption of best practice
+		String srcPath=rootPath+"src"+File.separator+"main"+File.separator+"java";
+		return srcPath;
 	}
 
 	protected Location getLocationFrom(Position pos) {
