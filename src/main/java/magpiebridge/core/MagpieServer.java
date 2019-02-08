@@ -48,6 +48,8 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
+import com.ibm.wala.classLoader.IMethod.SourcePosition;
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.collections.Pair;
@@ -321,7 +323,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	protected Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
-		return new Position() {
+		return new AbstractSourcePosition() {
 
 			@Override
 			public int getFirstLine() {
@@ -356,7 +358,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 			}
 
 			@Override
-			public int compareTo(Object o) {
+			public int compareTo(SourcePosition o) {
 				assert false;
 				return 0;
 			}
