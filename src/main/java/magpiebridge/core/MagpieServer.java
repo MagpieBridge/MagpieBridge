@@ -358,12 +358,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 			}
 
 			@Override
-			public int compareTo(SourcePosition o) {
-				assert false;
-				return 0;
-			}
-
-			@Override
 			public URL getURL() {
 				return url;
 			}
