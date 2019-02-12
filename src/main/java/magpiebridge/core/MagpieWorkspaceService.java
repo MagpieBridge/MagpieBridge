@@ -3,7 +3,11 @@ package magpiebridge.core;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
-
+/**
+ * 
+ * @author Julian Dolby and Linghui Luo
+ *
+ */
 public class MagpieWorkspaceService implements WorkspaceService {
 	protected final MagpieServer server;
 

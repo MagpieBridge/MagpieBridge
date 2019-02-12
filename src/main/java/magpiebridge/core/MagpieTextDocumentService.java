@@ -20,7 +20,11 @@ import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-
+/**
+ * 
+ * @author Julian Dolby and Linghui Luo
+ *
+ */
 public class MagpieTextDocumentService implements TextDocumentService {
 
 	protected final MagpieServer server;
