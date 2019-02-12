@@ -18,4 +18,6 @@ function install_tree {
     done
 }
 
-install_tree $1
+for dir in "$@"; do
+  install_tree $dir
+done

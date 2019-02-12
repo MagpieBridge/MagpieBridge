@@ -7,17 +7,17 @@
     <snapshot>
       <localCopy>true</localCopy>
     </snapshot>
-    <lastUpdated>20190205031447</lastUpdated>
+    <lastUpdated>20190210205306</lastUpdated>
     <snapshotVersions>
       <snapshotVersion>
         <extension>jar</extension>
         <value>0.0.1-SNAPSHOT</value>
-        <updated>20190205031447</updated>
+        <updated>20190210205306</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>pom</extension>
         <value>0.0.1-SNAPSHOT</value>
-        <updated>20190205031447</updated>
+        <updated>20190210205306</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
