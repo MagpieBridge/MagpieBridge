@@ -39,9 +39,9 @@ public class MagpieTextDocumentService implements TextDocumentService {
 		System.err.println("client didOpen:\n" + params);
 		TextDocumentItem doc = params.getTextDocument();
 		String language = doc.getLanguageId();
+		server.getProjectService(language).setRootPath(server.rootPath);
 		server.addSource(language, doc.getText(), doc.getUri());
 		server.doAnalysis(language);
-
 	}
 
 	@Override

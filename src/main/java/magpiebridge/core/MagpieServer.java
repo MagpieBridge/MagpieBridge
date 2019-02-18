@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +50,6 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
-import com.ibm.wala.classLoader.IMethod.SourcePosition;
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.collections.Pair;
@@ -62,19 +62,25 @@ import com.ibm.wala.util.io.TemporaryFile;
  */
 public class MagpieServer implements LanguageServer, LanguageClientAware {
 	protected LanguageClient client;
+
 	protected Map<String, Collection<ServerAnalysis>> languageAnalyses;
 	protected Map<String, Map<Module, URI>> languageSourceFiles;
+	protected Map<String, IProjectService> languageProjectServices;
+
 	protected Map<URL, List<Diagnostic>> diagnostics;
 	protected Map<URL, NavigableMap<Position, Hover>> hovers;
 	protected Map<URL, List<CodeLens>> codeLenses;
+
+	protected Path rootPath;
+
 	private Map<String, String> serverClientUri;
 	private Socket connectionSocket;
 	public Logger logger;
-	private String rootURI;
 
 	public MagpieServer() {
 		languageAnalyses = new HashMap<String, Collection<ServerAnalysis>>();
 		languageSourceFiles = new HashMap<String, Map<Module, URI>>();
+		languageProjectServices = new HashMap<String, IProjectService>();
 		diagnostics = new HashMap<>();
 		hovers = new HashMap<>();
 		codeLenses = new HashMap<>();
@@ -118,7 +124,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 		logger.logClientMsg(params.toString());
 		System.err.println("client:\n" + params);
-		this.rootURI=params.getRootUri();
+		this.rootPath = Paths.get(URI.create(params.getRootUri()));
 		final ServerCapabilities caps = new ServerCapabilities();
 		caps.setHoverProvider(true);
 		caps.setTextDocumentSync(TextDocumentSyncKind.Full);
@@ -181,6 +187,17 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		return false;
 	}
 
+	/**
+	 * Add project service for different languages.
+	 * 
+	 * @param language
+	 */
+	public void addProjectService(String language, IProjectService projectService) {
+		if (!this.languageProjectServices.containsKey(language)) {
+			this.languageProjectServices.put(language, projectService);
+		}
+	}
+
 	public void addAnalysis(String language, ServerAnalysis analysis) {
 		if (!languageAnalyses.containsKey(language)) {
 			languageAnalyses.put(language, new HashSet<ServerAnalysis>());
@@ -219,6 +236,20 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 				break;
 			}
 		}
+	}
+
+	@Override
+	public TextDocumentService getTextDocumentService() {
+		return new MagpieTextDocumentService(this);
+	}
+
+	@Override
+	public WorkspaceService getWorkspaceService() {
+		return new MagpieWorkspaceService(this);
+	}
+
+	public IProjectService getProjectService(String language) {
+		return languageProjectServices.get(language);
 	}
 
 	protected Consumer<AnalysisResult> createDiagnosticConsumer(List<Diagnostic> diagList, String source) {
@@ -278,13 +309,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		return consumer;
 	}
 
-	public String getSourceCodePath() {
-		String rootPath=rootURI.split("://")[1];
-		//FIXME. assumption of best practice
-		String srcPath=rootPath+"src"+File.separator+"main"+File.separator+"java";
-		return srcPath;
-	}
-
 	protected Location getLocationFrom(Position pos) {
 		Location codeLocation = new Location();
 		try {
@@ -310,16 +334,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		codeStart.setLine(line - 1);
 		codeStart.setCharacter(column);
 		return codeStart;
-	}
-
-	@Override
-	public TextDocumentService getTextDocumentService() {
-		return new MagpieTextDocumentService(this);
-	}
-
-	@Override
-	public WorkspaceService getWorkspaceService() {
-		return new MagpieWorkspaceService(this);
 	}
 
 	protected Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
