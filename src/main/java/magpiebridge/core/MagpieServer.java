@@ -1,6 +1,7 @@
 package magpiebridge.core;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,6 +25,8 @@ import java.util.NavigableMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import org.apache.commons.io.input.TeeInputStream;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.Diagnostic;
@@ -89,11 +92,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	public void launchOnStdio() {
-		launchOnStream(System.in, System.out);
+		launchOnStream(logStream(System.in, "magpie.in"), logStream(System.out, "magpie.out"));
 	}
 
 	public void launchOnStream(InputStream in, OutputStream out) {
-		Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this, in, out, true,
+		Launcher<LanguageClient> launcher = 
+				LSPLauncher.createServerLauncher(this, 
+						logStream(in, "magpie.in"), 
+						logStream(out, "magpie.out"), 
+						true,
 				new PrintWriter(System.err));
 		connect(launcher.getRemoteProxy());
 		launcher.startListening();
@@ -103,7 +110,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 		try {
 			connectionSocket = new Socket(host, port);
 			Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this,
-					connectionSocket.getInputStream(), connectionSocket.getOutputStream());
+					logStream(connectionSocket.getInputStream(), "magpie.in"),
+					logStream(connectionSocket.getOutputStream(), "magpie.out"));
 			connect(launcher.getRemoteProxy());
 			launcher.startListening();
 		} catch (IOException e) {
@@ -396,6 +404,26 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	public List<CodeLens> findCodeLenses(URI uri) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	static InputStream logStream(InputStream is, String logFileName) {
+		File log;
+		try {
+			log = File.createTempFile(logFileName, ".txt");
+			return new TeeInputStream(is, new FileOutputStream(log));
+		} catch (IOException e) {
+			return is;
+		}
+	}
+
+	static OutputStream logStream(OutputStream os, String logFileName) {
+		File log;
+		try {
+			log = File.createTempFile(logFileName, ".txt");
+			return new TeeOutputStream(os, new FileOutputStream(log));
+		} catch (IOException e) {
+			return os;
+		}
 	}
 
 }
