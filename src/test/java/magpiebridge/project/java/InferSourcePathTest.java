@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import magpiebridge.projectservice.java.InferSourcePath;
+
 public class InferSourcePathTest {
 	@Test
 	public void test1() {

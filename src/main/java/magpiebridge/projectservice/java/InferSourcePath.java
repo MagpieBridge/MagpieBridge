@@ -1,4 +1,4 @@
-package magpiebridge.project.java;
+package magpiebridge.projectservice.java;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,21 +9,25 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+
 /**
  * 
- * Infer the source path from a given project root path.
+ * Infer the source path from a given project root path. Instead using the
+ * Parser from Java JDK tool.jar from the original version, we use
+ * com.github.javaparser.JavaParser here. Modified by Linghui Luo 18.02.2019
  * 
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
  * 
- *      Modified by Linghui Luo 18.02.2019
+ * 
  */
 public class InferSourcePath {
 
@@ -55,8 +59,16 @@ public class InferSourcePath {
 			}
 
 			Optional<Path> infer(Path java) {
-				Parser parser = new Parser();
-				String packageName = Objects.toString(parser.parse(java).getPackageName(), "");
+				JavaParser javaParser = new JavaParser();
+				Optional<CompilationUnit> result = null;
+				try {
+					result = javaParser.parse(java).getResult();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				String packageName = "";
+				if (result.isPresent())
+					packageName = result.get().getPackageDeclaration().get().getNameAsString();
 				String packagePath = packageName.replace('.', File.separatorChar);
 				Path dir = java.getParent();
 				if (!dir.endsWith(packagePath)) {

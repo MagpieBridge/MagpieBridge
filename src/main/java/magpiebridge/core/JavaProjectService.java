@@ -4,8 +4,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
 
-import magpiebridge.project.java.InferConfig;
-import magpiebridge.project.java.InferSourcePath;
+import magpiebridge.projectservice.java.InferConfig;
+import magpiebridge.projectservice.java.InferSourcePath;
 
 /**
  * 

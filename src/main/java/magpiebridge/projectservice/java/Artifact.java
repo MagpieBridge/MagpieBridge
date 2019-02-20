@@ -1,4 +1,4 @@
-package magpiebridge.project.java;
+package magpiebridge.projectservice.java;
 
 import java.util.Objects;
 /**

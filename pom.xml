@@ -57,18 +57,16 @@
 			<artifactId>org.eclipse.jdt.core</artifactId>
 			<version>3.15.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.sun/tools -->
+		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>
-			<groupId>com.sun</groupId>
-			<artifactId>tools</artifactId>
-			 <version>1.7.0.13</version>
-			<scope>system</scope>
-			<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+			<groupId>com.github.javaparser</groupId>
+			<artifactId>javaparser-core</artifactId>
+			<version>3.13.0</version>
 		</dependency>
 		<dependency>
-		  <groupId>commons-io</groupId>
-		  <artifactId>commons-io</artifactId>
-		  <version>2.6</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.6</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -83,16 +81,7 @@
 			</plugin>
 		</plugins>
 	</build>
-<repositories>
-	<repository>
-	  <id>magpie-bridge-repository</id>
-	  <url>http://raw.github.com/MagpieBridge/MagpieBridge/mvn/repository/</url>
-          <snapshots>
-	    <enabled>true</enabled>
-	  </snapshots>
-	  <releases>
-	    <enabled>true</enabled>
-	  </releases>
-	</repository>
-</repositories>
+	<!-- <repositories> <repository> <id>magpie-bridge-repository</id> <url>http://raw.github.com/MagpieBridge/MagpieBridge/mvn/repository/</url> 
+		<snapshots> <enabled>true</enabled> </snapshots> <releases> <enabled>true</enabled> 
+		</releases> </repository> </repositories> -->
 </project>
