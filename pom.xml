@@ -35,22 +35,22 @@
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
-			<version>1.5.1-SNAPSHOT</version>
+			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.cast</artifactId>
-			<version>1.5.1-SNAPSHOT</version>
+			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.cast.java</artifactId>
-			<version>1.5.1-SNAPSHOT</version>
+			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.util</artifactId>
-			<version>1.5.1-SNAPSHOT</version>
+			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jdt</groupId>
@@ -81,7 +81,11 @@
 			</plugin>
 		</plugins>
 	</build>
-	<!-- <repositories> <repository> <id>magpie-bridge-repository</id> <url>http://raw.github.com/MagpieBridge/MagpieBridge/mvn/repository/</url> 
-		<snapshots> <enabled>true</enabled> </snapshots> <releases> <enabled>true</enabled> 
-		</releases> </repository> </repositories> -->
+	<repositories>
+		<repository>
+            <id>wala</id>
+            <name>wala snapshots</name>
+            <url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
+        </repository>
+	</repositories>
 </project>
