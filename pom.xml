@@ -76,7 +76,11 @@
 			</plugin>
 		</plugins>
 	</build>
-	<!-- <repositories> <repository> <id>magpie-bridge-repository</id> <url>http://raw.github.com/MagpieBridge/MagpieBridge/mvn/repository/</url> 
-		<snapshots> <enabled>true</enabled> </snapshots> <releases> <enabled>true</enabled> 
-		</releases> </repository> </repositories> -->
+	<repositories>
+		<repository>
+            <id>wala</id>
+            <name>wala snapshots</name>
+            <url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
+        </repository>
+	</repositories>
 </project>
