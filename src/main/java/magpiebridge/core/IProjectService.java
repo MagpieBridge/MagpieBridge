@@ -8,5 +8,5 @@ import java.nio.file.Path;
  *
  */
 public interface IProjectService {
-	public void setRootPath(Path rootPath);
+  public void setRootPath(Path rootPath);
 }
