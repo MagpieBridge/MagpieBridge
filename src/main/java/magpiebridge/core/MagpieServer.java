@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -74,8 +75,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	protected Map<URL, NavigableMap<Position, Hover>> hovers;
 	protected Map<URL, List<CodeLens>> codeLenses;
 
-	protected Path rootPath;
-
+	protected Optional<Path> rootPath;
 	private Map<String, String> serverClientUri;
 	private Socket connectionSocket;
 	public Logger logger;
@@ -96,12 +96,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	}
 
 	public void launchOnStream(InputStream in, OutputStream out) {
-		Launcher<LanguageClient> launcher = 
-				LSPLauncher.createServerLauncher(this, 
-						logStream(in, "magpie.in"), 
-						logStream(out, "magpie.out"), 
-						true,
-				new PrintWriter(System.err));
+		Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this, logStream(in, "magpie.in"),
+				logStream(out, "magpie.out"), true, new PrintWriter(System.err));
 		connect(launcher.getRemoteProxy());
 		launcher.startListening();
 	}
@@ -132,7 +128,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 	public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
 		logger.logClientMsg(params.toString());
 		System.err.println("client:\n" + params);
-		this.rootPath = Paths.get(URI.create(params.getRootUri()));
+		if (params.getRootUri() != null)
+			this.rootPath = Optional.ofNullable(Paths.get(URI.create(params.getRootUri())));
+		else
+			this.rootPath = Optional.empty();
 		final ServerCapabilities caps = new ServerCapabilities();
 		caps.setHoverProvider(true);
 		caps.setTextDocumentSync(TextDocumentSyncKind.Full);

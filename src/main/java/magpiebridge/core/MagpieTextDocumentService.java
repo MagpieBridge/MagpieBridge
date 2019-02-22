@@ -20,6 +20,7 @@ import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+
 /**
  * 
  * @author Julian Dolby and Linghui Luo
@@ -39,7 +40,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
 		System.err.println("client didOpen:\n" + params);
 		TextDocumentItem doc = params.getTextDocument();
 		String language = doc.getLanguageId();
-		server.getProjectService(language).setRootPath(server.rootPath);
+		if (server.rootPath.isPresent())
+			server.getProjectService(language).setRootPath(server.rootPath.get());
 		server.addSource(language, doc.getText(), doc.getUri());
 		server.doAnalysis(language);
 	}
@@ -47,7 +49,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
 	@Override
 	public void didChange(DidChangeTextDocumentParams params) {
 		server.logger.logClientMsg(params.toString());
-
 
 	}
 
