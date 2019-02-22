@@ -81,11 +81,11 @@
 			</plugin>
 		</plugins>
 	</build>
-	<!-- <repositories>
+	<repositories>
 		<repository>
-            <id>wala</id>
-            <name>wala snapshots</name>
-            <url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
-        </repository>
-	</repositories> -->
+			<id>wala</id>
+			<name>wala snapshots</name>
+			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
+		</repository>
+	</repositories>
 </project>
