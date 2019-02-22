@@ -47,11 +47,6 @@
 			<artifactId>com.ibm.wala.util</artifactId>
 			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jdt</groupId>
-			<artifactId>org.eclipse.jdt.core</artifactId>
-			<version>3.15.0</version>
-		</dependency>
 		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
