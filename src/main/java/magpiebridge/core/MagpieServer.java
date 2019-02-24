@@ -145,7 +145,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     exec.setCommands(new LinkedList<String>());
     caps.setExecuteCommandProvider(exec);
-    caps.setCodeActionProvider(true);
+    caps.setCodeActionProvider(false);
     InitializeResult v = new InitializeResult(caps);
     System.err.println("server:\n" + caps);
     logger.logServerMsg(v.toString());
