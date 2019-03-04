@@ -485,7 +485,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
         }
       }
       if (clientUri != null) {
-        System.err.println("DiagnositicClientURI:" + clientUri);
         pdp.setUri(clientUri);
         client.publishDiagnostics(pdp);
         logger.logServerMsg(pdp.toString());
