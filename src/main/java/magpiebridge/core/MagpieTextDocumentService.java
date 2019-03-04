@@ -22,6 +22,7 @@ import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 /**
+ * Default {@link TextDocumentService} for {@link MagpieServer}.
  * 
  * @author Julian Dolby and Linghui Luo
  *
@@ -41,7 +42,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
     if (server.rootPath.isPresent()) {
-      server.getProjectService(language).setRootPath(server.rootPath.get());
+      if (server.getProjectService(language).isPresent())
+        server.getProjectService(language).get().setRootPath(server.rootPath.get());
     }
     server.addSource(language, doc.getText(), doc.getUri());
     server.doAnalysis(language);

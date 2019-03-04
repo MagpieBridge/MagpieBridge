@@ -84,7 +84,7 @@ public class JavaProjectService implements IProjectService {
   }
 
   /**
-   * Gets the root path.
+   * Gets the project root path.
    *
    * @return the root path
    */
