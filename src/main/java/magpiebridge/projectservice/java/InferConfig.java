@@ -13,10 +13,12 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -63,6 +65,11 @@ public class InferConfig {
   }
 
   private static Path defaultGradleHome() {
+    String gradleUserHome = System.getenv("GRADLE_USER_HOME");
+    if (gradleUserHome != null && !gradleUserHome.isEmpty() && Files.exists(Paths.get(gradleUserHome))) {
+      return Paths.get(gradleUserHome);
+    }
+
     return Paths.get(System.getProperty("user.home")).resolve(".gradle");
   }
 
@@ -91,7 +98,7 @@ public class InferConfig {
     // Maven
     if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
       try {
-        return Files.walk(workspaceRoot).flatMap(this::outputDirectory).collect(Collectors.toSet());
+        return Files.walk(workspaceRoot).flatMap(this::mavenOutputDirectory).collect(Collectors.toSet());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -106,11 +113,25 @@ public class InferConfig {
       }
     }
 
+    // Gradle
+    if (hasGradleProject()) {
+      return Collections.singleton(workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"));
+// TODO Remove this
+//      try {
+//        return Files.walk(workspaceRoot.resolve("build/intermediates/javac"))
+//            .filter(path -> path.toFile().isDirectory())
+//            .filter(this::containsClassFiles)
+//            .collect(Collectors.toSet());
+//      } catch (IOException e) {
+//        throw new RuntimeException(e);
+//      }
+    }
+
     return Collections.emptySet();
   }
 
   /** Recognize build root files like pom.xml and return compiler output directories */
-  public Stream<Path> outputDirectory(Path file) {
+  public Stream<Path> mavenOutputDirectory(Path file) {
     if (file.getFileName().toString().equals("pom.xml")) {
       Path target = file.resolveSibling("target");
 
@@ -118,8 +139,6 @@ public class InferConfig {
         return Stream.of(target.resolve("classes"), target.resolve("test-classes"));
       }
     }
-
-    // TODO gradle
 
     return Stream.empty();
   }
@@ -171,6 +190,15 @@ public class InferConfig {
         result.addAll(jars);
       }
       return result;
+    }
+
+    // Gradle
+    if (hasGradleProject()) {
+      return gradleDependencies().stream()
+          .map(dep -> findGradleJar(dep, false))
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .collect(Collectors.toSet());
     }
 
     return Collections.emptySet();
@@ -254,16 +282,29 @@ public class InferConfig {
 
     // Maven
     if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
-      Set<Path> result = new HashSet<Path>();
+      Set<Path> result = new HashSet<>();
       for (Artifact a : mvnDependencies()) {
         findMavenJar(a, true).ifPresent(result::add);
       }
       return result;
     }
-    // TODO Gradle
+
+    // Gradle
+    if (hasGradleProject()) {
+      return gradleDependencies().stream()
+          .map(dep -> findGradleJar(dep, true))
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .collect(Collectors.toSet());
+    }
+
     // TODO Bazel
 
     return Collections.emptySet();
+  }
+
+  private boolean hasGradleProject() {
+    return Files.exists(workspaceRoot.resolve("build.gradle"));
   }
 
   private Optional<Path> findAnyJar(Artifact artifact, boolean source) {
@@ -368,6 +409,69 @@ public class InferConfig {
     }
 
     return Collections.emptyList();
+  }
+
+  private Collection<Artifact> gradleDependencies() {
+    String gradleBinary = getGradleBinary().toString();
+
+    try {
+      // Find all subprojects
+      Pattern projectPattern = Pattern.compile("project '(.*)'$");
+      Predicate<String> projectPatternPredicate = projectPattern.asPredicate();
+      Process projectsListing = new ProcessBuilder().command(gradleBinary, "projects").start();
+      Set<String> subProjects;
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
+        subProjects = reader.lines()
+            .filter(projectPatternPredicate)
+            .map(line -> projectPattern.matcher(line).group(1))
+            .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
+        subProjects.add(""); // Add root project
+      }
+
+      // For each subproject, collect dependencies
+      Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
+      Predicate<String> dependencyPatternPredicate = dependencyPattern.asPredicate();
+      Set<Artifact> dependencies = new LinkedHashSet<>();
+      for (String subProject : subProjects) {
+        Process dependencyListing = new ProcessBuilder().command(gradleBinary, subProject + ":dependencies").start();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
+          reader.lines()
+              .filter(dependencyPatternPredicate)
+              .map(dependencyPattern::matcher)
+              .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(3)))
+              .forEach(dependencies::add);
+        }
+      }
+
+      return dependencies;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Path getGradleBinary() {
+    boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+
+    // Try gradle wrapper
+    if (isWindows) {
+      Path gradlewBat = workspaceRoot.resolve("gradlew.bat");
+      if (Files.exists(gradlewBat)) {
+        return gradlewBat;
+      }
+    } else {
+      Path gradlew = workspaceRoot.resolve("gradlew");
+      if (Files.exists(gradlew)) {
+        return gradlew;
+      }
+    }
+
+    // Try system-wide gradle installation
+    String gradlePath = findExecutableOnPath("gradle");
+    if (gradlePath != null && Files.exists(Paths.get(gradlePath))) {
+      return Paths.get(gradlePath);
+    }
+
+    throw new RuntimeException("Could not find gradle binary.");
   }
 
   private static String getMvnCommand() {
