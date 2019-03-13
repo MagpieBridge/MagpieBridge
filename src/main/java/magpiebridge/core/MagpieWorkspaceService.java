@@ -6,9 +6,8 @@ import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * Default {@link WorkspaceService} for {@link MagpieServer}.
- * 
- * @author Julian Dolby and Linghui Luo
  *
+ * @author Julian Dolby and Linghui Luo
  */
 public class MagpieWorkspaceService implements WorkspaceService {
   protected final MagpieServer server;
@@ -29,5 +28,4 @@ public class MagpieWorkspaceService implements WorkspaceService {
     // TODO Auto-generated method stub
 
   }
-
 }

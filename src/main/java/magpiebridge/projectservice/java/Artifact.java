@@ -3,12 +3,9 @@ package magpiebridge.projectservice.java;
 import java.util.Objects;
 
 /**
- * 
- * 
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- * 
- *      Modified by Linghui Luo 18.02.2019
+ *     <p>Modified by Linghui Luo
  */
 public class Artifact {
   protected final String groupId, artifactId, version;
@@ -39,7 +36,8 @@ public class Artifact {
       return false;
     }
     Artifact artifact = (Artifact) o;
-    return Objects.equals(groupId, artifact.groupId) && Objects.equals(artifactId, artifact.artifactId)
+    return Objects.equals(groupId, artifact.groupId)
+        && Objects.equals(artifactId, artifact.artifactId)
         && Objects.equals(version, artifact.version);
   }
 

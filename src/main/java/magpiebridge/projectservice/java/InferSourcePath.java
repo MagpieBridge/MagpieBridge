@@ -2,7 +2,6 @@ package magpiebridge.projectservice.java;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -19,14 +18,12 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
- * 
- * Infer the source path from a given project root path. Instead using the Parser from Java JDK tool.jar from the original
- * version, we use com.github.javaparser.JavaParser here. Modified by Linghui Luo 18.02.2019
- * 
+ * Infer the source path from a given project root path. Instead using the Parser from Java JDK
+ * tool.jar from the original version, we use com.github.javaparser.JavaParser here. Modified by
+ * Linghui Luo
+ *
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- * 
- * 
  */
 public class InferSourcePath {
 
@@ -92,10 +89,12 @@ public class InferSourcePath {
         }
 
         if (!alreadyKnown(java)) {
-          infer(java).ifPresent(root -> {
-            int count = sourceRoots.getOrDefault(root, 0);
-            sourceRoots.put(root, count + 1);
-          });
+          infer(java)
+              .ifPresent(
+                  root -> {
+                    int count = sourceRoots.getOrDefault(root, 0);
+                    sourceRoots.put(root, count + 1);
+                  });
         }
       }
     }
@@ -103,5 +102,4 @@ public class InferSourcePath {
     allJavaFiles(workspaceRoot).forEach(checker);
     return checker.sourceRoots.keySet();
   }
-
 }

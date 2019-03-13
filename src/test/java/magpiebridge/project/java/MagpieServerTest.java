@@ -5,14 +5,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import magpiebridge.core.JavaProjectService;
+import magpiebridge.core.MagpieServer;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.junit.Test;
-
-import magpiebridge.core.JavaProjectService;
-import magpiebridge.core.MagpieServer;
 
 public class MagpieServerTest {
   @Test
@@ -22,7 +20,8 @@ public class MagpieServerTest {
     server.addProjectService(lang, new JavaProjectService());
     assertTrue(server.getProjectService(lang).isPresent());
     InitializeParams param = new InitializeParams();
-    param.setRootUri(Paths.get("src/test/resources/CogniCryptDemoExample/").toAbsolutePath().toUri().toString());
+    param.setRootUri(
+        Paths.get("src/test/resources/CogniCryptDemoExample/").toAbsolutePath().toUri().toString());
     server.initialize(param);
     DidOpenTextDocumentParams p = new DidOpenTextDocumentParams();
     TextDocumentItem i = new TextDocumentItem();
@@ -34,7 +33,8 @@ public class MagpieServerTest {
     p.setTextDocument(i);
     server.getTextDocumentService().didOpen(p);
     JavaProjectService service = (JavaProjectService) server.getProjectService(lang).get();
-    Path expected = Paths.get("src/test/resources/CogniCryptDemoExample/src/main/java").toAbsolutePath();
+    Path expected =
+        Paths.get("src/test/resources/CogniCryptDemoExample/src/main/java").toAbsolutePath();
     assertEquals(expected, service.getSourcePath().iterator().next());
   }
 }

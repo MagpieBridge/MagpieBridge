@@ -1,13 +1,11 @@
 package magpiebridge.core;
 
-import com.google.common.io.Files;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.collections.Pair;
 import com.ibm.wala.util.io.TemporaryFile;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,7 +32,6 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.eclipse.lsp4j.CodeLens;
@@ -108,7 +105,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   public Logger logger;
 
   /**
-   * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link MagpieWorkspaceService}.
+   * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link
+   * MagpieWorkspaceService}.
    */
   public MagpieServer() {
     this.textDocumentService = new MagpieTextDocumentService(this);
@@ -124,12 +122,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Instantiates a new magpie server using given {@link TextDocumentService} and {@link WorkspaceService}.
+   * Instantiates a new magpie server using given {@link TextDocumentService} and {@link
+   * WorkspaceService}.
    *
-   * @param textDocumentService
-   *          the text document service
-   * @param workspaceService
-   *          the workspace service
+   * @param textDocumentService the text document service
+   * @param workspaceService the workspace service
    */
   public MagpieServer(TextDocumentService textDocumentService, WorkspaceService workspaceService) {
     this();
@@ -137,9 +134,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.workspaceService = workspaceService;
   }
 
-  /**
-   * Launch on stdio.
-   */
+  /** Launch on stdio. */
   public void launchOnStdio() {
     launchOnStream(logStream(System.in, "magpie.in"), logStream(System.out, "magpie.out"));
   }
@@ -147,14 +142,17 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Launch on stream.
    *
-   * @param in
-   *          the in
-   * @param out
-   *          the out
+   * @param in the in
+   * @param out the out
    */
   public void launchOnStream(InputStream in, OutputStream out) {
-    Launcher<LanguageClient> launcher = LSPLauncher.createServerLauncher(this, logStream(in, "magpie.in"),
-        logStream(out, "magpie.out"), true, new PrintWriter(System.err));
+    Launcher<LanguageClient> launcher =
+        LSPLauncher.createServerLauncher(
+            this,
+            logStream(in, "magpie.in"),
+            logStream(out, "magpie.out"),
+            true,
+            new PrintWriter(System.err));
     connect(launcher.getRemoteProxy());
     launcher.startListening();
   }
@@ -162,16 +160,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Launch on socket port.
    *
-   * @param host
-   *          the host
-   * @param port
-   *          the port
+   * @param host the host
+   * @param port the port
    */
   public void launchOnSocketPort(String host, int port) {
     try {
       connectionSocket = new Socket(host, port);
-      Launcher<LanguageClient> launcher
-          = LSPLauncher.createServerLauncher(this, logStream(connectionSocket.getInputStream(), "magpie.in"),
+      Launcher<LanguageClient> launcher =
+          LSPLauncher.createServerLauncher(
+              this,
+              logStream(connectionSocket.getInputStream(), "magpie.in"),
               logStream(connectionSocket.getOutputStream(), "magpie.out"));
       connect(launcher.getRemoteProxy());
       launcher.startListening();
@@ -180,16 +178,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
-  /**
-   * Launch on web socket port.
-   */
-  public void launchOnWebSocketPort() {
-
-  }
+  /** Launch on web socket port. */
+  public void launchOnWebSocketPort() {}
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.services.LanguageClient)
    */
   @Override
@@ -199,7 +193,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.InitializeParams)
    */
   @Override
@@ -232,7 +226,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.InitializedParams)
    */
   @Override
@@ -243,7 +237,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#shutdown()
    */
   @Override
@@ -253,7 +247,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#exit()
    */
   @Override
@@ -268,12 +262,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Adds the source code.
    *
-   * @param language
-   *          the language
-   * @param text
-   *          the text
-   * @param clientUri
-   *          the client uri
+   * @param language the language
+   * @param text the text
+   * @param clientUri the client uri
    * @return true, if successful
    */
   public boolean addSource(String language, String text, String clientUri) {
@@ -300,9 +291,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Add project service for different languages. This should be specified by the user of MagpieServer.<br>
+   * Add project service for different languages. This should be specified by the user of
+   * MagpieServer.<br>
    * An example for using MagpieServer for java projects.
-   * 
+   *
    * <pre>
    * {
    *   &#64;code
@@ -313,10 +305,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * }
    * </pre>
    *
-   * @param language
-   *          the language
-   * @param projectService
-   *          the project service
+   * @param language the language
+   * @param projectService the project service
    */
   public void addProjectService(String language, IProjectService projectService) {
     if (!this.languageProjectServices.containsKey(language)) {
@@ -328,7 +318,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * Adds the analysis for different languages running on the server. This should be specified by the user of
    * MagpieServer.<br>
    * An example for adding a user-defined analysis.
-   * 
+   *
    * <pre>
    * {@code
    * MagpieServer server = new MagpieServer();
@@ -336,7 +326,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * ServerAnalysis myAnalysis = new MyAnalysis();
    * server.addAnalysis(language, myAnalysis);
    * }
-   * 
+   *
    * <pre>
    *
    * @param language
@@ -354,8 +344,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Do analysis.
    *
-   * @param language
-   *          the language
+   * @param language the language
    */
   public void doAnalysis(String language) {
     Map<Module, URI> sourceFiles = this.languageSourceFiles.get(language);
@@ -370,10 +359,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Consume the analysis results.
    *
-   * @param results
-   *          the results
-   * @param source
-   *          the source
+   * @param results the results
+   * @param source the source
    */
   public void consume(Collection<AnalysisResult> results, String source) {
     for (AnalysisResult result : results) {
@@ -403,7 +390,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#getTextDocumentService()
    */
   @Override
@@ -413,7 +400,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.eclipse.lsp4j.services.LanguageServer#getWorkspaceService()
    */
   @Override
@@ -424,8 +411,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Gets the project service.
    *
-   * @param language
-   *          the language
+   * @param language the language
    * @return the project service
    */
   public Optional<IProjectService> getProjectService(String language) {
@@ -435,62 +421,61 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Creates the diagnostic consumer.
    *
-   * @param diagList
-   *          the diag list
-   * @param source
-   *          the source
+   * @param diagList the diag list
+   * @param source the source
    * @return the consumer
    */
-  protected Consumer<AnalysisResult> createDiagnosticConsumer(List<Diagnostic> diagList, String source) {
-    Consumer<AnalysisResult> consumer = result -> {
-      Diagnostic d = new Diagnostic();
-      d.setMessage(result.toString(false));
-      d.setRange(getLocationFrom(result.position()).getRange());
-      d.setSource(source);
-      List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
-      for (Pair<Position, String> related : result.related()) {
-        DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-        di.setLocation(getLocationFrom(related.fst));
-        di.setMessage(related.snd);
-        relatedList.add(di);
-      }
-      d.setRelatedInformation(relatedList);
-      d.setSeverity(result.severity());
-      if (!diagList.contains(d)) {
-        diagList.add(d);
-      }
-      PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
-      pdp.setDiagnostics(diagList);
-      String serverUri = result.position().getURL().toString();
-      if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-        // take care of uri in windows
-        if (!serverUri.startsWith("file:///")) {
-          serverUri = serverUri.replace("file://", "file:///");
-        }
-      }
-      String clientUri = null;
-      if (serverClientUri.containsKey(serverUri)) {
-        // the file was at least opened once in the editor
-        clientUri = serverClientUri.get(serverUri);
-      } else {
-        // the file was not opened, but whole project was analyzed
-        try {
-          File file = new File(new URI(serverUri));
-          if (file.exists()) {
-            clientUri = serverUri;
+  protected Consumer<AnalysisResult> createDiagnosticConsumer(
+      List<Diagnostic> diagList, String source) {
+    Consumer<AnalysisResult> consumer =
+        result -> {
+          Diagnostic d = new Diagnostic();
+          d.setMessage(result.toString(false));
+          d.setRange(getLocationFrom(result.position()).getRange());
+          d.setSource(source);
+          List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
+          for (Pair<Position, String> related : result.related()) {
+            DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
+            di.setLocation(getLocationFrom(related.fst));
+            di.setMessage(related.snd);
+            relatedList.add(di);
           }
-        }catch (URISyntaxException e)
-        {
-          e.printStackTrace();
-        }
-      }
-      if (clientUri != null) {
-        pdp.setUri(clientUri);
-        client.publishDiagnostics(pdp);
-        logger.logServerMsg(pdp.toString());
-        System.err.println("server:\n" + pdp);
-      }
-    };
+          d.setRelatedInformation(relatedList);
+          d.setSeverity(result.severity());
+          if (!diagList.contains(d)) {
+            diagList.add(d);
+          }
+          PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
+          pdp.setDiagnostics(diagList);
+          String serverUri = result.position().getURL().toString();
+          if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+            // take care of uri in windows
+            if (!serverUri.startsWith("file:///")) {
+              serverUri = serverUri.replace("file://", "file:///");
+            }
+          }
+          String clientUri = null;
+          if (serverClientUri.containsKey(serverUri)) {
+            // the file was at least opened once in the editor
+            clientUri = serverClientUri.get(serverUri);
+          } else {
+            // the file was not opened, but whole project was analyzed
+            try {
+              File file = new File(new URI(serverUri));
+              if (file.exists()) {
+                clientUri = serverUri;
+              }
+            } catch (URISyntaxException e) {
+              e.printStackTrace();
+            }
+          }
+          if (clientUri != null) {
+            pdp.setUri(clientUri);
+            client.publishDiagnostics(pdp);
+            logger.logServerMsg(pdp.toString());
+            System.err.println("server:\n" + pdp);
+          }
+        };
     return consumer;
   }
 
@@ -500,15 +485,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the consumer
    */
   protected Consumer<AnalysisResult> createHoverConsumer() {
-    Consumer<AnalysisResult> consumer = result -> {
-      Hover hover = new Hover();
-      List<Either<String, MarkedString>> contents = new ArrayList<>();
-      Either<String, MarkedString> content = Either.forLeft(result.toString(true));
-      contents.add(content);
-      hover.setContents(contents);
-      hover.setRange(getLocationFrom(result.position()).getRange());
-
-    };
+    Consumer<AnalysisResult> consumer =
+        result -> {
+          Hover hover = new Hover();
+          List<Either<String, MarkedString>> contents = new ArrayList<>();
+          Either<String, MarkedString> content = Either.forLeft(result.toString(true));
+          contents.add(content);
+          hover.setContents(contents);
+          hover.setRange(getLocationFrom(result.position()).getRange());
+        };
     return consumer;
   }
 
@@ -518,20 +503,19 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the consumer
    */
   protected Consumer<AnalysisResult> createCodeLensConsumer() {
-    Consumer<AnalysisResult> consumer = result -> {
-      CodeLens codeLens = new CodeLens();
+    Consumer<AnalysisResult> consumer =
+        result -> {
+          CodeLens codeLens = new CodeLens();
 
-      codeLens.setRange(getLocationFrom(result.position()).getRange());
-
-    };
+          codeLens.setRange(getLocationFrom(result.position()).getRange());
+        };
     return consumer;
   }
 
   /**
    * Gets the location from given position.
    *
-   * @param pos
-   *          the pos
+   * @param pos the pos
    * @return the location from
    */
   protected Location getLocationFrom(Position pos) {
@@ -543,12 +527,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
     Range codeRange = new Range();
     if (pos.getFirstCol() < 0) {
-      codeRange.setStart(getPositionFrom(pos.getFirstLine(), 0));// imprecise
+      codeRange.setStart(getPositionFrom(pos.getFirstLine(), 0)); // imprecise
     } else {
       codeRange.setStart(getPositionFrom(pos.getFirstLine(), pos.getFirstCol()));
     }
     if (pos.getLastLine() < 0) {
-      codeRange.setEnd(getPositionFrom(pos.getFirstLine() + 1, 0));// imprecise
+      codeRange.setEnd(getPositionFrom(pos.getFirstLine() + 1, 0)); // imprecise
     } else {
       codeRange.setEnd(getPositionFrom(pos.getLastLine(), pos.getLastCol()));
     }
@@ -559,10 +543,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Gets the position from given line and column numbers.
    *
-   * @param line
-   *          the line
-   * @param column
-   *          the column
+   * @param line the line
+   * @param column the column
    * @return the position from
    */
   protected org.eclipse.lsp4j.Position getPositionFrom(int line, int column) {
@@ -575,10 +557,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Lookup pos.
    *
-   * @param pos
-   *          the pos
-   * @param url
-   *          the url
+   * @param pos the pos
+   * @param url the url
    * @return the position
    */
   protected Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
@@ -636,8 +616,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Find hover.
    *
-   * @param lookupPos
-   *          the lookup pos
+   * @param lookupPos the lookup pos
    * @return the hover
    */
   public Hover findHover(Position lookupPos) {
@@ -648,8 +627,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Find code lenses.
    *
-   * @param uri
-   *          the uri
+   * @param uri the uri
    * @return the list
    */
   public List<CodeLens> findCodeLenses(URI uri) {
@@ -660,10 +638,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Log stream.
    *
-   * @param is
-   *          the is
-   * @param logFileName
-   *          the log file name
+   * @param is the is
+   * @param logFileName the log file name
    * @return the input stream
    */
   static InputStream logStream(InputStream is, String logFileName) {
@@ -679,10 +655,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Log stream.
    *
-   * @param os
-   *          the os
-   * @param logFileName
-   *          the log file name
+   * @param os the os
+   * @param logFileName the log file name
    * @return the output stream
    */
   static OutputStream logStream(OutputStream os, String logFileName) {
@@ -694,5 +668,4 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       return os;
     }
   }
-
 }
