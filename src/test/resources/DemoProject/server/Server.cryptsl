@@ -1,0 +1,18 @@
+SPEC server.Server
+
+OBJECTS 
+	server.User user;
+	
+EVENTS
+	c: Server();
+	setUser: setUser(user);
+	login: login();
+
+ORDER
+	c | (c, setUser+, login*)
+
+REQUIRES
+	correctUser[user];
+
+ENSURES
+	server[this];

@@ -5,9 +5,9 @@ import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
- * 
- * @author Julian Dolby and Linghui Luo
+ * Default {@link WorkspaceService} for {@link MagpieServer}.
  *
+ * @author Julian Dolby and Linghui Luo
  */
 public class MagpieWorkspaceService implements WorkspaceService {
   protected final MagpieServer server;
@@ -18,6 +18,7 @@ public class MagpieWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
+
     // TODO Auto-generated method stub
 
   }
@@ -27,5 +28,4 @@ public class MagpieWorkspaceService implements WorkspaceService {
     // TODO Auto-generated method stub
 
   }
-
 }

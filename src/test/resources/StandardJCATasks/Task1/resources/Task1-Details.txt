@@ -1,0 +1,13 @@
+Task 1
+
+This project is supposed to implement a file encryption. In the main class, there is a method encryptfile 
+that receives three parameters. 
+First, the path to the plain-text file, second, the path to where the ciphertext 
+should be stored, and third the password for decryption. Currently, the program simply copies the file, that is, 
+it first reads it and then writes it to the output location. This feature is implemented by means of the FileHandler 
+class. It currently comprises two methods, readFile() that reads a file and returns its content, and writeContent() 
+that writes that content to harddisk again. Your task is to implement the encryption of this file. You can assume 
+that you must share the password over the phone.
+
+You can check your implementation at any time, by running the four test cases in TaskOneTest. Currently, one of them 
+fails. Only when all four of them are passing, your implementation counts as functionally correct.

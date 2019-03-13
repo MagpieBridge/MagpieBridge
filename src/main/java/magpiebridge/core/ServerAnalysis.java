@@ -1,14 +1,9 @@
 package magpiebridge.core;
 
 import com.ibm.wala.classLoader.Module;
-
 import java.util.Collection;
 
-/**
- * 
- * @author Julian Dolby and Linghui Luo
- *
- */
+/** @author Julian Dolby and Linghui Luo */
 public interface ServerAnalysis {
   public String source();
 

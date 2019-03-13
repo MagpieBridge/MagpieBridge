@@ -1,0 +1,14 @@
+Task 3
+Task 3 requires you to implement the storage of a password in a database. This database is sqllite-based 
+and holds user data consisting of a user name and a password. The project’s main class implements one constructor 
+and three methods. The constructor establishes the connection to the database. Method addUser() adds the passed user 
+to the database with the password also passed to the method. However, currently, the method lacks any processing of 
+the password and stores it as plaintext into the database. The second method retrievePasswordAsStoredInDB() requests 
+the password of a given user from the database. Lastly, method verifyPassword() implements a verification of a given 
+user/password pair. As passwords are stored in plaintext, it currently only performs a simple equals check for the 
+retrieved password vs. passed password suffices.
+
+Implement both the processing of the password to store it in the database as well as the correct verification.
+
+You can check your implementation at any time, by running the three test cases in TaskThreeTest. Currently, one of 
+them fails. Only when all of them are passing, your implementation counts as functionally correct.

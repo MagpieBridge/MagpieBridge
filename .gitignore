@@ -3,11 +3,11 @@
 
 \.project
 
-\.settings/org\.eclipse\.core\.resources\.prefs
+\.settings/
 
-\.settings/org\.eclipse\.jdt\.core\.prefs
+\.settings/
 
-\.settings/org\.eclipse\.m2e\.core\.prefs
+\.settings/
 
 target/classes/META-INF/MANIFEST\.MF
 
@@ -19,3 +19,7 @@ target/test-classes/magpie/magpiebridge/AppTest\.class
 
 *.class
 /target/
+
+*.iml
+
+\.idea/

@@ -17,7 +17,6 @@ public class Logger {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
   }
 
   private void log(boolean isServer, String msg) {
