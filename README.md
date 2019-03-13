@@ -3,4 +3,4 @@
 # MagpieBridge [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 
 
-Formating the code with ``mvn com.coveo:fmt-maven-plugin:format`` before git push 
+Formatting the code with ``mvn com.coveo:fmt-maven-plugin:format`` before git push 
