@@ -1,5 +1,7 @@
 package magpiebridge.projectservice.java;
 
+import com.google.common.base.Strings;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -18,11 +20,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author George Fraser
@@ -115,16 +118,10 @@ public class InferConfig {
 
     // Gradle
     if (hasGradleProject()) {
-      return Collections.singleton(workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"));
-// TODO Remove this
-//      try {
-//        return Files.walk(workspaceRoot.resolve("build/intermediates/javac"))
-//            .filter(path -> path.toFile().isDirectory())
-//            .filter(this::containsClassFiles)
-//            .collect(Collectors.toSet());
-//      } catch (IOException e) {
-//        throw new RuntimeException(e);
-//      }
+      return Stream.of(
+          workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
+          workspaceRoot.resolve("build").resolve("classes")
+      ).filter(Files::exists).collect(Collectors.toSet());
     }
 
     return Collections.emptySet();
@@ -332,6 +329,15 @@ public class InferConfig {
     }
   }
 
+  private static String toGlobPathPart(Path path) {
+      Path absolutePath = path.toAbsolutePath();
+      String root = Strings.nullToEmpty(absolutePath.getRoot().toString()).replace('\\', '/');
+
+      return root + StreamSupport.stream(absolutePath.spliterator(), false)
+          .map(p -> p.getFileName().toString())
+          .collect(Collectors.joining("/"));
+  }
+
   private Optional<Path> findGradleJar(Artifact artifact, boolean source) {
     // Search for
     // caches/modules-*/files-*/groupId/artifactId/version/*/artifactId-version[-sources].jar
@@ -339,8 +345,8 @@ public class InferConfig {
     String pattern =
         "glob:"
             + String.join(
-                File.separator,
-                base.toString(),
+                "/", // File.separator does *not* work on Windows
+                toGlobPathPart(base),
                 "modules-*",
                 "files-*",
                 artifact.groupId,
@@ -417,31 +423,42 @@ public class InferConfig {
     try {
       // Find all subprojects
       Pattern projectPattern = Pattern.compile("project '(.*)'$");
-      Predicate<String> projectPatternPredicate = projectPattern.asPredicate();
-      Process projectsListing = new ProcessBuilder().command(gradleBinary, "projects").start();
+      LOG.info("Running " + gradleBinary + " projects");
+      Process projectsListing = new ProcessBuilder()
+          .directory(workspaceRoot.toFile())
+          .command(gradleBinary, "projects")
+          .start();
       Set<String> subProjects;
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
         subProjects = reader.lines()
-            .filter(projectPatternPredicate)
-            .map(line -> projectPattern.matcher(line).group(1))
+            .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
+            .map(projectPattern::matcher)
+            .filter(Matcher::find)
+            .map(matcher -> matcher.group(1))
             .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
         subProjects.add(""); // Add root project
       }
+      LOG.info("Subprojects: " + subProjects);
 
       // For each subproject, collect dependencies
       Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
-      Predicate<String> dependencyPatternPredicate = dependencyPattern.asPredicate();
       Set<Artifact> dependencies = new LinkedHashSet<>();
       for (String subProject : subProjects) {
-        Process dependencyListing = new ProcessBuilder().command(gradleBinary, subProject + ":dependencies").start();
+        LOG.info("Running " + gradleBinary + " "+ subProject + ":dependencies");
+        Process dependencyListing = new ProcessBuilder()
+            .directory(workspaceRoot.toFile())
+            .command(gradleBinary, subProject + ":dependencies")
+            .start();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
-          reader.lines()
-              .filter(dependencyPatternPredicate)
+          reader
+              .lines()
               .map(dependencyPattern::matcher)
+              .filter(Matcher::find)
               .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(3)))
               .forEach(dependencies::add);
         }
       }
+      LOG.info("Dependencies: " + dependencies);
 
       return dependencies;
     } catch (IOException e) {

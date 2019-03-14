@@ -1,13 +1,14 @@
 package magpiebridge.project.java;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import magpiebridge.projectservice.java.InferSourcePath;
+import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-import magpiebridge.projectservice.java.InferSourcePath;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class InferSourcePathTest {
   @Test
@@ -46,6 +47,15 @@ public class InferSourcePathTest {
     Set<Path> sourcePath = InferSourcePath.sourcePath(root);
     assertEquals(sourcePath.size(), 1);
     Path expected = Paths.get("src/test/resources/DemoProject/src").toAbsolutePath();
+    assertEquals(expected.toString(), sourcePath.iterator().next().toString());
+  }
+
+  @Test
+  public void testGradleProject() {
+    Path root = Paths.get("src/test/resources/DemoProjectGradle/").toAbsolutePath();
+    Set<Path> sourcePath = InferSourcePath.sourcePath(root);
+    assertEquals(sourcePath.size(), 1);
+    Path expected = Paths.get("src/test/resources/DemoProjectGradle/src/main/java/").toAbsolutePath();
     assertEquals(expected.toString(), sourcePath.iterator().next().toString());
   }
 
