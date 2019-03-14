@@ -23,3 +23,5 @@ target/test-classes/magpie/magpiebridge/AppTest\.class
 *.iml
 
 \.idea/
+
+.gradle
