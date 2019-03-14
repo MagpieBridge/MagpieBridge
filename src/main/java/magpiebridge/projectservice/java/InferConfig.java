@@ -1,7 +1,6 @@
 package magpiebridge.projectservice.java;
 
 import com.google.common.base.Strings;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +68,9 @@ public class InferConfig {
 
   private static Path defaultGradleHome() {
     String gradleUserHome = System.getenv("GRADLE_USER_HOME");
-    if (gradleUserHome != null && !gradleUserHome.isEmpty() && Files.exists(Paths.get(gradleUserHome))) {
+    if (gradleUserHome != null
+        && !gradleUserHome.isEmpty()
+        && Files.exists(Paths.get(gradleUserHome))) {
       return Paths.get(gradleUserHome);
     }
 
@@ -101,7 +102,9 @@ public class InferConfig {
     // Maven
     if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
       try {
-        return Files.walk(workspaceRoot).flatMap(this::mavenOutputDirectory).collect(Collectors.toSet());
+        return Files.walk(workspaceRoot)
+            .flatMap(this::mavenOutputDirectory)
+            .collect(Collectors.toSet());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -119,9 +122,10 @@ public class InferConfig {
     // Gradle
     if (hasGradleProject()) {
       return Stream.of(
-          workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
-          workspaceRoot.resolve("build").resolve("classes")
-      ).filter(Files::exists).collect(Collectors.toSet());
+              workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
+              workspaceRoot.resolve("build").resolve("classes"))
+          .filter(Files::exists)
+          .collect(Collectors.toSet());
     }
 
     return Collections.emptySet();
@@ -330,12 +334,13 @@ public class InferConfig {
   }
 
   private static String toGlobPathPart(Path path) {
-      Path absolutePath = path.toAbsolutePath();
-      String root = Strings.nullToEmpty(absolutePath.getRoot().toString()).replace('\\', '/');
+    Path absolutePath = path.toAbsolutePath();
+    String root = Strings.nullToEmpty(absolutePath.getRoot().toString()).replace('\\', '/');
 
-      return root + StreamSupport.stream(absolutePath.spliterator(), false)
-          .map(p -> p.getFileName().toString())
-          .collect(Collectors.joining("/"));
+    return root
+        + StreamSupport.stream(absolutePath.spliterator(), false)
+            .map(p -> p.getFileName().toString())
+            .collect(Collectors.joining("/"));
   }
 
   private Optional<Path> findGradleJar(Artifact artifact, boolean source) {
@@ -424,18 +429,22 @@ public class InferConfig {
       // Find all subprojects
       Pattern projectPattern = Pattern.compile("project '(.*)'$");
       LOG.info("Running " + gradleBinary + " projects");
-      Process projectsListing = new ProcessBuilder()
-          .directory(workspaceRoot.toFile())
-          .command(gradleBinary, "projects")
-          .start();
+      Process projectsListing =
+          new ProcessBuilder()
+              .directory(workspaceRoot.toFile())
+              .command(gradleBinary, "projects")
+              .start();
       Set<String> subProjects;
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
-        subProjects = reader.lines()
-            .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
-            .map(projectPattern::matcher)
-            .filter(Matcher::find)
-            .map(matcher -> matcher.group(1))
-            .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
+        subProjects =
+            reader
+                .lines()
+                .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
+                .map(projectPattern::matcher)
+                .filter(Matcher::find)
+                .map(matcher -> matcher.group(1))
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
         subProjects.add(""); // Add root project
       }
       LOG.info("Subprojects: " + subProjects);
@@ -444,12 +453,14 @@ public class InferConfig {
       Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
       Set<Artifact> dependencies = new LinkedHashSet<>();
       for (String subProject : subProjects) {
-        LOG.info("Running " + gradleBinary + " "+ subProject + ":dependencies");
-        Process dependencyListing = new ProcessBuilder()
-            .directory(workspaceRoot.toFile())
-            .command(gradleBinary, subProject + ":dependencies")
-            .start();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
+        LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
+        Process dependencyListing =
+            new ProcessBuilder()
+                .directory(workspaceRoot.toFile())
+                .command(gradleBinary, subProject + ":dependencies")
+                .start();
+        try (BufferedReader reader =
+            new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
           reader
               .lines()
               .map(dependencyPattern::matcher)
