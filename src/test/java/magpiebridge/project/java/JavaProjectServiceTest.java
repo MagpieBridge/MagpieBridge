@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import magpiebridge.core.JavaProjectService;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class JavaProjectServiceTest {
