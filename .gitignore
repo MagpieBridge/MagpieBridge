@@ -9,19 +9,8 @@
 
 \.settings/
 
-target/classes/META-INF/MANIFEST\.MF
-
-target/classes/META-INF/maven/magpie/magpiebridge/pom\.properties
-
-target/classes/META-INF/maven/magpie/magpiebridge/pom\.xml
-
-target/test-classes/magpie/magpiebridge/AppTest\.class
-
-*.class
 /target/
 
 *.iml
 
 \.idea/
-
-.gradle
