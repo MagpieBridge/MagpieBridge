@@ -79,7 +79,9 @@ public class InferConfig {
   public Set<Path> classPath() {
     HashSet<Path> result = new HashSet<Path>();
     result.addAll(buildClassPath());
-    result.addAll(workspaceClassPath());
+    Set<Path> workspaceClassPath = workspaceClassPath();
+    LOG.info("Workspace Class Path:" + workspaceClassPath);
+    result.addAll(workspaceClassPath);
     return result;
   }
 
