@@ -1,3 +1,6 @@
 
 language: java
-script: "mvn install"
+script: 
+    - chmod +x src/test/resources/DemoProjectGradle/gradlew 
+    - mvn install
+

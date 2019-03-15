@@ -29,7 +29,7 @@ import java.util.stream.StreamSupport;
 /**
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- *     <p>Modified and extended by Linghui Luo
+ *     <p>Modified and extended by Linghui Luo & Christian Brüggemann
  */
 public class InferConfig {
   private static final Logger LOG = Logger.getLogger("main");
