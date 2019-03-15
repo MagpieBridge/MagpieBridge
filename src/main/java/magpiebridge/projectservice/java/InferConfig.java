@@ -324,7 +324,7 @@ public class InferConfig {
             .resolve(artifact.groupId.replace('.', File.separatorChar))
             .resolve(artifact.artifactId)
             .resolve(artifact.version)
-            .resolve(fileName(artifact, source));
+            .resolve(fileNameJar(artifact, source));
 
     if (Files.exists(jar)) {
       return Optional.of(jar);
@@ -347,7 +347,7 @@ public class InferConfig {
     // Search for
     // caches/modules-*/files-*/groupId/artifactId/version/*/artifactId-version[-sources].jar
     Path base = gradleHome.resolve("caches");
-    String pattern =
+    String gradleCachePattern =
         "glob:"
             + String.join(
                 "/", // File.separator does *not* work on Windows
@@ -358,18 +358,46 @@ public class InferConfig {
                 artifact.artifactId,
                 artifact.version,
                 "*",
-                fileName(artifact, source));
-    PathMatcher match = FileSystems.getDefault().getPathMatcher(pattern);
+                fileNameJarOrAar(artifact, source));
+    PathMatcher match = FileSystems.getDefault().getPathMatcher(gradleCachePattern);
 
     try {
-      return Files.walk(base, 7).filter(match::matches).findFirst();
+      Optional<Path> gradleCacheMatch = Files.walk(base, 7).filter(match::matches).findFirst();
+      if (gradleCacheMatch.isPresent()) {
+        return gradleCacheMatch;
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+
+    // Try Android SDK paths
+    String androidSdkPath = System.getenv("ANDROID_SDK_PATH");
+    if (!Strings.isNullOrEmpty(androidSdkPath)) {
+      Path extrasPath = Paths.get(androidSdkPath, "extras");
+      Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
+      Stream<String> patternPart2 = Stream.of(artifact.groupId.split("."));
+      Stream<String> patternPart3 = Stream.of(artifact.artifactId, artifact.version, fileNameJarOrAar(artifact, source));
+      String pattern = Stream.concat(Stream.concat(patternPart1, patternPart2), patternPart3).collect(Collectors.joining("/"));
+      PathMatcher androidSdkMatch = FileSystems.getDefault().getPathMatcher(pattern);
+
+      try {
+        if (Files.exists(extrasPath)) {
+          return Files.walk(extrasPath).filter(androidSdkMatch::matches).findFirst();
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return Optional.empty();
   }
 
-  private String fileName(Artifact artifact, boolean source) {
-    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".jar";
+  private String fileNameJar(Artifact artifact, boolean source) {
+    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") +".jar";
+  }
+
+  private String fileNameJarOrAar(Artifact artifact, boolean source) {
+    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".{aar,jar}";
   }
 
   private static List<Artifact> dependencyList(Path pomXml) {
