@@ -13,11 +13,11 @@ import org.junit.Test;
 
 public class JavaProjectServiceTest {
 
-  @Ignore
+  @Test
   public void testMavenProject() {
     // ignore it because CI times out
     JavaProjectService ps = new JavaProjectService();
-    Path root = Paths.get("src/test/resources/DemoProject/").toAbsolutePath();
+    Path root = Paths.get("src/test/resources/DemoProjectMaven/").toAbsolutePath();
     ps.setRootPath(root);
     assertNotEquals(0, ps.getClassPath().size());
     assertNotEquals(0, ps.getLibraryPath().size());
