@@ -375,7 +375,7 @@ public class InferConfig {
     if (!Strings.isNullOrEmpty(androidSdkPath)) {
       Path extrasPath = Paths.get(androidSdkPath, "extras");
       Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
-      Stream<String> patternPart2 = Stream.of(artifact.groupId.split("."));
+      Stream<String> patternPart2 = Stream.of(artifact.groupId.split("\\."));
       Stream<String> patternPart3 = Stream.of(artifact.artifactId, artifact.version, fileNameJarOrAar(artifact, source));
       String pattern = Stream.concat(Stream.concat(patternPart1, patternPart2), patternPart3).collect(Collectors.joining("/"));
       PathMatcher androidSdkMatch = FileSystems.getDefault().getPathMatcher(pattern);
