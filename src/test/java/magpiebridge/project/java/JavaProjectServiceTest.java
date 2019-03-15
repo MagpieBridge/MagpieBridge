@@ -70,6 +70,6 @@ public class JavaProjectServiceTest {
     ps.setRootPath(root);
     assertEquals(112, ps.getClassPath().size());
     assertEquals(111, ps.getLibraryPath().size());
-    assertTrue(ps.getClassPath().contains(root.resolve("build").resolve("intermediates").resolve("javac")));
+    assertTrue(ps.getClassPath().contains(root.resolve("app").resolve("build").resolve("intermediates").resolve("javac")));
   }
 }
