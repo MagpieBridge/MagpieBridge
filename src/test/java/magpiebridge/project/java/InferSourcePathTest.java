@@ -50,6 +50,16 @@ public class InferSourcePathTest {
   }
 
   @Test
+  public void testGradleProject() {
+    Path root = Paths.get("src/test/resources/DemoProjectGradle/").toAbsolutePath();
+    Set<Path> sourcePath = InferSourcePath.sourcePath(root);
+    assertEquals(sourcePath.size(), 1);
+    Path expected =
+        Paths.get("src/test/resources/DemoProjectGradle/src/main/java/").toAbsolutePath();
+    assertEquals(expected.toString(), sourcePath.iterator().next().toString());
+  }
+
+  @Test
   public void testEclipseJavaProject1() {
     Path root = Paths.get("src/test/resources/StandardJCATasks/Task1").toAbsolutePath();
     Set<Path> sourcePath = InferSourcePath.sourcePath(root);

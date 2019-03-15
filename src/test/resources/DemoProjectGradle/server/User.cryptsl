@@ -1,0 +1,18 @@
+SPEC server.User
+
+OBJECTS 
+	java.lang.String name;
+	
+EVENTS
+	c: User();
+	setName: setName(name);
+
+ORDER
+	c, setName
+
+CONSTRAINTS
+	name in {"Johannes"};
+
+ENSURES
+	correctUser[this];
+
