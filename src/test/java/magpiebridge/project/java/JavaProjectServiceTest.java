@@ -1,7 +1,6 @@
 package magpiebridge.project.java;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -18,8 +17,8 @@ public class JavaProjectServiceTest {
     JavaProjectService ps = new JavaProjectService();
     Path root = Paths.get("src/test/resources/DemoProjectMaven/").toAbsolutePath();
     ps.setRootPath(root);
-    assertNotEquals(0, ps.getClassPath().size());
-    assertNotEquals(0, ps.getLibraryPath().size());
+    assertEquals(10, ps.getClassPath().size());
+    assertEquals(8, ps.getLibraryPath().size());
     assertEquals(2, ps.getClassPath().size() - ps.getLibraryPath().size());
   }
 

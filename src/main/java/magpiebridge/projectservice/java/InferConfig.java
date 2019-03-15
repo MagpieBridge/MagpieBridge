@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -15,7 +14,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -325,7 +323,6 @@ public class InferConfig {
             .resolve(artifact.artifactId)
             .resolve(artifact.version)
             .resolve(fileName(artifact, source));
-
     if (Files.exists(jar)) {
       return Optional.of(jar);
     } else {
@@ -372,53 +369,32 @@ public class InferConfig {
     return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".jar";
   }
 
-  private static List<Artifact> dependencyList(Path pomXml) {
-    Objects.requireNonNull(pomXml, "pom.xml path is null");
-
+  private Collection<Artifact> mvnDependencies() {
+    Path pomXml = workspaceRoot.resolve("pom.xml");
     try {
-      // Tell maven to output deps to a temporary file
-      Path outputFile = Files.createTempFile("deps", ".txt");
-
-      // TODO consider using mvn dependency:copy-dependencies instead
-      String cmd =
-          String.format(
-              "%s dependency:list -DincludeScope=test -DoutputFile=%s",
-              getMvnCommand(), outputFile);
-      File workingDirectory = pomXml.toAbsolutePath().getParent().toFile();
-      int result = Runtime.getRuntime().exec(cmd, null, workingDirectory).waitFor();
-
-      if (result != 0) {
-        throw new RuntimeException("`" + cmd + "` returned " + result);
+      if (Files.exists(pomXml)) {
+        Objects.requireNonNull(pomXml, "pom.xml path is null");
+        Process dependencyListing =
+            new ProcessBuilder()
+                .directory(workspaceRoot.toFile())
+                .command(getMvnCommand(), "dependency:list")
+                .start();
+        Pattern dependencyPattern = Pattern.compile(".*\\s{2}(.*):(.*):(.*):(.*):(.*)");
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()));
+        Set<Artifact> dependencies = new LinkedHashSet<>();
+        reader
+            .lines()
+            .map(dependencyPattern::matcher)
+            .filter(Matcher::find)
+            .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(4)))
+            .forEach(dependencies::add);
+        LOG.info("Maven Dependencies: " + dependencies);
+        return dependencies;
       }
-
-      return readDependencyList(outputFile);
-    } catch (InterruptedException | IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static List<Artifact> readDependencyList(Path outputFile) {
-    Pattern artifact = Pattern.compile(".*:.*:.*:.*:.*");
-
-    try (InputStream in = Files.newInputStream(outputFile)) {
-      return new BufferedReader(new InputStreamReader(in))
-          .lines()
-          .map(String::trim)
-          .filter(line -> artifact.matcher(line).matches())
-          .map(Artifact::parse)
-          .collect(Collectors.toList());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private Collection<Artifact> mvnDependencies() {
-    Path pomXml = workspaceRoot.resolve("pom.xml");
-
-    if (Files.exists(pomXml)) {
-      return dependencyList(pomXml);
-    }
-
     return Collections.emptyList();
   }
 
@@ -444,10 +420,11 @@ public class InferConfig {
                 .map(projectPattern::matcher)
                 .filter(Matcher::find)
                 .map(matcher -> matcher.group(1))
-                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures
+        // mutability
         subProjects.add(""); // Add root project
       }
-      LOG.info("Subprojects: " + subProjects);
+      LOG.info("Gradle Subprojects: " + subProjects);
 
       // For each subproject, collect dependencies
       Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
@@ -469,7 +446,7 @@ public class InferConfig {
               .forEach(dependencies::add);
         }
       }
-      LOG.info("Dependencies: " + dependencies);
+      LOG.info("Gradle Dependencies: " + dependencies);
 
       return dependencies;
     } catch (IOException e) {
