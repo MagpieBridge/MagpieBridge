@@ -455,7 +455,7 @@ public class InferConfig {
 
     try {
       // Find all subprojects
-      Pattern projectPattern = Pattern.compile("project '(.*)'$");
+      Pattern projectPattern = Pattern.compile("[pP]roject '(.*)'$");
       LOG.info("Running " + gradleBinary + " projects");
       Process projectsListing =
           new ProcessBuilder()
