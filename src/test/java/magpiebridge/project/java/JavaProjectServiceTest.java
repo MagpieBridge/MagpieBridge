@@ -1,6 +1,7 @@
 package magpiebridge.project.java;
 
 import magpiebridge.core.JavaProjectService;
+import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -49,6 +50,11 @@ public class JavaProjectServiceTest {
     assertTrue(ps.getClassPath().contains(root.resolve("build").resolve("classes")));
   }
 
+  private static ProcessBuilder setEnv(ProcessBuilder pb, String envName, String envValue) {
+    pb.environment().put(envName, envValue);
+    return pb;
+  }
+
   @Test
   public void testAndroidGradleProject() throws IOException, InterruptedException {
     Path root = Paths.get("src/test/resources/MyApplication/").toAbsolutePath();
@@ -60,7 +66,7 @@ public class JavaProjectServiceTest {
       gradlePath = root.resolve("gradlew");
     }
     // Build the project to download JARs to system
-    new ProcessBuilder()
+    InferConfigGradle.newProcessBuilderWithEnv(root)
         .directory(root.toFile())
         .command(gradlePath.toString(), ":app:assemble")
         .start()
@@ -70,6 +76,9 @@ public class JavaProjectServiceTest {
     ps.setRootPath(root);
     assertEquals(112, ps.getClassPath().size());
     assertEquals(111, ps.getLibraryPath().size());
-    assertTrue(ps.getClassPath().contains(root.resolve("app").resolve("build").resolve("intermediates").resolve("javac")));
+    assertTrue(
+        ps.getClassPath()
+            .contains(
+                root.resolve("app").resolve("build").resolve("intermediates").resolve("javac")));
   }
 }

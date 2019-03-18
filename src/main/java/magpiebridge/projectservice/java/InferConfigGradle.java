@@ -1,5 +1,6 @@
 package magpiebridge.projectservice.java;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import java.io.BufferedReader;
@@ -12,6 +13,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -21,7 +23,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-class InferConfigGradle {
+@VisibleForTesting
+public class InferConfigGradle {
 
   private static final Logger LOG = Logger.getLogger("main");
 
@@ -37,7 +40,66 @@ class InferConfigGradle {
             .collect(Collectors.joining("/"));
   }
 
-  static Optional<Path> findGradleJar(Path gradleHome, Artifact artifact, boolean source) {
+  @VisibleForTesting
+  public static ProcessBuilder newProcessBuilderWithEnv(Path workspaceRoot) {
+    ProcessBuilder pb = new ProcessBuilder();
+    if (Strings.isNullOrEmpty(pb.environment().getOrDefault("ANDROID_HOME", null))) {
+      androidSdkPath(workspaceRoot)
+          .map(Path::toString)
+          .ifPresent(sdkPath -> pb.environment().put("ANDROID_HOME", sdkPath));
+    }
+    return pb;
+  }
+
+  private static Optional<Path> androidSdkPath(Path workspaceRoot) {
+    Path localProperties = workspaceRoot.resolve("local.properties");
+    Path sdkDirFromLocalProperties;
+    if (Files.exists(localProperties)) {
+      Pattern sdkDirPattern = Pattern.compile("sdk\\.dir=(.*)");
+      try {
+        sdkDirFromLocalProperties =
+            Files.readAllLines(localProperties).stream()
+                .map(sdkDirPattern::matcher)
+                .filter(Matcher::find)
+                .map(matcher -> matcher.group(0))
+                .map(Paths::get)
+                .findFirst()
+                .orElse(null);
+      } catch (IOException e) {
+        sdkDirFromLocalProperties = null;
+      }
+    } else {
+      sdkDirFromLocalProperties = null;
+    }
+
+    Path userHome = Paths.get(System.getProperty("user.home"));
+
+    String envAndroidSdkPathStr = System.getenv("ANDROID_SDK_PATH");
+    Path envAndroidSdkPath =
+        Strings.isNullOrEmpty(envAndroidSdkPathStr) ? null : Paths.get(envAndroidSdkPathStr);
+
+    String envAndroidHomePathStr = System.getenv("ANDROID_HOME");
+    Path envAndroidHomePath =
+        Strings.isNullOrEmpty(envAndroidHomePathStr) ? null : Paths.get(envAndroidHomePathStr);
+
+    return Stream.of(
+            sdkDirFromLocalProperties,
+            envAndroidSdkPath,
+            envAndroidHomePath,
+            userHome
+                .resolve("AppData")
+                .resolve("Local")
+                .resolve("Android")
+                .resolve("Sdk"), // Windows
+            userHome.resolve("Library").resolve("Android").resolve("sdk"), // Mac
+            userHome.resolve("Android").resolve("Sdk")) // Linux
+        .filter(Objects::nonNull)
+        .filter(Files::exists)
+        .findFirst();
+  }
+
+  static Optional<Path> findGradleJar(
+      Path gradleHome, Artifact artifact, boolean source, Path workspaceRoot) {
     // Search for
     // caches/modules-*/files-*/groupId/artifactId/version/*/artifactId-version[-sources].jar
     Path base = gradleHome.resolve("caches");
@@ -65,9 +127,9 @@ class InferConfigGradle {
     }
 
     // Try Android SDK paths
-    String androidSdkPath = System.getenv("ANDROID_SDK_PATH");
-    if (!Strings.isNullOrEmpty(androidSdkPath)) {
-      Path extrasPath = Paths.get(androidSdkPath, "extras");
+    Path androidSdkPath = androidSdkPath(workspaceRoot).orElse(null);
+    if (androidSdkPath != null) {
+      Path extrasPath = androidSdkPath.resolve("extras");
       Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
       Stream<String> patternPart2 = Stream.of(artifact.groupId.split("\\."));
       Stream<String> patternPart3 =
@@ -76,8 +138,9 @@ class InferConfigGradle {
               artifact.version,
               InferConfig.fileNameJarOrAar(artifact, source));
       String pattern =
-          Stream.concat(Stream.concat(patternPart1, patternPart2), patternPart3)
-              .collect(Collectors.joining("/"));
+          "glob:"
+              + Stream.concat(Stream.concat(patternPart1, patternPart2), patternPart3)
+                  .collect(Collectors.joining("/"));
       PathMatcher androidSdkMatch = FileSystems.getDefault().getPathMatcher(pattern);
 
       try {
@@ -105,7 +168,7 @@ class InferConfigGradle {
       for (String subProject : subProjects) {
         LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
         Process dependencyListing =
-            new ProcessBuilder()
+            newProcessBuilderWithEnv(workspaceRoot)
                 .directory(workspaceRoot.toFile())
                 .command(gradleBinary, subProject + ":dependencies")
                 .start();
@@ -133,7 +196,7 @@ class InferConfigGradle {
     LOG.info("Running " + gradleBinary + " projects");
     try {
       Process projectsListing =
-          new ProcessBuilder()
+          newProcessBuilderWithEnv(workspaceRoot)
               .directory(workspaceRoot.toFile())
               .command(gradleBinary, "projects")
               .start();
@@ -186,9 +249,8 @@ class InferConfigGradle {
   }
 
   static Set<Path> workspaceClassPath(Path workspaceRoot) {
-    Set<String> subprojects = InferConfigGradle.gradleSubprojects(workspaceRoot);
     Stream<Path> subprojectDirs =
-        subprojects.stream()
+        InferConfigGradle.gradleSubprojects(workspaceRoot).stream()
             .filter(subproject -> !subproject.isEmpty())
             .map(subproject -> removePrefix(subproject, ":"))
             .flatMap(
@@ -203,10 +265,11 @@ class InferConfigGradle {
 
     Stream<Path> rootProjectDirs =
         Stream.of(
-                workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
-                workspaceRoot.resolve("build").resolve("classes"))
-            .filter(Files::exists);
-    return Stream.concat(rootProjectDirs, subprojectDirs).collect(Collectors.toSet());
+            workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
+            workspaceRoot.resolve("build").resolve("classes"));
+    return Stream.concat(rootProjectDirs, subprojectDirs)
+        .filter(Files::exists)
+        .collect(Collectors.toSet());
   }
 
   private static String removePrefix(String str, String prefix) {

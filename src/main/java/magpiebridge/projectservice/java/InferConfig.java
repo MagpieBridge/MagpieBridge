@@ -188,7 +188,7 @@ public class InferConfig {
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
       return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
-          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false))
+          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false, workspaceRoot))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
@@ -285,7 +285,7 @@ public class InferConfig {
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
       return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
-          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, true))
+          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, true, workspaceRoot))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
@@ -301,7 +301,7 @@ public class InferConfig {
     if (maven.isPresent()) {
       return maven;
     } else {
-      return InferConfigGradle.findGradleJar(gradleHome, artifact, source);
+      return InferConfigGradle.findGradleJar(gradleHome, artifact, source, workspaceRoot);
     }
   }
 
