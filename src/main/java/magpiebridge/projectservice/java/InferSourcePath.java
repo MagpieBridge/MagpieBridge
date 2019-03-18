@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,8 @@ import java.util.stream.Stream;
 public class InferSourcePath {
 
   private static final Logger LOG = Logger.getLogger("main");
+  private Set<String> packageNames;
+  private Set<String> classFullQualifiedNames;
 
   protected static Stream<Path> allJavaFiles(Path dir) {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.java");
@@ -39,9 +42,10 @@ public class InferSourcePath {
     }
   }
 
-  public static Set<Path> sourcePath(Path workspaceRoot) {
+  public Set<Path> sourcePath(Path workspaceRoot) {
     LOG.info("Searching for source roots in " + workspaceRoot);
-
+    packageNames = new HashSet<String>();
+    classFullQualifiedNames = new HashSet<String>();
     class SourcePaths implements Consumer<Path> {
       int certaintyThreshold = 10;
       Map<Path, Integer> sourceRoots = new HashMap<>();
@@ -65,7 +69,10 @@ public class InferSourcePath {
         }
         String packageName = "";
         if (result.isPresent()) {
-          packageName = result.get().getPackageDeclaration().get().getNameAsString();
+          CompilationUnit cu = result.get();
+          packageName = cu.getPackageDeclaration().get().getNameAsString();
+          packageNames.add(packageName);
+          classFullQualifiedNames.add(packageName + "." + cu.getPrimaryTypeName().get());
         }
         String packagePath = packageName.replace('.', File.separatorChar);
         Path dir = java.getParent();
@@ -101,5 +108,13 @@ public class InferSourcePath {
     SourcePaths checker = new SourcePaths();
     allJavaFiles(workspaceRoot).forEach(checker);
     return checker.sourceRoots.keySet();
+  }
+
+  public Set<String> getPackageNames() {
+    return this.packageNames;
+  }
+
+  public Set<String> getClassFullQualifiedNames() {
+    return this.classFullQualifiedNames;
   }
 }
