@@ -1,6 +1,5 @@
 package magpiebridge.projectservice.java;
 
-import com.google.common.base.Strings;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -14,17 +13,14 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * @author George Fraser
@@ -120,7 +116,7 @@ public class InferConfig {
     }
 
     // Gradle
-    if (hasGradleProject()) {
+    if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
       // TODO We need to traverse into subproject folders here as well
       return Stream.of(
               workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
@@ -195,9 +191,9 @@ public class InferConfig {
     }
 
     // Gradle
-    if (hasGradleProject()) {
-      return gradleDependencies().stream()
-          .map(dep -> findGradleJar(dep, false))
+    if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
+      return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
+          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
@@ -292,9 +288,9 @@ public class InferConfig {
     }
 
     // Gradle
-    if (hasGradleProject()) {
-      return gradleDependencies().stream()
-          .map(dep -> findGradleJar(dep, true))
+    if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
+      return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
+          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, true))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
@@ -305,16 +301,12 @@ public class InferConfig {
     return Collections.emptySet();
   }
 
-  private boolean hasGradleProject() {
-    return Files.exists(workspaceRoot.resolve("build.gradle"));
-  }
-
   private Optional<Path> findAnyJar(Artifact artifact, boolean source) {
     Optional<Path> maven = findMavenJar(artifact, source);
     if (maven.isPresent()) {
       return maven;
     } else {
-      return findGradleJar(artifact, source);
+      return InferConfigGradle.findGradleJar(gradleHome, artifact, source);
     }
   }
 
@@ -334,70 +326,12 @@ public class InferConfig {
     }
   }
 
-  private static String toGlobPathPart(Path path) {
-    Path absolutePath = path.toAbsolutePath();
-    String root = Strings.nullToEmpty(absolutePath.getRoot().toString()).replace('\\', '/');
 
-    return root
-        + StreamSupport.stream(absolutePath.spliterator(), false)
-            .map(p -> p.getFileName().toString())
-            .collect(Collectors.joining("/"));
-  }
-
-  private Optional<Path> findGradleJar(Artifact artifact, boolean source) {
-    // Search for
-    // caches/modules-*/files-*/groupId/artifactId/version/*/artifactId-version[-sources].jar
-    Path base = gradleHome.resolve("caches");
-    String gradleCachePattern =
-        "glob:"
-            + String.join(
-                "/", // File.separator does *not* work on Windows
-                toGlobPathPart(base),
-                "modules-*",
-                "files-*",
-                artifact.groupId,
-                artifact.artifactId,
-                artifact.version,
-                "*",
-                fileNameJarOrAar(artifact, source));
-    PathMatcher match = FileSystems.getDefault().getPathMatcher(gradleCachePattern);
-
-    try {
-      Optional<Path> gradleCacheMatch = Files.walk(base, 7).filter(match::matches).findFirst();
-      if (gradleCacheMatch.isPresent()) {
-        return gradleCacheMatch;
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    // Try Android SDK paths
-    String androidSdkPath = System.getenv("ANDROID_SDK_PATH");
-    if (!Strings.isNullOrEmpty(androidSdkPath)) {
-      Path extrasPath = Paths.get(androidSdkPath, "extras");
-      Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
-      Stream<String> patternPart2 = Stream.of(artifact.groupId.split("\\."));
-      Stream<String> patternPart3 = Stream.of(artifact.artifactId, artifact.version, fileNameJarOrAar(artifact, source));
-      String pattern = Stream.concat(Stream.concat(patternPart1, patternPart2), patternPart3).collect(Collectors.joining("/"));
-      PathMatcher androidSdkMatch = FileSystems.getDefault().getPathMatcher(pattern);
-
-      try {
-        if (Files.exists(extrasPath)) {
-          return Files.walk(extrasPath).filter(androidSdkMatch::matches).findFirst();
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    return Optional.empty();
-  }
-
-  private String fileNameJar(Artifact artifact, boolean source) {
+  static String fileNameJar(Artifact artifact, boolean source) {
     return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") +".jar";
   }
 
-  private String fileNameJarOrAar(Artifact artifact, boolean source) {
+  static String fileNameJarOrAar(Artifact artifact, boolean source) {
     return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".{aar,jar}";
   }
 
@@ -451,86 +385,6 @@ public class InferConfig {
     return Collections.emptyList();
   }
 
-  private Collection<Artifact> gradleDependencies() {
-    String gradleBinary = getGradleBinary().toString();
-
-    try {
-      // Find all subprojects
-      Pattern projectPattern = Pattern.compile("[pP]roject '(.*)'$");
-      LOG.info("Running " + gradleBinary + " projects");
-      Process projectsListing =
-          new ProcessBuilder()
-              .directory(workspaceRoot.toFile())
-              .command(gradleBinary, "projects")
-              .start();
-      Set<String> subProjects;
-      try (BufferedReader reader =
-          new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
-        subProjects =
-            reader
-                .lines()
-                .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
-                .map(projectPattern::matcher)
-                .filter(Matcher::find)
-                .map(matcher -> matcher.group(1))
-                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
-        subProjects.add(""); // Add root project
-      }
-      LOG.info("Subprojects: " + subProjects);
-
-      // For each subproject, collect dependencies
-      Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
-      Set<Artifact> dependencies = new LinkedHashSet<>();
-      for (String subProject : subProjects) {
-        LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
-        Process dependencyListing =
-            new ProcessBuilder()
-                .directory(workspaceRoot.toFile())
-                .command(gradleBinary, subProject + ":dependencies")
-                .start();
-        try (BufferedReader reader =
-            new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
-          reader
-              .lines()
-              .map(dependencyPattern::matcher)
-              .filter(Matcher::find)
-              .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(3)))
-              .forEach(dependencies::add);
-        }
-      }
-      LOG.info("Dependencies: " + dependencies);
-
-      return dependencies;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private Path getGradleBinary() {
-    boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-
-    // Try gradle wrapper
-    if (isWindows) {
-      Path gradlewBat = workspaceRoot.resolve("gradlew.bat");
-      if (Files.exists(gradlewBat)) {
-        return gradlewBat;
-      }
-    } else {
-      Path gradlew = workspaceRoot.resolve("gradlew");
-      if (Files.exists(gradlew)) {
-        return gradlew;
-      }
-    }
-
-    // Try system-wide gradle installation
-    String gradlePath = findExecutableOnPath("gradle");
-    if (gradlePath != null && Files.exists(Paths.get(gradlePath))) {
-      return Paths.get(gradlePath);
-    }
-
-    throw new RuntimeException("Could not find gradle binary.");
-  }
-
   private static String getMvnCommand() {
     String mvnCommand = "mvn";
     if (File.separatorChar == '\\') {
@@ -542,7 +396,7 @@ public class InferConfig {
     return mvnCommand;
   }
 
-  private static String findExecutableOnPath(String name) {
+  static String findExecutableOnPath(String name) {
     for (String dirname : System.getenv("PATH").split(File.pathSeparator)) {
       File file = new File(dirname, name);
       if (file.isFile() && file.canExecute()) {
