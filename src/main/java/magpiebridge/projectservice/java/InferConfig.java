@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -39,6 +38,8 @@ public class InferConfig {
   private final Path mavenHome;
   /** Location of the gradle cache, usually ~/.gradle */
   private final Path gradleHome;
+
+  private Set<Path> cachedBuildClassPath;
 
   InferConfig(
       Path workspaceRoot,
@@ -142,6 +143,10 @@ public class InferConfig {
    * bazel-genfiles
    */
   private Set<Path> buildClassPath() {
+    if (cachedBuildClassPath != null) {
+      return cachedBuildClassPath;
+    }
+
     // externalDependencies
     if (!externalDependencies.isEmpty()) {
       Set<Path> result = new HashSet<Path>();
@@ -155,6 +160,7 @@ public class InferConfig {
               String.format("Couldn't find jar for %s in %s or %s", a, mavenHome, gradleHome));
         }
       }
+      cachedBuildClassPath = result;
       return result;
     }
 
@@ -169,6 +175,7 @@ public class InferConfig {
           LOG.warning(String.format("Couldn't find jar for %s in %s", a, mavenHome));
         }
       }
+      cachedBuildClassPath = result;
       return result;
     }
 
@@ -183,27 +190,19 @@ public class InferConfig {
         LOG.info(String.format("Found %d generated-files directories", jars.size()));
         result.addAll(jars);
       }
+      cachedBuildClassPath = result;
       return result;
     }
 
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-      System.out.println("Looking up gradle dependencies");
-      Collection<Artifact> artifacts = InferConfigGradle.gradleDependencies(workspaceRoot);
-      int depCount = artifacts.size();
-      AtomicInteger counter = new AtomicInteger();
-      return artifacts
-          .parallelStream()
-          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false, workspaceRoot))
-          .peek(
-              path ->
-                  LOG.info(
-                      "Processed " + counter.incrementAndGet() + " of " + depCount + " dependencies"))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .collect(Collectors.toSet());
+      Set<Path> result = InferConfigGradle.gradleBuildClassPath(workspaceRoot, gradleHome);
+
+      cachedBuildClassPath = result;
+      return result;
     }
 
+    cachedBuildClassPath = Collections.emptySet();
     return Collections.emptySet();
   }
 

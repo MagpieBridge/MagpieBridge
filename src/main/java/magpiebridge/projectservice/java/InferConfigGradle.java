@@ -16,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -274,5 +275,22 @@ public class InferConfigGradle {
 
   private static String removePrefix(String str, String prefix) {
     return str.startsWith(prefix) ? str.substring(prefix.length()) : str;
+  }
+
+  static Set<Path> gradleBuildClassPath(Path workspaceRoot, Path gradleHome) {
+    System.out.println("Looking up gradle dependencies");
+    Collection<Artifact> artifacts = gradleDependencies(workspaceRoot);
+    int depCount = artifacts.size();
+    AtomicInteger counter = new AtomicInteger();
+    return artifacts
+        .parallelStream()
+        .map(dep -> findGradleJar(gradleHome, dep, false, workspaceRoot))
+        .peek(
+            path ->
+                LOG.info(
+                    "Processed " + counter.incrementAndGet() + " of " + depCount + " dependencies"))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toSet());
   }
 }
