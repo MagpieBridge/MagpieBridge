@@ -1,15 +1,14 @@
 package magpiebridge.project.java;
 
-import magpiebridge.core.JavaProjectService;
-import magpiebridge.projectservice.java.InferConfigGradle;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import magpiebridge.core.JavaProjectService;
+import magpiebridge.projectservice.java.InferConfigGradle;
+import org.junit.Test;
 
 public class JavaProjectServiceTest {
 
