@@ -161,7 +161,7 @@ public class InferConfigGradle {
 
     try {
       Set<String> subProjects = gradleSubprojects(workspaceRoot);
-      LOG.info("Subprojects: " + subProjects);
+      LOG.info("Gradle subprojects: " + subProjects);
 
       // For each subproject, collect dependencies
       Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
@@ -183,7 +183,7 @@ public class InferConfigGradle {
               .forEach(dependencies::add);
         }
       }
-      LOG.info("Dependencies: " + dependencies);
+      LOG.info("Gradle dependencies: " + dependencies);
 
       return dependencies;
     } catch (IOException e) {

@@ -1,14 +1,7 @@
 package magpiebridge.project.java;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import magpiebridge.core.JavaProjectService;
-import org.junit.Ignore;
+import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -19,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JavaProjectServiceTest {
