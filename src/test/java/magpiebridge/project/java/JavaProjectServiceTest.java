@@ -5,7 +5,10 @@ import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -66,11 +69,17 @@ public class JavaProjectServiceTest {
       gradlePath = root.resolve("gradlew");
     }
     // Build the project to download JARs to system
-    InferConfigGradle.newProcessBuilderWithEnv(root)
-        .directory(root.toFile())
-        .command(gradlePath.toString(), ":app:assemble")
-        .start()
-        .waitFor();
+    System.out.println("Building app");
+    InputStream assemble =
+        InferConfigGradle.newProcessBuilderWithEnv(root)
+            .directory(root.toFile())
+            .command(gradlePath.toString(), ":app:assemble")
+            .start()
+            .getInputStream();
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(assemble))) {
+      reader.lines().forEach(System.out::println);
+    }
+    System.out.println("Finished building app");
 
     JavaProjectService ps = new JavaProjectService();
     ps.setRootPath(root);
