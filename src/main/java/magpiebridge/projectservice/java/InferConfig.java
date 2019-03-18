@@ -1,7 +1,5 @@
 package magpiebridge.projectservice.java;
 
-import magpiebridge.utils.Box;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -77,7 +76,7 @@ public class InferConfig {
 
   /** @return */
   public Set<Path> classPath() {
-    HashSet<Path> result = new HashSet<Path>();
+    HashSet<Path> result = new HashSet<>();
     result.addAll(buildClassPath());
     result.addAll(workspaceClassPath());
     return result;
@@ -192,11 +191,14 @@ public class InferConfig {
       System.out.println("Looking up gradle dependencies");
       Collection<Artifact> artifacts = InferConfigGradle.gradleDependencies(workspaceRoot);
       int depCount = artifacts.size();
-      Box<Integer> counter = new Box<>(0);
-      return artifacts.stream()
+      AtomicInteger counter = new AtomicInteger();
+      return artifacts
+          .parallelStream()
           .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false, workspaceRoot))
           .peek(
-              path -> LOG.info("Found " + (++counter.value) + " of " + depCount + " dependencies"))
+              path ->
+                  LOG.info(
+                      "Processed " + counter.incrementAndGet() + " of " + depCount + " dependencies"))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
