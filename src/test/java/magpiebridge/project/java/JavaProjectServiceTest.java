@@ -1,17 +1,15 @@
 package magpiebridge.project.java;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import magpiebridge.core.JavaProjectService;
 import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JavaProjectServiceTest {
 
@@ -50,11 +48,6 @@ public class JavaProjectServiceTest {
     assertTrue(ps.getClassPath().contains(root.resolve("build").resolve("classes")));
   }
 
-  private static ProcessBuilder setEnv(ProcessBuilder pb, String envName, String envValue) {
-    pb.environment().put(envName, envValue);
-    return pb;
-  }
-
   @Test
   public void testAndroidGradleProject() throws IOException, InterruptedException {
     Path root = Paths.get("src/test/resources/MyApplication/").toAbsolutePath();
@@ -67,15 +60,13 @@ public class JavaProjectServiceTest {
     }
     // Build the project to download JARs to system
     System.out.println("Building app");
-    InputStream assemble =
-        InferConfigGradle.newProcessBuilderWithEnv(root)
-            .directory(root.toFile())
-            .command(gradlePath.toString(), ":app:assemble")
-            .start()
-            .getInputStream();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(assemble))) {
-      reader.lines().forEach(System.out::println);
-    }
+    InferConfigGradle.newProcessBuilderWithEnv(root)
+        .directory(root.toFile())
+        .command(gradlePath.toString(), ":app:assemble")
+        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+        .redirectError(ProcessBuilder.Redirect.INHERIT)
+        .start()
+        .waitFor();
     System.out.println("Finished building app");
 
     JavaProjectService ps = new JavaProjectService();
