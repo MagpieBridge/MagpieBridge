@@ -3,7 +3,6 @@ package magpiebridge.projectservice.java;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -13,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- *     <p>Modified and extended by Linghui Luo
+ *     <p>Modified and extended by Linghui Luo & Christian Brüggemann
  */
 public class InferConfig {
   private static final Logger LOG = Logger.getLogger("main");
@@ -79,7 +79,9 @@ public class InferConfig {
   public Set<Path> classPath() {
     HashSet<Path> result = new HashSet<>();
     result.addAll(buildClassPath());
-    result.addAll(workspaceClassPath());
+    Set<Path> workspaceClassPath = workspaceClassPath();
+    LOG.info("Workspace Class Path:" + workspaceClassPath);
+    result.addAll(workspaceClassPath);
     return result;
   }
 
@@ -322,7 +324,6 @@ public class InferConfig {
             .resolve(artifact.artifactId)
             .resolve(artifact.version)
             .resolve(fileNameJar(artifact, source));
-
     if (Files.exists(jar)) {
       return Optional.of(jar);
     } else {
@@ -338,53 +339,32 @@ public class InferConfig {
     return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".{aar,jar}";
   }
 
-  private static List<Artifact> dependencyList(Path pomXml) {
-    Objects.requireNonNull(pomXml, "pom.xml path is null");
-
+  private Collection<Artifact> mvnDependencies() {
+    Path pomXml = workspaceRoot.resolve("pom.xml");
     try {
-      // Tell maven to output deps to a temporary file
-      Path outputFile = Files.createTempFile("deps", ".txt");
-
-      // TODO consider using mvn dependency:copy-dependencies instead
-      String cmd =
-          String.format(
-              "%s dependency:list -DincludeScope=test -DoutputFile=%s",
-              getMvnCommand(), outputFile);
-      File workingDirectory = pomXml.toAbsolutePath().getParent().toFile();
-      int result = Runtime.getRuntime().exec(cmd, null, workingDirectory).waitFor();
-
-      if (result != 0) {
-        throw new RuntimeException("`" + cmd + "` returned " + result);
+      if (Files.exists(pomXml)) {
+        Objects.requireNonNull(pomXml, "pom.xml path is null");
+        Process dependencyListing =
+            new ProcessBuilder()
+                .directory(workspaceRoot.toFile())
+                .command(getMvnCommand(), "dependency:list")
+                .start();
+        Pattern dependencyPattern = Pattern.compile(".*\\s{2}(.*):(.*):(.*):(.*):(.*)");
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()));
+        Set<Artifact> dependencies = new LinkedHashSet<>();
+        reader
+            .lines()
+            .map(dependencyPattern::matcher)
+            .filter(Matcher::find)
+            .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(4)))
+            .forEach(dependencies::add);
+        LOG.info("Maven Dependencies: " + dependencies);
+        return dependencies;
       }
-
-      return readDependencyList(outputFile);
-    } catch (InterruptedException | IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static List<Artifact> readDependencyList(Path outputFile) {
-    Pattern artifact = Pattern.compile(".*:.*:.*:.*:.*");
-
-    try (InputStream in = Files.newInputStream(outputFile)) {
-      return new BufferedReader(new InputStreamReader(in))
-          .lines()
-          .map(String::trim)
-          .filter(line -> artifact.matcher(line).matches())
-          .map(Artifact::parse)
-          .collect(Collectors.toList());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private Collection<Artifact> mvnDependencies() {
-    Path pomXml = workspaceRoot.resolve("pom.xml");
-
-    if (Files.exists(pomXml)) {
-      return dependencyList(pomXml);
-    }
-
     return Collections.emptyList();
   }
 

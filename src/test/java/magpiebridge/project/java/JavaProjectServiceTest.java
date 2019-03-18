@@ -1,7 +1,13 @@
 package magpiebridge.project.java;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import magpiebridge.core.JavaProjectService;
-import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -18,14 +24,14 @@ import static org.junit.Assert.assertTrue;
 
 public class JavaProjectServiceTest {
 
-  @Ignore
+  @Test
   public void testMavenProject() {
     // ignore it because CI times out
     JavaProjectService ps = new JavaProjectService();
-    Path root = Paths.get("src/test/resources/DemoProject/").toAbsolutePath();
+    Path root = Paths.get("src/test/resources/DemoProjectMaven/").toAbsolutePath();
     ps.setRootPath(root);
-    assertNotEquals(0, ps.getClassPath().size());
-    assertNotEquals(0, ps.getLibraryPath().size());
+    assertEquals(10, ps.getClassPath().size());
+    assertEquals(8, ps.getLibraryPath().size());
     assertEquals(2, ps.getClassPath().size() - ps.getLibraryPath().size());
   }
 
