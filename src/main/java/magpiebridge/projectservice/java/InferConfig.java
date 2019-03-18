@@ -117,12 +117,7 @@ public class InferConfig {
 
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-      // TODO We need to traverse into subproject folders here as well
-      return Stream.of(
-              workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
-              workspaceRoot.resolve("build").resolve("classes"))
-          .filter(Files::exists)
-          .collect(Collectors.toSet());
+      return InferConfigGradle.workspaceClassPath(workspaceRoot);
     }
 
     return Collections.emptySet();

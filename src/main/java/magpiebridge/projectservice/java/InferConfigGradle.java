@@ -68,8 +68,7 @@ class InferConfigGradle {
     String androidSdkPath = System.getenv("ANDROID_SDK_PATH");
     if (!Strings.isNullOrEmpty(androidSdkPath)) {
       Path extrasPath = Paths.get(androidSdkPath, "extras");
-      Stream<String> patternPart1 =
-          Stream.of(toGlobPathPart(extrasPath), "extras", "**");
+      Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
       Stream<String> patternPart2 = Stream.of(artifact.groupId.split("\\."));
       Stream<String> patternPart3 =
           Stream.of(
@@ -97,7 +96,7 @@ class InferConfigGradle {
     String gradleBinary = getGradleBinary(workspaceRoot).toString();
 
     try {
-      Set<String> subProjects = gradleSubprojects(gradleBinary, workspaceRoot);
+      Set<String> subProjects = gradleSubprojects(workspaceRoot);
       LOG.info("Subprojects: " + subProjects);
 
       // For each subproject, collect dependencies
@@ -128,30 +127,33 @@ class InferConfigGradle {
     }
   }
 
-  private static Set<String> gradleSubprojects(String gradleBinary, Path workspaceRoot)
-      throws IOException {
-    // Find all subprojects
+  private static Set<String> gradleSubprojects(Path workspaceRoot) {
+    String gradleBinary = getGradleBinary(workspaceRoot).toString();
     Pattern projectPattern = Pattern.compile("[pP]roject '(.*)'$");
     LOG.info("Running " + gradleBinary + " projects");
-    Process projectsListing =
-        new ProcessBuilder()
-            .directory(workspaceRoot.toFile())
-            .command(gradleBinary, "projects")
-            .start();
-    Set<String> subProjects;
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
-      subProjects =
-          reader
-              .lines()
-              .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
-              .map(projectPattern::matcher)
-              .filter(Matcher::find)
-              .map(matcher -> matcher.group(1))
-              .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
-      subProjects.add(""); // Add root project
+    try {
+      Process projectsListing =
+          new ProcessBuilder()
+              .directory(workspaceRoot.toFile())
+              .command(gradleBinary, "projects")
+              .start();
+      Set<String> subProjects;
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
+        subProjects =
+            reader
+                .lines()
+                .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
+                .map(projectPattern::matcher)
+                .filter(Matcher::find)
+                .map(matcher -> matcher.group(1))
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
+        subProjects.add(""); // Add root project
+      }
+      return subProjects;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    return subProjects;
   }
 
   private static Path getGradleBinary(Path workspaceRoot) {
@@ -181,5 +183,33 @@ class InferConfigGradle {
 
   static boolean hasGradleProject(Path workspaceRoot) {
     return Files.exists(workspaceRoot.resolve("build.gradle"));
+  }
+
+  static Set<Path> workspaceClassPath(Path workspaceRoot) {
+    Set<String> subprojects = InferConfigGradle.gradleSubprojects(workspaceRoot);
+    Stream<Path> subprojectDirs =
+        subprojects.stream()
+            .filter(subproject -> !subproject.isEmpty())
+            .map(subproject -> removePrefix(subproject, ":"))
+            .flatMap(
+                subproject ->
+                    Stream.of(
+                        workspaceRoot
+                            .resolve(subproject)
+                            .resolve("build")
+                            .resolve("intermediates")
+                            .resolve("javac"),
+                        workspaceRoot.resolve(subproject).resolve("build").resolve("classes")));
+
+    Stream<Path> rootProjectDirs =
+        Stream.of(
+                workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
+                workspaceRoot.resolve("build").resolve("classes"))
+            .filter(Files::exists);
+    return Stream.concat(rootProjectDirs, subprojectDirs).collect(Collectors.toSet());
+  }
+
+  private static String removePrefix(String str, String prefix) {
+    return str.startsWith(prefix) ? str.substring(prefix.length()) : str;
   }
 }
