@@ -61,7 +61,7 @@ public class InferConfigGradle {
             Files.readAllLines(localProperties).stream()
                 .map(sdkDirPattern::matcher)
                 .filter(Matcher::find)
-                .map(matcher -> matcher.group(0))
+                .map(matcher -> matcher.group(1))
                 .map(Paths::get)
                 .findFirst()
                 .orElse(null);
