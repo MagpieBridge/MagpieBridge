@@ -1,5 +1,7 @@
 package magpiebridge.projectservice.java;
 
+import magpiebridge.utils.Box;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -187,8 +189,14 @@ public class InferConfig {
 
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-      return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
+      System.out.println("Looking up gradle dependencies");
+      Collection<Artifact> artifacts = InferConfigGradle.gradleDependencies(workspaceRoot);
+      int depCount = artifacts.size();
+      Box<Integer> counter = new Box<>(0);
+      return artifacts.stream()
           .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, false, workspaceRoot))
+          .peek(
+              path -> LOG.info("Found " + (++counter.value) + " of " + depCount + " dependencies"))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toSet());
@@ -321,9 +329,8 @@ public class InferConfig {
     }
   }
 
-
   static String fileNameJar(Artifact artifact, boolean source) {
-    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") +".jar";
+    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".jar";
   }
 
   static String fileNameJarOrAar(Artifact artifact, boolean source) {
