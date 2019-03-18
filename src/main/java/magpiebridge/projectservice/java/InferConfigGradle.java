@@ -278,17 +278,14 @@ public class InferConfigGradle {
   }
 
   static Set<Path> gradleBuildClassPath(Path workspaceRoot, Path gradleHome) {
-    System.out.println("Looking up gradle dependencies");
+    LOG.info("Looking up gradle dependencies");
     Collection<Artifact> artifacts = gradleDependencies(workspaceRoot);
     int depCount = artifacts.size();
-    AtomicInteger counter = new AtomicInteger();
+    AtomicInteger c = new AtomicInteger();
     return artifacts
         .parallelStream()
         .map(dep -> findGradleJar(gradleHome, dep, false, workspaceRoot))
-        .peek(
-            path ->
-                LOG.info(
-                    "Processed " + counter.incrementAndGet() + " of " + depCount + " dependencies"))
+        .peek(__ -> LOG.info("Processed " + c.incrementAndGet() + "/" + depCount + " dependencies"))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(Collectors.toSet());
