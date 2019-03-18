@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import magpiebridge.core.JavaProjectService;
 import org.junit.Test;
 
@@ -20,6 +21,12 @@ public class JavaProjectServiceTest {
     assertEquals(10, ps.getClassPath().size());
     assertEquals(8, ps.getLibraryPath().size());
     assertEquals(2, ps.getClassPath().size() - ps.getLibraryPath().size());
+    Set<String> classNames = ps.getSourceClassFullQualifiedNames();
+    assertTrue(classNames.contains("demo.SignatureExample"));
+    assertTrue(classNames.contains("demo.FileOutputExample"));
+    assertTrue(classNames.contains("demo.SecUtils"));
+    assertTrue(classNames.contains("server.ServerMain"));
+    assertTrue(classNames.contains("server.Server"));
   }
 
   @Test

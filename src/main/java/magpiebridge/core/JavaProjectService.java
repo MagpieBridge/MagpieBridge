@@ -7,6 +7,7 @@ import java.util.Set;
 import magpiebridge.projectservice.java.InferConfig;
 import magpiebridge.projectservice.java.InferSourcePath;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class JavaProjectService provides the configuration information of a java project.
  *
@@ -20,6 +21,9 @@ public class JavaProjectService implements IProjectService {
   /** The source path. */
   private Set<Path> sourcePath;
 
+  /** The source class full qualified names. */
+  private Set<String> sourceClassFullQualifiedNames;
+
   /** The class path. */
   private Set<Path> classPath;
 
@@ -32,6 +36,7 @@ public class JavaProjectService implements IProjectService {
   /** Instantiates a new java project service. */
   public JavaProjectService() {
     this.sourcePath = Collections.emptySet();
+    this.sourceClassFullQualifiedNames = Collections.emptySet();
     this.classPath = Collections.emptySet();
     this.libraryPath = Collections.emptySet();
     this.externalDependencies = Collections.emptySet();
@@ -62,10 +67,24 @@ public class JavaProjectService implements IProjectService {
     if (this.sourcePath.isEmpty()) {
       if (rootPath.isPresent()) {
         // if source path is not specified by the user, infer the source path.
-        this.sourcePath = InferSourcePath.sourcePath(rootPath.get());
+        InferSourcePath infer = new InferSourcePath();
+        this.sourcePath = infer.sourcePath(rootPath.get());
+        this.sourceClassFullQualifiedNames = infer.getClassFullQualifiedNames();
       }
     }
     return sourcePath;
+  }
+
+  /**
+   * Gets the source class full qualified names.
+   *
+   * @return the source class full qualified names
+   */
+  public Set<String> getSourceClassFullQualifiedNames() {
+    if (this.sourcePath.isEmpty()) {
+      getSourcePath();
+    }
+    return this.sourceClassFullQualifiedNames;
   }
 
   /**
