@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class InferConfigGradle {
+class InferConfigGradle {
 
   private static final Logger LOG = Logger.getLogger("main");
 
