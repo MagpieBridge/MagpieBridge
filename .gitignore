@@ -5,12 +5,11 @@
 
 \.settings/
 
-\.settings/
-
-\.settings/
-
+*.class
 /target/
 
 *.iml
 
 \.idea/
+
+.gradle
