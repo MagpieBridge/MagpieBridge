@@ -122,8 +122,8 @@ public class JavaProjectServiceTest {
 
     JavaProjectService ps = new JavaProjectService();
     ps.setRootPath(root);
-    assertEquals(112, ps.getClassPath().size());
-    assertEquals(111, ps.getLibraryPath().size());
+    assertEquals(113, ps.getClassPath().size());
+    assertEquals(112, ps.getLibraryPath().size());
     assertTrue(
         ps.getClassPath()
             .contains(
