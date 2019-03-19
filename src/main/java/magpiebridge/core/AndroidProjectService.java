@@ -25,6 +25,7 @@ public class AndroidProjectService extends JavaProjectService {
   public Optional<Path> getApkPath() {
     if (this.getRootPath().isPresent()) {
       String root = this.getRootPath().get().toString();
+      // TODO consider customized build path
       File apkDir = Paths.get(root, "app/build/outputs/apk/debug").toFile();
       for (File f : apkDir.listFiles()) {
         if (f.isFile() && f.getName().endsWith(".apk")) {
@@ -33,6 +34,7 @@ public class AndroidProjectService extends JavaProjectService {
         }
       }
     }
+
     return this.apkPath;
   }
 }

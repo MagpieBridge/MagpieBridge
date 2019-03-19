@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import magpiebridge.core.JavaProjectService;
-import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Test;
 
 public class JavaProjectServiceTest {
@@ -52,36 +51,5 @@ public class JavaProjectServiceTest {
     assertEquals(9, ps.getClassPath().size());
     assertEquals(8, ps.getLibraryPath().size());
     assertTrue(ps.getClassPath().contains(root.resolve("build").resolve("classes")));
-  }
-
-  @Test
-  public void testAndroidGradleProject() throws IOException, InterruptedException {
-    Path root = Paths.get("src/test/resources/MyApplication/").toAbsolutePath();
-
-    Path gradlePath;
-    if (System.getProperty("os.name").startsWith("Windows")) {
-      gradlePath = root.resolve("gradlew.bat");
-    } else {
-      gradlePath = root.resolve("gradlew");
-    }
-    // Build the project to download JARs to system
-    System.out.println("Building app");
-    InferConfigGradle.newProcessBuilderWithEnv(root)
-        .directory(root.toFile())
-        .command(gradlePath.toString(), ":app:assemble")
-        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-        .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .start()
-        .waitFor();
-    System.out.println("Finished building app");
-
-    JavaProjectService ps = new JavaProjectService();
-    ps.setRootPath(root);
-    assertEquals(112, ps.getClassPath().size());
-    assertEquals(111, ps.getLibraryPath().size());
-    assertTrue(
-        ps.getClassPath()
-            .contains(
-                root.resolve("app").resolve("build").resolve("intermediates").resolve("javac")));
   }
 }
