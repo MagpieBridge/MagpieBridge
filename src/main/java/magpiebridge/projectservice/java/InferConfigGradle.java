@@ -57,14 +57,22 @@ public class InferConfigGradle {
     if (Files.exists(localProperties)) {
       Pattern sdkDirPattern = Pattern.compile("sdk\\.dir=(.*)");
       try {
-        sdkDirFromLocalProperties =
+        Optional<String> op =
             Files.readAllLines(localProperties).stream()
                 .map(sdkDirPattern::matcher)
                 .filter(Matcher::find)
                 .map(matcher -> matcher.group(1))
-                .map(Paths::get)
-                .findFirst()
-                .orElse(null);
+                .findFirst();
+        if (!op.isPresent()) {
+          return null;
+        } else {
+          String path = op.get();
+          if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+            // take care of windows
+            path = path.replace("\\:", ":");
+          }
+          sdkDirFromLocalProperties = Paths.get(path);
+        }
       } catch (IOException e) {
         sdkDirFromLocalProperties = null;
       }
@@ -210,7 +218,8 @@ public class InferConfigGradle {
                 .map(projectPattern::matcher)
                 .filter(Matcher::find)
                 .map(matcher -> matcher.group(1))
-                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures mutability
+                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures
+        // mutability
         subProjects.add(""); // Add root project
       }
       return subProjects;
