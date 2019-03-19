@@ -37,19 +37,23 @@ public class AndroidProjectServiceTest {
     }
     // Build the project to download JARs to system
     System.out.println("Building app");
-    InferConfigGradle.newProcessBuilderWithEnv(root)
-        .directory(root.toFile())
-        .command(gradlePath.toString(), ":app:assemble")
-        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-        .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .start()
-        .waitFor();
+    int exitCode =
+        InferConfigGradle.newProcessBuilderWithEnv(root)
+            .directory(root.toFile())
+            .command(gradlePath.toString(), ":app:assemble")
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
+            .start()
+            .waitFor();
+    if (exitCode != 0) {
+      System.err.println("Warning: Assembling was not successful.");
+    }
     System.out.println("Finished building app");
 
     JavaProjectService ps = new JavaProjectService();
     ps.setRootPath(root);
-    assertEquals(112, ps.getClassPath().size());
-    assertEquals(111, ps.getLibraryPath().size());
+    assertEquals(113, ps.getClassPath().size());
+    assertEquals(112, ps.getLibraryPath().size());
     assertTrue(
         ps.getClassPath()
             .contains(
