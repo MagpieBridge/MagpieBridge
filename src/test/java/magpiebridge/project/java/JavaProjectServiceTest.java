@@ -1,14 +1,15 @@
 package magpiebridge.project.java;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import magpiebridge.core.JavaProjectService;
+import magpiebridge.projectservice.java.InferConfigGradle;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import magpiebridge.core.JavaProjectService;
-import magpiebridge.projectservice.java.InferConfigGradle;
-import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class JavaProjectServiceTest {
 
@@ -59,13 +60,16 @@ public class JavaProjectServiceTest {
     }
     // Build the project to download JARs to system
     System.out.println("Building app");
-    InferConfigGradle.newProcessBuilderWithEnv(root)
+    int exitCode = InferConfigGradle.newProcessBuilderWithEnv(root)
         .directory(root.toFile())
         .command(gradlePath.toString(), ":app:assemble")
         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
         .start()
         .waitFor();
+    if (exitCode != 0) {
+      System.err.println("Warning: Assembling was not successful.");
+    }
     System.out.println("Finished building app");
 
     JavaProjectService ps = new JavaProjectService();
