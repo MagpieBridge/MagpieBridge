@@ -7,7 +7,6 @@ import java.util.Set;
 import magpiebridge.projectservice.java.InferConfig;
 import magpiebridge.projectservice.java.InferSourcePath;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class JavaProjectService provides the configuration information of a java project.
  *
