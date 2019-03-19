@@ -6,8 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.regex.Pattern;
 import magpiebridge.core.JavaProjectService;
+import magpiebridge.projectservice.java.InferConfigGradle;
+
 import org.junit.Test;
 
 public class JavaProjectServiceTest {
