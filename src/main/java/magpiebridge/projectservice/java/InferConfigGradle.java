@@ -138,7 +138,7 @@ public class InferConfigGradle {
     Path androidSdkPath = androidSdkPath(workspaceRoot).orElse(null);
     if (androidSdkPath != null) {
       Path extrasPath = androidSdkPath.resolve("extras");
-      Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "extras", "**");
+      Stream<String> patternPart1 = Stream.of(toGlobPathPart(extrasPath), "**");
       Stream<String> patternPart2 = Stream.of(artifact.groupId.split("\\."));
       Stream<String> patternPart3 =
           Stream.of(
@@ -171,7 +171,7 @@ public class InferConfigGradle {
       LOG.info("Gradle subprojects: " + subProjects);
 
       // For each subproject, collect dependencies
-      Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*)");
+      Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*?)(?:$| )");
       Set<Artifact> dependencies = new LinkedHashSet<>();
       for (String subProject : subProjects) {
         LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
@@ -270,11 +270,17 @@ public class InferConfigGradle {
                             .resolve("build")
                             .resolve("intermediates")
                             .resolve("javac"),
+                        workspaceRoot
+                            .resolve(subproject)
+                            .resolve("build")
+                            .resolve("intermediates")
+                            .resolve("classes"),
                         workspaceRoot.resolve(subproject).resolve("build").resolve("classes")));
 
     Stream<Path> rootProjectDirs =
         Stream.of(
             workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
+            workspaceRoot.resolve("build").resolve("intermediates").resolve("classes"),
             workspaceRoot.resolve("build").resolve("classes"));
     return Stream.concat(rootProjectDirs, subprojectDirs)
         .filter(Files::exists)
