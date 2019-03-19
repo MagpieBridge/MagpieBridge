@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import magpiebridge.core.JavaProjectService;
 import magpiebridge.projectservice.java.InferConfigGradle;
-
 import org.junit.Test;
 
 public class JavaProjectServiceTest {
