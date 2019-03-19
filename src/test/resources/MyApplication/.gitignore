@@ -6,12 +6,9 @@
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
+/build/
 /.idea/assetWizardSettings.xml
 .DS_Store
-/build/generated
-/build/intermediates
-/build/reports
-/build/tmp
 /captures
 .externalNativeBuild
 /app.build
