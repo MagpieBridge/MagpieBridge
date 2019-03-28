@@ -3,7 +3,6 @@ package magpiebridge.project.java;
 import static org.junit.Assert.assertEquals;
 
 import com.ibm.wala.classLoader.Module;
-import com.ibm.wala.classLoader.SourceFileModule;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +25,6 @@ public class SourceFileManagerTest {
     assertEquals(1, modules.size());
     VersionedSourceFile f2 = new VersionedSourceFile(text, 1);
     m.generateSourceFileModule(URI.create(uri), f2);
-    System.err.println(URI.create(uri).toString());
     modules = m.getSourceFileModules();
     assertEquals(1, modules.size());
   }
