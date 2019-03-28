@@ -26,8 +26,14 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  */
 public class MagpieTextDocumentService implements TextDocumentService {
 
+  /** The server. */
   protected final MagpieServer server;
 
+  /**
+   * Instantiates a new magpie text document service.
+   *
+   * @param server the server
+   */
   public MagpieTextDocumentService(MagpieServer server) {
     this.server = server;
   }
@@ -36,13 +42,18 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didOpen(DidOpenTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
     System.err.println("client didOpen:\n" + params);
+
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
+    // set the rootPath for project service if it is not set yet.
     if (server.rootPath.isPresent()) {
       if (server.getProjectService(language).isPresent())
         server.getProjectService(language).get().setRootPath(server.rootPath.get());
     }
-    server.addSource(language, doc.getText(), doc.getUri());
+
+    // add the opened file to file manager and do analysis
+    SourceFileManager fileManager = server.getSourceFileManager(language);
+    fileManager.didOpen(params);
     server.doAnalysis(language);
   }
 
@@ -50,6 +61,13 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didChange(DidChangeTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
     System.err.println("client didChange:\n" + params);
+
+    // update the changed file in file manager and clean diagnostics.
+    String language = inferLanguage(params.getTextDocument().getUri());
+    SourceFileManager fileManager = server.getSourceFileManager(language);
+    fileManager.didChange(params);
+    // TODO. it should be customized to clean all or just this changed file
+    server.cleanAllDiagnostics();
   }
 
   @Override
@@ -60,6 +78,10 @@ public class MagpieTextDocumentService implements TextDocumentService {
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
+    System.err.println("client didSave:\n" + params);
+    // re-analyze when file is saved.
+    String language = inferLanguage(params.getTextDocument().getUri());
+    server.doAnalysis(language);
   }
 
   @Override
@@ -92,5 +114,18 @@ public class MagpieTextDocumentService implements TextDocumentService {
           }
           return codeLenses;
         });
+  }
+
+  /**
+   * Infer language of the file from the uri.
+   *
+   * @param uri the uri
+   * @return the string
+   */
+  private String inferLanguage(String uri) {
+    if (uri.endsWith(".java")) return "java";
+    else if (uri.endsWith(".py")) return "python";
+    else if (uri.endsWith(".js")) return "javascript";
+    else throw new UnsupportedOperationException();
   }
 }

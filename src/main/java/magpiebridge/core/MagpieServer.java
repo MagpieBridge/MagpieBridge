@@ -2,10 +2,7 @@ package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
-import com.ibm.wala.classLoader.Module;
-import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.collections.Pair;
-import com.ibm.wala.util.io.TemporaryFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +55,7 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class MagpieServer.
  *
@@ -74,13 +72,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The workspace service. */
   protected WorkspaceService workspaceService;
 
-  /** The language analyses. */
-  protected Map<String, Collection<ServerAnalysis>> languageAnalyses;
+  /** The language analyzes. language mapped to a set of analyzes. */
+  protected Map<String, Collection<ServerAnalysis>> languageAnalyzes;
 
-  /** The language source files. */
-  protected Map<String, Map<Module, URI>> languageSourceFiles;
+  /**
+   * The language source file managers. language mapped to its corresponding source file manager.
+   */
+  private Map<String, SourceFileManager> languageSourceFileManagers;
 
-  /** The language project services. */
+  /** The language project services. language mapped to its project service. */
   protected Map<String, IProjectService> languageProjectServices;
 
   /** The diagnostics. */
@@ -95,7 +95,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The root path. */
   protected Optional<Path> rootPath;
 
-  /** The server client uri. */
+  /** The server client uri. Server-side URI mapped to Client-side URI. */
   private Map<String, String> serverClientUri;
 
   /** The connection socket. */
@@ -111,13 +111,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   public MagpieServer() {
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
-    languageAnalyses = new HashMap<String, Collection<ServerAnalysis>>();
-    languageSourceFiles = new HashMap<String, Map<Module, URI>>();
-    languageProjectServices = new HashMap<String, IProjectService>();
-    diagnostics = new HashMap<>();
-    hovers = new HashMap<>();
-    codeLenses = new HashMap<>();
-    serverClientUri = new HashMap<>();
+    this.languageAnalyzes = new HashMap<String, Collection<ServerAnalysis>>();
+    this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
+    this.languageProjectServices = new HashMap<String, IProjectService>();
+    this.diagnostics = new HashMap<>();
+    this.hovers = new HashMap<>();
+    this.codeLenses = new HashMap<>();
+    this.serverClientUri = new HashMap<>();
     logger = new Logger();
   }
 
@@ -260,34 +260,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Adds the source code.
+   * Gets the source file manager for given language.
    *
    * @param language the language
-   * @param text the text
-   * @param clientUri the client uri
-   * @return true, if successful
+   * @return the source file manager
    */
-  public boolean addSource(String language, String text, String clientUri) {
-    try {
-      File file = File.createTempFile("temp", ".java");
-      file.deleteOnExit();
-      TemporaryFile.stringToFile(file, text);
-      Module sourceFile = new SourceFileModule(file, clientUri.toString(), null);
-      String serverUri = Paths.get(file.toURI()).toUri().toString();
-      serverClientUri.put(serverUri, clientUri);
-      if (!languageSourceFiles.containsKey(language)) {
-        languageSourceFiles.put(language, new HashMap<Module, URI>());
-      }
-      if (!languageSourceFiles.get(language).containsKey(sourceFile)) {
-        languageSourceFiles.get(language).put(sourceFile, new URI(clientUri));
-        return true;
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-    }
-    return false;
+  public SourceFileManager getSourceFileManager(String language) {
+    if (!this.languageSourceFileManagers.containsKey(language))
+      this.languageSourceFileManagers.put(
+          language, new SourceFileManager(language, this.serverClientUri));
+    return this.languageSourceFileManagers.get(language);
   }
 
   /**
@@ -335,10 +317,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    *          the analysis
    */
   public void addAnalysis(String language, ServerAnalysis analysis) {
-    if (!languageAnalyses.containsKey(language)) {
-      languageAnalyses.put(language, new HashSet<ServerAnalysis>());
+    if (!languageAnalyzes.containsKey(language)) {
+      languageAnalyzes.put(language, new HashSet<ServerAnalysis>());
     }
-    languageAnalyses.get(language).add(analysis);
+    languageAnalyzes.get(language).add(analysis);
   }
 
   /**
@@ -347,12 +329,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param language the language
    */
   public void doAnalysis(String language) {
-    Map<Module, URI> sourceFiles = this.languageSourceFiles.get(language);
-    if (!languageAnalyses.containsKey(language)) {
-      languageAnalyses.put(language, Collections.emptyList());
+    SourceFileManager fileManager = getSourceFileManager(language);
+    if (!languageAnalyzes.containsKey(language)) {
+      languageAnalyzes.put(language, Collections.emptyList());
     }
-    for (ServerAnalysis analysis : languageAnalyses.get(language)) {
-      analysis.analyze(sourceFiles.keySet(), this);
+    for (ServerAnalysis analysis : languageAnalyzes.get(language)) {
+      analysis.analyze(fileManager.getSourceFileModules().values(), this);
     }
   }
 
@@ -448,27 +430,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
           pdp.setDiagnostics(diagList);
           String serverUri = result.position().getURL().toString();
-          if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-            // take care of uri in windows
-            if (!serverUri.startsWith("file:///")) {
-              serverUri = serverUri.replace("file://", "file:///");
-            }
-          }
-          String clientUri = null;
-          if (serverClientUri.containsKey(serverUri)) {
-            // the file was at least opened once in the editor
-            clientUri = serverClientUri.get(serverUri);
-          } else {
-            // the file was not opened, but whole project was analyzed
-            try {
-              File file = new File(new URI(serverUri));
-              if (file.exists()) {
-                clientUri = serverUri;
-              }
-            } catch (URISyntaxException e) {
-              e.printStackTrace();
-            }
-          }
+          String clientUri = getClientUri(serverUri);
           if (clientUri != null) {
             pdp.setUri(clientUri);
             client.publishDiagnostics(pdp);
@@ -477,6 +439,39 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           }
         };
     return consumer;
+  }
+
+  /**
+   * Gets the client uri.
+   *
+   * @param serverUri the server uri
+   * @return the client uri
+   */
+  private String getClientUri(String serverUri) {
+    System.err.println("serverUri: " + serverUri);
+    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+      // take care of uri in windows
+      if (!serverUri.startsWith("file:///")) {
+        serverUri = serverUri.replace("file://", "file:///");
+      }
+    }
+    String clientUri = null;
+    if (serverClientUri.containsKey(serverUri)) {
+      // the file was at least opened once in the editor
+      clientUri = serverClientUri.get(serverUri);
+    } else {
+      // the file was not opened, but whole project was analyzed
+      try {
+        File file = new File(new URI(serverUri));
+        if (file.exists()) {
+          clientUri = serverUri;
+        }
+      } catch (URISyntaxException e) {
+        e.printStackTrace();
+      }
+    }
+    if (clientUri != null) System.err.println("clientUri: " + serverUri);
+    return clientUri;
   }
 
   /**
@@ -666,6 +661,14 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       return new TeeOutputStream(os, new FileOutputStream(log));
     } catch (IOException e) {
       return os;
+    }
+  }
+
+  /** Clean all diagnostics. */
+  public void cleanAllDiagnostics() {
+    for (URL url : diagnostics.keySet()) {
+      client.publishDiagnostics(
+          new PublishDiagnosticsParams(getClientUri(url.toString()), Collections.emptyList()));
     }
   }
 }
