@@ -101,7 +101,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   protected Map<URL, Map<Range, CodeAction>> codeActions;
 
-  protected CodeAction matchAction;
+  protected List<CodeAction> matchActions;
 
   /** The root path. */
   protected Optional<Path> rootPath;
@@ -220,16 +220,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setWorkspaceSymbolProvider(false);
     caps.setDocumentFormattingProvider(false);
     caps.setDocumentRangeFormattingProvider(false);
-    caps.setDocumentHighlightProvider(true);
-    caps.setColorProvider(true);
-    caps.setHoverProvider(true);
-    caps.setTextDocumentSync(TextDocumentSyncKind.Full);
+    caps.setDocumentHighlightProvider(false);
+    caps.setColorProvider(false);
+    caps.setDocumentSymbolProvider(false);
+    caps.setDefinitionProvider(false);
+    caps.setReferencesProvider(false);
     CodeLensOptions cl = new CodeLensOptions();
     cl.setResolveProvider(false);
     caps.setCodeLensProvider(cl);
-    caps.setDocumentSymbolProvider(true);
-    caps.setDefinitionProvider(true);
-    caps.setReferencesProvider(true);
+    caps.setHoverProvider(true);
+    caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     LinkedList<String> cmds = new LinkedList<String>();
     cmds.add(CodeActionKind.QuickFix);
@@ -462,8 +462,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                       d.getRange().getStart().getLine(), 44 + result.repair().length()));
               CodeAction action =
                   CodeActionGenerator.replace(
-                      result.repair(), range, result.repair(), clientUri, diagList);
-              if (!actionList.containsKey(d)) actionList.put(d.getRange(), action);
+                      "FIX", range, result.repair(), clientUri, Collections.singletonList(d));
+              if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
             } catch (MalformedURLException e) {
               e.printStackTrace();
             }
@@ -668,21 +668,22 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return Collections.emptyList();
   }
 
-  public void findCodeActions(URI uri, List<Diagnostic> diagnostics) {
+  public List<CodeAction> findCodeActions(URI uri, List<Diagnostic> diagnostics) {
+    this.matchActions = new ArrayList<>();
     try {
       URL url = uri.toURL();
       if (this.codeActions.containsKey(url)) {
         Map<Range, CodeAction> actions = this.codeActions.get(url);
         for (Diagnostic dia : diagnostics) {
           if (actions.containsKey(dia.getRange())) {
-            this.matchAction = actions.get(dia.getRange());
-            break;
+            matchActions.add(actions.get(dia.getRange()));
           }
         }
       }
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
+    return matchActions;
   }
 
   /**

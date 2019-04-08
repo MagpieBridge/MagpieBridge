@@ -1,9 +1,7 @@
 package magpiebridge.core;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.eclipse.lsp4j.ExecuteCommandParams;
@@ -38,12 +36,8 @@ public class MagpieWorkspaceService implements WorkspaceService {
   public CompletableFuture<Object> executeCommand(ExecuteCommandParams params) {
     return CompletableFuture.supplyAsync(
         () -> {
-          String cmd = params.getCommand();
-          if (cmd.equals(CodeActionKind.QuickFix)) {
-            return server.client.applyEdit(
-                new ApplyWorkspaceEditParams(server.matchAction.getEdit()));
-          }
-          return null;
+          return server.client.applyEdit(
+              new ApplyWorkspaceEditParams(server.matchActions.get(0).getEdit()));
         });
   }
 }

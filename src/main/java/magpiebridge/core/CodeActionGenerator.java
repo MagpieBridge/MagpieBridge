@@ -1,8 +1,8 @@
 package magpiebridge.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.lsp4j.CodeAction;
@@ -18,16 +18,14 @@ public class CodeActionGenerator {
 
   public static CodeAction replace(
       String title, Range range, String replaceText, String uri, List<Diagnostic> diags) {
-    CodeAction codeAction = new CodeAction(title);
+    CodeAction codeAction = new CodeAction(title + "_AKT");
     TextEdit tEdit = new TextEdit(range, replaceText);
     Map<String, List<TextEdit>> changes = new HashMap<>();
     changes.put(uri, Collections.singletonList(tEdit));
     WorkspaceEdit edit = new WorkspaceEdit(changes);
     codeAction.setKind(CodeActionKind.QuickFix);
     codeAction.setEdit(edit);
-    List<Object> args = new LinkedList<Object>(diags);
-    args.add(0, uri);
-    codeAction.setCommand(new Command(title, CodeActionKind.QuickFix, args));
+    codeAction.setCommand(new Command(title + "_CMD", CodeActionKind.QuickFix, new ArrayList<>()));
     return codeAction;
   }
 }
