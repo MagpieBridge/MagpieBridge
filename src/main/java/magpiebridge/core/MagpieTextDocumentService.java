@@ -8,15 +8,20 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 /**
@@ -41,8 +46,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
-    System.err.println("client didOpen:\n" + params);
-
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
     // set the rootPath for project service if it is not set yet.
@@ -60,8 +63,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
-    System.err.println("client didChange:\n" + params);
-
     // update the changed file in file manager and clean diagnostics.
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
@@ -78,7 +79,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
     server.logger.logClientMsg(params.toString());
-    System.err.println("client didSave:\n" + params);
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language);
@@ -113,6 +113,39 @@ public class MagpieTextDocumentService implements TextDocumentService {
             e.printStackTrace();
           }
           return codeLenses;
+        });
+  }
+
+  @Override
+  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
+      TextDocumentPositionParams params) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          List<DocumentHighlight> hightlights = new ArrayList<DocumentHighlight>();
+          String uri = params.getTextDocument().getUri();
+          try {
+            hightlights = server.findHightLights(new URI(uri));
+          } catch (URISyntaxException e) {
+            e.printStackTrace();
+          }
+          return hightlights;
+        });
+  }
+
+  @Override
+  public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          List<Either<Command, CodeAction>> actions = new ArrayList<>();
+          try {
+            String uri = params.getTextDocument().getUri();
+            server.findCodeActions(new URI(uri), params.getContext().getDiagnostics());
+            if (server.matchAction != null)
+              actions.add(Either.forLeft(server.matchAction.getCommand()));
+          } catch (URISyntaxException e) {
+            e.printStackTrace();
+          }
+          return actions;
         });
   }
 

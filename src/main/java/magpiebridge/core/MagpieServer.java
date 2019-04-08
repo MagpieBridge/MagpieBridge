@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,10 +32,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
+import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
@@ -55,7 +60,6 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class MagpieServer.
  *
@@ -92,6 +96,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The code lenses. */
   protected Map<URL, List<CodeLens>> codeLenses;
 
+  /** The highlights. */
+  protected Map<URL, List<DocumentHighlight>> hightLights;
+
+  protected Map<URL, Map<Range, CodeAction>> codeActions;
+
+  protected CodeAction matchAction;
+
   /** The root path. */
   protected Optional<Path> rootPath;
 
@@ -117,6 +128,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.diagnostics = new HashMap<>();
     this.hovers = new HashMap<>();
     this.codeLenses = new HashMap<>();
+    this.codeActions = new HashMap<>();
+    this.hightLights = new HashMap<>();
     this.serverClientUri = new HashMap<>();
     logger = new Logger();
   }
@@ -178,9 +191,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
-  /** Launch on web socket port. */
-  public void launchOnWebSocketPort() {}
-
   /*
    * (non-Javadoc)
    *
@@ -199,27 +209,34 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
     logger.logClientMsg(params.toString());
-    System.err.println("client:\n" + params);
     if (params.getRootUri() != null) {
       this.rootPath = Optional.ofNullable(Paths.get(URI.create(params.getRootUri())));
     } else {
       this.rootPath = Optional.empty();
     }
     final ServerCapabilities caps = new ServerCapabilities();
+    caps.setTypeDefinitionProvider(false);
+    caps.setImplementationProvider(false);
+    caps.setWorkspaceSymbolProvider(false);
+    caps.setDocumentFormattingProvider(false);
+    caps.setDocumentRangeFormattingProvider(false);
+    caps.setDocumentHighlightProvider(true);
+    caps.setColorProvider(true);
     caps.setHoverProvider(true);
     caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     CodeLensOptions cl = new CodeLensOptions();
-    cl.setResolveProvider(true);
+    cl.setResolveProvider(false);
     caps.setCodeLensProvider(cl);
     caps.setDocumentSymbolProvider(true);
     caps.setDefinitionProvider(true);
     caps.setReferencesProvider(true);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
-    exec.setCommands(new LinkedList<String>());
+    LinkedList<String> cmds = new LinkedList<String>();
+    cmds.add(CodeActionKind.QuickFix);
+    exec.setCommands(cmds);
     caps.setExecuteCommandProvider(exec);
-    caps.setCodeActionProvider(false);
+    caps.setCodeActionProvider(true);
     InitializeResult v = new InitializeResult(caps);
-    System.err.println("server:\n" + caps);
     logger.logServerMsg(v.toString());
     return CompletableFuture.completedFuture(v);
   }
@@ -232,7 +249,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   @Override
   public void initialized(InitializedParams params) {
     logger.logClientMsg(params.toString());
-    System.err.println("client:\n" + params);
   }
 
   /*
@@ -253,7 +269,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   @Override
   public void exit() {
     try {
-      connectionSocket.close();
+      if (connectionSocket != null) connectionSocket.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -347,15 +363,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   public void consume(Collection<AnalysisResult> results, String source) {
     for (AnalysisResult result : results) {
       URL url = result.position().getURL();
-      List<Diagnostic> diagList = null;
-      if (this.diagnostics.containsKey(url)) {
-        diagList = diagnostics.get(url);
-      } else {
-        diagList = new ArrayList<>();
-        this.diagnostics.put(url, diagList);
-      }
       switch (result.kind()) {
         case Diagnostic:
+          List<Diagnostic> diagList = null;
+          if (this.diagnostics.containsKey(url)) {
+            diagList = diagnostics.get(url);
+          } else {
+            diagList = new ArrayList<>();
+            this.diagnostics.put(url, diagList);
+          }
           createDiagnosticConsumer(diagList, source).accept(result);
           break;
         case Hover:
@@ -427,15 +443,38 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           if (!diagList.contains(d)) {
             diagList.add(d);
           }
-          PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
-          pdp.setDiagnostics(diagList);
           String serverUri = result.position().getURL().toString();
           String clientUri = getClientUri(serverUri);
+
+          // add code action (quickfix) related to analysis result
+          if (result.repair() != null) {
+            URL url;
+            try {
+              url = new URL(clientUri);
+              if (!this.codeActions.containsKey(url)) {
+                this.codeActions.put(url, new HashMap<>());
+              }
+              Map<Range, CodeAction> actionList = this.codeActions.get(url);
+              Range range = new Range();
+              range.setStart(new org.eclipse.lsp4j.Position(d.getRange().getStart().getLine(), 44));
+              range.setEnd(
+                  new org.eclipse.lsp4j.Position(
+                      d.getRange().getStart().getLine(), 44 + result.repair().length()));
+              CodeAction action =
+                  CodeActionGenerator.replace(
+                      result.repair(), range, result.repair(), clientUri, diagList);
+              if (!actionList.containsKey(d)) actionList.put(d.getRange(), action);
+            } catch (MalformedURLException e) {
+              e.printStackTrace();
+            }
+          }
+
+          PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
+          pdp.setDiagnostics(diagList);
           if (clientUri != null) {
             pdp.setUri(clientUri);
             client.publishDiagnostics(pdp);
             logger.logServerMsg(pdp.toString());
-            System.err.println("server:\n" + pdp);
           }
         };
     return consumer;
@@ -448,7 +487,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the client uri
    */
   private String getClientUri(String serverUri) {
-    System.err.println("serverUri: " + serverUri);
     if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
       // take care of uri in windows
       if (!serverUri.startsWith("file:///")) {
@@ -470,7 +508,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
         e.printStackTrace();
       }
     }
-    if (clientUri != null) System.err.println("clientUri: " + serverUri);
     return clientUri;
   }
 
@@ -501,7 +538,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     Consumer<AnalysisResult> consumer =
         result -> {
           CodeLens codeLens = new CodeLens();
-
+          codeLens.setCommand(new Command("repair", result.repair()));
           codeLens.setRange(getLocationFrom(result.position()).getRange());
         };
     return consumer;
@@ -615,8 +652,37 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the hover
    */
   public Hover findHover(Position lookupPos) {
-    // TODO Auto-generated method stub
+    if (this.hovers.containsKey(lookupPos.getURL())) {
+
+      return this.hovers.get(lookupPos.getURL()).get(lookupPos);
+    }
     return null;
+  }
+
+  public List<DocumentHighlight> findHightLights(URI uri) {
+    try {
+      if (this.hightLights.containsKey(uri.toURL())) return this.hightLights.get(uri.toURL());
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+    return Collections.emptyList();
+  }
+
+  public void findCodeActions(URI uri, List<Diagnostic> diagnostics) {
+    try {
+      URL url = uri.toURL();
+      if (this.codeActions.containsKey(url)) {
+        Map<Range, CodeAction> actions = this.codeActions.get(url);
+        for (Diagnostic dia : diagnostics) {
+          if (actions.containsKey(dia.getRange())) {
+            this.matchAction = actions.get(dia.getRange());
+            break;
+          }
+        }
+      }
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -626,8 +692,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the list
    */
   public List<CodeLens> findCodeLenses(URI uri) {
-    // TODO Auto-generated method stub
-    return null;
+    try {
+      if (this.codeLenses.containsKey(uri.toURL())) return this.codeLenses.get(uri.toURL());
+
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+    return Collections.emptyList();
   }
 
   /**
