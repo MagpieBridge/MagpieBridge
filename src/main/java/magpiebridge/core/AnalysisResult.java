@@ -16,5 +16,5 @@ public interface AnalysisResult {
 
   public DiagnosticSeverity severity();
 
-  public String repair();
+  public Pair<Position,String> repair();
 }
