@@ -456,13 +456,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               }
               Map<Range, CodeAction> actionList = this.codeActions.get(url);
               Range range = new Range();
-              range.setStart(new org.eclipse.lsp4j.Position(d.getRange().getStart().getLine(), 44));
+              Position fixPos = result.repair().fst;
+              String replace = result.repair().snd;
+              range.setStart(
+                  new org.eclipse.lsp4j.Position(fixPos.getFirstLine(), fixPos.getFirstCol()));
               range.setEnd(
                   new org.eclipse.lsp4j.Position(
-                      d.getRange().getStart().getLine(), 44 + result.repair().length()));
+                      fixPos.getFirstLine(), fixPos.getFirstCol() + replace.length()));
               CodeAction action =
                   CodeActionGenerator.replace(
-                      "FIX", range, result.repair(), clientUri, Collections.singletonList(d));
+                      "FIX", range, replace, clientUri, Collections.singletonList(d));
               if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
             } catch (MalformedURLException e) {
               e.printStackTrace();
@@ -538,7 +541,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     Consumer<AnalysisResult> consumer =
         result -> {
           CodeLens codeLens = new CodeLens();
-          codeLens.setCommand(new Command("repair", result.repair()));
+          codeLens.setCommand(new Command("repair", result.repair().snd));
           codeLens.setRange(getLocationFrom(result.position()).getRange());
         };
     return consumer;
