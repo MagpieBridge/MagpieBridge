@@ -448,25 +448,26 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
           // add code action (quickfix) related to analysis result
           if (result.repair() != null) {
-            URL url;
             try {
-              url = new URL(clientUri);
+              URL url = new URL(clientUri);
               if (!this.codeActions.containsKey(url)) {
                 this.codeActions.put(url, new HashMap<>());
               }
-              Map<Range, CodeAction> actionList = this.codeActions.get(url);
-              Range range = new Range();
               Position fixPos = result.repair().fst;
-              String replace = result.repair().snd;
-              range.setStart(
-                  new org.eclipse.lsp4j.Position(fixPos.getFirstLine(), fixPos.getFirstCol()));
-              range.setEnd(
-                  new org.eclipse.lsp4j.Position(
-                      fixPos.getFirstLine(), fixPos.getFirstCol() + replace.length()));
-              CodeAction action =
-                  CodeActionGenerator.replace(
-                      "FIX", range, replace, clientUri, Collections.singletonList(d));
-              if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
+              if (fixPos != null) {
+                Map<Range, CodeAction> actionList = this.codeActions.get(url);
+                Range range = new Range();
+                String replace = result.repair().snd;
+                range.setStart(
+                    new org.eclipse.lsp4j.Position(fixPos.getFirstLine(), fixPos.getFirstCol()));
+                range.setEnd(
+                    new org.eclipse.lsp4j.Position(
+                        fixPos.getFirstLine(), fixPos.getFirstCol() + replace.length()));
+                CodeAction action =
+                    CodeActionGenerator.replace(
+                        "FIX", range, replace, clientUri, Collections.singletonList(d));
+                if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
+              }
             } catch (MalformedURLException e) {
               e.printStackTrace();
             }
