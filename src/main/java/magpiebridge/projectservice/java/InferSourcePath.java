@@ -76,6 +76,7 @@ public class InferSourcePath {
             classFullQualifiedNames.add(packageName + "." + cu.getPrimaryTypeName().get());
           } else classFullQualifiedNames.add(cu.getPrimaryTypeName().get());
         }
+        if (packageName.length() == 0) return Optional.of(java.getParent());
         String packagePath = packageName.replace('.', File.separatorChar);
         Path dir = java.getParent();
         if (!dir.endsWith(packagePath)) {

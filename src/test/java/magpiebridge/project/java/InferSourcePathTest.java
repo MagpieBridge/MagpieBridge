@@ -60,6 +60,17 @@ public class InferSourcePathTest {
   }
 
   @Test
+  public void testMavenProject1() {
+    InferSourcePath infer = new InferSourcePath();
+    Path root =
+        Paths.get(
+                "E:\\Git\\Github\\magpie\\flowdroid-lsp-demo\\src\\test\\resources\\DemoFlowDroid")
+            .toAbsolutePath();
+    Set<Path> sourcePath = infer.sourcePath(root);
+    System.out.println(sourcePath);
+  }
+
+  @Test
   public void testGradleProject() {
     Path root = Paths.get("src/test/resources/DemoProjectGradle/").toAbsolutePath();
     Set<Path> sourcePath = new InferSourcePath().sourcePath(root);
