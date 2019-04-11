@@ -59,7 +59,6 @@ public class InferSourcePathTest {
     assertTrue(classNames.contains("server.User"));
   }
 
-
   @Test
   public void testGradleProject() {
     Path root = Paths.get("src/test/resources/DemoProjectGradle/").toAbsolutePath();

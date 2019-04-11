@@ -459,13 +459,17 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                 Range range = new Range();
                 String replace = result.repair().snd;
                 range.setStart(
-                    new org.eclipse.lsp4j.Position(fixPos.getFirstLine(), fixPos.getFirstCol()));
-                range.setEnd(
                     new org.eclipse.lsp4j.Position(
-                        fixPos.getFirstLine(), fixPos.getFirstCol() + replace.length()));
+                        fixPos.getFirstLine() - 1, fixPos.getFirstCol()));
+                range.setEnd(
+                    new org.eclipse.lsp4j.Position(fixPos.getLastLine() - 1, fixPos.getLastCol()));
                 CodeAction action =
                     CodeActionGenerator.replace(
-                        "FIX", range, replace, clientUri, Collections.singletonList(d));
+                        "Replace it with " + replace,
+                        range,
+                        replace,
+                        clientUri,
+                        Collections.singletonList(d));
                 if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
               }
             } catch (MalformedURLException e) {
