@@ -445,7 +445,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           }
           String serverUri = result.position().getURL().toString();
           String clientUri = getClientUri(serverUri);
-
           // add code action (quickfix) related to analysis result
           if (result.repair() != null) {
             try {
@@ -488,6 +487,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return consumer;
   }
 
+  private String checkURI(String uri) {
+    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+      // take care of uri in windows
+      if (!uri.startsWith("file:///")) {
+        uri = uri.replace("file://", "file:///");
+      }
+    }
+    return uri;
+  }
   /**
    * Gets the client uri.
    *
@@ -495,12 +503,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the client uri
    */
   private String getClientUri(String serverUri) {
-    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-      // take care of uri in windows
-      if (!serverUri.startsWith("file:///")) {
-        serverUri = serverUri.replace("file://", "file:///");
-      }
-    }
+    serverUri = checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {
       // the file was at least opened once in the editor
@@ -561,7 +564,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   protected Location getLocationFrom(Position pos) {
     Location codeLocation = new Location();
     try {
-      codeLocation.setUri(pos.getURL().toURI().toString());
+      codeLocation.setUri(checkURI(pos.getURL().toURI().toString()));
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
