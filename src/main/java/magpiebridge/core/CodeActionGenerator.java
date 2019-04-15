@@ -18,14 +18,17 @@ public class CodeActionGenerator {
 
   public static CodeAction replace(
       String title, Range range, String replaceText, String uri, List<Diagnostic> diags) {
-    CodeAction codeAction = new CodeAction(title + "_AKT");
+    CodeAction codeAction = new CodeAction(title + "(Action)");
+    // CodeAction codeAction = new CodeAction(title);
     TextEdit tEdit = new TextEdit(range, replaceText);
     Map<String, List<TextEdit>> changes = new HashMap<>();
     changes.put(uri, Collections.singletonList(tEdit));
     WorkspaceEdit edit = new WorkspaceEdit(changes);
     codeAction.setKind(CodeActionKind.QuickFix);
     codeAction.setEdit(edit);
-    codeAction.setCommand(new Command(title + "_CMD", CodeActionKind.QuickFix, new ArrayList<>()));
+    codeAction.setCommand(
+        new Command(title + "(Command)", CodeActionKind.QuickFix, new ArrayList<>()));
+    // codeAction.setCommand(new Command(title, CodeActionKind.QuickFix, new ArrayList<>()));
     return codeAction;
   }
 }

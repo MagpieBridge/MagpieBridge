@@ -220,7 +220,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setWorkspaceSymbolProvider(false);
     caps.setDocumentFormattingProvider(false);
     caps.setDocumentRangeFormattingProvider(false);
-    caps.setDocumentHighlightProvider(false);
+    caps.setDocumentHighlightProvider(true);
     caps.setColorProvider(false);
     caps.setDocumentSymbolProvider(false);
     caps.setDefinitionProvider(false);
@@ -750,5 +750,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       client.publishDiagnostics(
           new PublishDiagnosticsParams(getClientUri(url.toString()), Collections.emptyList()));
     }
+    diagnostics.clear();
   }
 }

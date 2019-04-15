@@ -53,7 +53,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
       if (server.getProjectService(language).isPresent())
         server.getProjectService(language).get().setRootPath(server.rootPath.get());
     }
-
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
