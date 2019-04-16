@@ -39,6 +39,7 @@ public class JavaProjectService implements IProjectService {
     this.classPath = Collections.emptySet();
     this.libraryPath = Collections.emptySet();
     this.externalDependencies = Collections.emptySet();
+    this.rootPath = Optional.empty();
   }
 
   /**
