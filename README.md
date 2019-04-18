@@ -1,14 +1,16 @@
-<img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/magpieBridge.png" width="250">
+
+<p align="center">
+    <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/magpieBridge.png" width="250">
+</p>
 
 # MapgieBridge [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
+
+
 ## What is MagpieBridge?
 MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. 
+<p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
-
-<object data="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.pdf" type="application/pdf" width="700px" height="700px">
-    <embed src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.pdf">
-    </embed>
-</object>
+</p>
 
 MagpieBridge in Chinese: in a Chinese legend, a human and a fairy fall in love, but this love angers the gods, who separate them
 on opposite sides of the Milky Way. However, on the seventh day of the seventh lunar month each year,
