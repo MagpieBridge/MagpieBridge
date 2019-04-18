@@ -3,19 +3,22 @@
 
 \.project
 
-\.settings/org\.eclipse\.core\.resources\.prefs
-
-\.settings/org\.eclipse\.jdt\.core\.prefs
-
-\.settings/org\.eclipse\.m2e\.core\.prefs
-
-target/classes/META-INF/MANIFEST\.MF
-
-target/classes/META-INF/maven/magpie/magpiebridge/pom\.properties
-
-target/classes/META-INF/maven/magpie/magpiebridge/pom\.xml
-
-target/test-classes/magpie/magpiebridge/AppTest\.class
+\.settings/
 
 *.class
 /target/
+
+*.iml
+
+\.idea/
+
+.gradle
+src/test/resources/MyApplication/app/build/outputs/apk/release/output\.json
+
+src/test/resources/MyApplication/app/build/outputs/apk/debug/output\.json
+
+src/test/resources/MyApplication/app/build/outputs/apk/release/app-release-unsigned\.apk
+
+src/test/resources/MyApplication/app/build/outputs/logs/manifest-merger-release-report\.txt
+
+src/test/resources/MyApplication/app/build/outputs/logs/manifest-merger-debug-report\.txt

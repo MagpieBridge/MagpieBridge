@@ -2,7 +2,6 @@ package magpiebridge.projectservice.java;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -11,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -19,18 +19,18 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
- * 
- * Infer the source path from a given project root path. Instead using the Parser from Java JDK tool.jar from the original
- * version, we use com.github.javaparser.JavaParser here. Modified by Linghui Luo 18.02.2019
- * 
+ * Infer the source path from a given project root path. Instead using the Parser from Java JDK
+ * tool.jar from the original version, we use com.github.javaparser.JavaParser here. Modified by
+ * Linghui Luo
+ *
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- * 
- * 
  */
 public class InferSourcePath {
 
   private static final Logger LOG = Logger.getLogger("main");
+  private Set<String> packageNames;
+  private Set<String> classFullQualifiedNames;
 
   protected static Stream<Path> allJavaFiles(Path dir) {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.java");
@@ -42,9 +42,10 @@ public class InferSourcePath {
     }
   }
 
-  public static Set<Path> sourcePath(Path workspaceRoot) {
+  public Set<Path> sourcePath(Path workspaceRoot) {
     LOG.info("Searching for source roots in " + workspaceRoot);
-
+    packageNames = new HashSet<String>();
+    classFullQualifiedNames = new HashSet<String>();
     class SourcePaths implements Consumer<Path> {
       int certaintyThreshold = 10;
       Map<Path, Integer> sourceRoots = new HashMap<>();
@@ -68,8 +69,14 @@ public class InferSourcePath {
         }
         String packageName = "";
         if (result.isPresent()) {
-          packageName = result.get().getPackageDeclaration().get().getNameAsString();
+          CompilationUnit cu = result.get();
+          if (cu.getPackageDeclaration().isPresent()) {
+            packageName = cu.getPackageDeclaration().get().getNameAsString();
+            packageNames.add(packageName);
+            classFullQualifiedNames.add(packageName + "." + cu.getPrimaryTypeName().get());
+          } else classFullQualifiedNames.add(cu.getPrimaryTypeName().get());
         }
+        if (packageName.length() == 0) return Optional.of(java.getParent());
         String packagePath = packageName.replace('.', File.separatorChar);
         Path dir = java.getParent();
         if (!dir.endsWith(packagePath)) {
@@ -92,10 +99,12 @@ public class InferSourcePath {
         }
 
         if (!alreadyKnown(java)) {
-          infer(java).ifPresent(root -> {
-            int count = sourceRoots.getOrDefault(root, 0);
-            sourceRoots.put(root, count + 1);
-          });
+          infer(java)
+              .ifPresent(
+                  root -> {
+                    int count = sourceRoots.getOrDefault(root, 0);
+                    sourceRoots.put(root, count + 1);
+                  });
         }
       }
     }
@@ -104,4 +113,11 @@ public class InferSourcePath {
     return checker.sourceRoots.keySet();
   }
 
+  public Set<String> getPackageNames() {
+    return this.packageNames;
+  }
+
+  public Set<String> getClassFullQualifiedNames() {
+    return this.classFullQualifiedNames;
+  }
 }

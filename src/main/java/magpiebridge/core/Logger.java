@@ -6,18 +6,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalTime;
 
+/** @author Linghui Luo */
 public class Logger {
   private File file;
   private BufferedWriter writer;
 
   public Logger() {
     try {
-      file = File.createTempFile("logger", ".txt");
+      file = File.createTempFile("magpie_all_log", ".txt");
       writer = new BufferedWriter(new FileWriter(file));
     } catch (IOException e) {
       e.printStackTrace();
     }
-
   }
 
   private void log(boolean isServer, String msg) {
