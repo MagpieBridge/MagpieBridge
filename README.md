@@ -3,7 +3,17 @@
 # MapgieBridge [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 ## What is MagpieBridge?
 MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. 
+<img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
 
+<object data="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.pdf">
+    </embed>
+</object>
+
+MagpieBridge in Chinese: in a Chinese legend, a human and a fairy fall in love, but this love angers the gods, who separate them
+on opposite sides of the Milky Way. However, on the seventh day of the seventh lunar month each year,
+thousands of magpies form a bridge, called 鹊桥 in Chinese and Queqiao in pinyin, allowing the lovers
+to meet.
 ## Integrated Static Analyses using MagpieBridge
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
