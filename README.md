@@ -21,8 +21,8 @@ to meet.
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
 ## How to use MapgieBridge for your own analysis?
-- check your analysis is built on top the analysis frameworks MagpieBridge supports (WALA, Soot)
-- [check this tutorial to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki/Create-your-first-project-with-MagpieBridge)
+- Check if your analysis is built on top the analysis frameworks MagpieBridge supports (WALA, Soot)
+- [Check this tutorial to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki/Create-your-first-project-with-MagpieBridge)
 ## Contributors:
 <a href="https://github.com/MagpieBridge/MagpieBridge/graphs/contributors">
     <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/contributor.png"/>
