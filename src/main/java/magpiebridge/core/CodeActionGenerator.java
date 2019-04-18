@@ -18,7 +18,7 @@ public class CodeActionGenerator {
 
   public static CodeAction replace(
       String title, Range range, String replaceText, String uri, List<Diagnostic> diags) {
-    CodeAction codeAction = new CodeAction(title + "(Action)");
+    CodeAction codeAction = new CodeAction(title);
     // CodeAction codeAction = new CodeAction(title);
     TextEdit tEdit = new TextEdit(range, replaceText);
     Map<String, List<TextEdit>> changes = new HashMap<>();

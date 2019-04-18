@@ -143,7 +143,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
             for (CodeAction action : matchedActions) {
               // FIXME. VSCode expects CodeAction, but Sublime expects Command. Now just send both
               actions.add(Either.forRight(action));
-              actions.add(Either.forLeft(action.getCommand()));
+              // actions.add(Either.forLeft(action.getCommand()));
             }
           } catch (URISyntaxException e) {
             e.printStackTrace();
