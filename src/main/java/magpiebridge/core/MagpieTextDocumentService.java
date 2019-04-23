@@ -45,13 +45,13 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
     // set the rootPath for project service if it is not set yet.
     if (server.rootPath.isPresent()) {
-      if (server.getProjectService(language).isPresent())
+      if (server.getProjectService(language).isPresent()) {
         server.getProjectService(language).get().setRootPath(server.rootPath.get());
+      }
     }
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
@@ -61,7 +61,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
     // update the changed file in file manager and clean diagnostics.
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
@@ -71,13 +70,10 @@ public class MagpieTextDocumentService implements TextDocumentService {
   }
 
   @Override
-  public void didClose(DidCloseTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
-  }
+  public void didClose(DidCloseTextDocumentParams params) {}
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language);
@@ -159,9 +155,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
    * @return the string
    */
   private String inferLanguage(String uri) {
-    if (uri.endsWith(".java")) return "java";
-    else if (uri.endsWith(".py")) return "python";
-    else if (uri.endsWith(".js")) return "javascript";
-    else throw new UnsupportedOperationException();
+    if (uri.endsWith(".java")) {
+      return "java";
+    } else if (uri.endsWith(".py")) {
+      return "python";
+    } else if (uri.endsWith(".js")) {
+      return "javascript";
+    } else {
+      throw new UnsupportedOperationException();
+    }
   }
 }

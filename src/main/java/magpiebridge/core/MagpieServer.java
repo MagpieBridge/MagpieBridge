@@ -4,7 +4,6 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 import com.ibm.wala.util.collections.Pair;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,8 +29,6 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import org.apache.commons.io.input.TeeInputStream;
-import org.apache.commons.io.output.TeeOutputStream;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeLens;
@@ -113,7 +110,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   private Socket connectionSocket;
 
   /** The logger. */
-  public Logger logger;
+  public StreamLogger logger;
 
   /**
    * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link
@@ -131,7 +128,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.codeActions = new HashMap<>();
     this.hightLights = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    logger = new Logger();
+    logger = new StreamLogger();
   }
 
   /**
@@ -149,7 +146,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /** Launch on stdio. */
   public void launchOnStdio() {
-    launchOnStream(logStream(System.in, "magpie.in"), logStream(System.out, "magpie.out"));
+    launchOnStream(logger.log(System.in), logger.log(System.out));
   }
 
   /**
@@ -161,11 +158,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   public void launchOnStream(InputStream in, OutputStream out) {
     Launcher<LanguageClient> launcher =
         LSPLauncher.createServerLauncher(
-            this,
-            logStream(in, "magpie.in"),
-            logStream(out, "magpie.out"),
-            true,
-            new PrintWriter(System.err));
+            this, logger.log(in), logger.log(out), true, new PrintWriter(System.err));
     connect(launcher.getRemoteProxy());
     launcher.startListening();
   }
@@ -182,8 +175,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       Launcher<LanguageClient> launcher =
           LSPLauncher.createServerLauncher(
               this,
-              logStream(connectionSocket.getInputStream(), "magpie.in"),
-              logStream(connectionSocket.getOutputStream(), "magpie.out"));
+              logger.log(connectionSocket.getInputStream()),
+              logger.log(connectionSocket.getOutputStream()));
       connect(launcher.getRemoteProxy());
       launcher.startListening();
     } catch (IOException e) {
@@ -208,7 +201,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
-    logger.logClientMsg(params.toString());
     if (params.getRootUri() != null) {
       this.rootPath = Optional.ofNullable(Paths.get(URI.create(params.getRootUri())));
     } else {
@@ -237,7 +229,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
     InitializeResult v = new InitializeResult(caps);
-    logger.logServerMsg(v.toString());
     return CompletableFuture.completedFuture(v);
   }
 
@@ -247,9 +238,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.InitializedParams)
    */
   @Override
-  public void initialized(InitializedParams params) {
-    logger.logClientMsg(params.toString());
-  }
+  public void initialized(InitializedParams params) {}
 
   /*
    * (non-Javadoc)
@@ -269,7 +258,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   @Override
   public void exit() {
     try {
-      if (connectionSocket != null) connectionSocket.close();
+      if (connectionSocket != null) {
+        connectionSocket.close();
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -282,9 +273,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the source file manager
    */
   public SourceFileManager getSourceFileManager(String language) {
-    if (!this.languageSourceFileManagers.containsKey(language))
+    if (!this.languageSourceFileManagers.containsKey(language)) {
       this.languageSourceFileManagers.put(
           language, new SourceFileManager(language, this.serverClientUri));
+    }
     return this.languageSourceFileManagers.get(language);
   }
 
@@ -469,7 +461,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                         replace,
                         clientUri,
                         Collections.singletonList(d));
-                if (!actionList.containsKey(d.getRange())) actionList.put(d.getRange(), action);
+                if (!actionList.containsKey(d.getRange())) {
+                  actionList.put(d.getRange(), action);
+                }
               }
             } catch (MalformedURLException e) {
               e.printStackTrace();
@@ -481,7 +475,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           if (clientUri != null) {
             pdp.setUri(clientUri);
             client.publishDiagnostics(pdp);
-            logger.logServerMsg(pdp.toString());
           }
         };
     return consumer;
@@ -672,7 +665,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   public List<DocumentHighlight> findHightLights(URI uri) {
     try {
-      if (this.hightLights.containsKey(uri.toURL())) return this.hightLights.get(uri.toURL());
+      if (this.hightLights.containsKey(uri.toURL())) {
+        return this.hightLights.get(uri.toURL());
+      }
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
@@ -705,7 +700,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    */
   public List<CodeLens> findCodeLenses(URI uri) {
     try {
-      if (this.codeLenses.containsKey(uri.toURL())) return this.codeLenses.get(uri.toURL());
+      if (this.codeLenses.containsKey(uri.toURL())) {
+        return this.codeLenses.get(uri.toURL());
+      }
 
     } catch (MalformedURLException e) {
       e.printStackTrace();
@@ -720,15 +717,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param logFileName the log file name
    * @return the input stream
    */
-  static InputStream logStream(InputStream is, String logFileName) {
-    File log;
-    try {
-      log = File.createTempFile(logFileName, ".txt");
-      return new TeeInputStream(is, new FileOutputStream(log));
-    } catch (IOException e) {
-      return is;
-    }
-  }
+  //  static InputStream logStream(InputStream is, String logFileName) {
+  //    File log;
+  //    try {
+  //      log = File.createTempFile(logFileName, ".txt");
+  //      return new TeeInputStream(is, new FileOutputStream(log));
+  //    } catch (IOException e) {
+  //      return is;
+  //    }
+  //  }
 
   /**
    * Log stream.
@@ -737,15 +734,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param logFileName the log file name
    * @return the output stream
    */
-  static OutputStream logStream(OutputStream os, String logFileName) {
-    File log;
-    try {
-      log = File.createTempFile(logFileName, ".txt");
-      return new TeeOutputStream(os, new FileOutputStream(log));
-    } catch (IOException e) {
-      return os;
-    }
-  }
+  //  static OutputStream logStream(OutputStream os, String logFileName) {
+  //    File log;
+  //    try {
+  //      log = File.createTempFile(logFileName, ".txt");
+  //      return new TeeOutputStream(os, new FileOutputStream(log));
+  //    } catch (IOException e) {
+  //      return os;
+  //    }
+  //  }
 
   /** Clean all diagnostics. */
   public void cleanAllDiagnostics() {
