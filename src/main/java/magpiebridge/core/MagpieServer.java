@@ -146,7 +146,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /** Launch on stdio. */
   public void launchOnStdio() {
-    launchOnStream(logger.log(System.in), logger.log(System.out));
+    launchOnStream(System.in, System.out);
   }
 
   /**

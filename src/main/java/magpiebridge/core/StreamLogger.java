@@ -17,24 +17,31 @@ import org.apache.commons.io.output.TeeOutputStream;
 
 /** @author Linghui Luo */
 public class StreamLogger {
-  private Logger IN_LOGGER = Logger.getLogger("LOG");
-  private Logger OUT_LOGGER = Logger.getLogger("LOG");
+  private Logger LOGGER_IN = Logger.getLogger("IN");
+  private Logger LOGGER_OUT = Logger.getLogger("OUT");
 
   public StreamLogger() {
     try {
-      File temp = File.createTempFile("magpie", ".log");
-      FileHandler fh = null;
+      // The SimpleFormatter uses String.format(format, date, source, logger, level, message,
+      // thrown);
+      System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] %5$s %n");
+      File temp1 = File.createTempFile("magpie_in", ".log");
+      File temp2 = File.createTempFile("magpie_out", ".log");
+      FileHandler fh1 = null;
+      FileHandler fh2 = null;
       try {
-        fh = new FileHandler(temp.getAbsolutePath(), true);
+        fh1 = new FileHandler(temp1.getAbsolutePath(), true);
+        fh2 = new FileHandler(temp2.getAbsolutePath(), true);
       } catch (Exception e) {
         e.printStackTrace();
       }
-      fh.setFormatter(new SimpleFormatter());
-      fh.setLevel(Level.INFO);
-      IN_LOGGER.addHandler(fh);
-      OUT_LOGGER.addHandler(fh);
-      IN_LOGGER.setLevel(Level.INFO);
-      OUT_LOGGER.setLevel(Level.INFO);
+      fh1.setFormatter(new SimpleFormatter());
+      LOGGER_IN.addHandler(fh1);
+      LOGGER_IN.setLevel(Level.INFO);
+
+      fh2.setFormatter(new SimpleFormatter());
+      LOGGER_OUT.addHandler(fh2);
+      LOGGER_OUT.setLevel(Level.INFO);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -59,7 +66,7 @@ public class StreamLogger {
               try {
                 while ((line = reader.readLine()) != null) {
                   if (!line.trim().isEmpty()) {
-                    IN_LOGGER.log(Level.INFO, "\n" + line + "\n");
+                    LOGGER_IN.log(Level.INFO, "[IN ] " + line);
                   }
                 }
               } catch (IOException e) {
@@ -93,7 +100,7 @@ public class StreamLogger {
               try {
                 while ((line = reader.readLine()) != null) {
                   if (!line.trim().isEmpty()) {
-                    OUT_LOGGER.log(Level.INFO, "\n" + line + "\n");
+                    LOGGER_OUT.log(Level.INFO, "[OUT] " + line);
                   }
                 }
               } catch (IOException e) {
