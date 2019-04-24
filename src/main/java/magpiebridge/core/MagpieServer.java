@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.eclipse.lsp4j.CodeAction;
@@ -109,7 +111,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   private Socket connectionSocket;
 
   /** The logger. */
-  public MessageLogger logger;
+  private MessageLogger logger;
+
+  private static Logger log = Logger.getLogger("main");
 
   /**
    * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link
@@ -330,28 +334,41 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param source the source
    */
   public void consume(Collection<AnalysisResult> results, String source) {
+    Map<String, List<Diagnostic>> publishDiags = new HashMap<>();
     for (AnalysisResult result : results) {
-      URL url = result.position().getURL();
-      switch (result.kind()) {
-        case Diagnostic:
-          List<Diagnostic> diagList = null;
-          if (this.diagnostics.containsKey(url)) {
-            diagList = diagnostics.get(url);
-          } else {
-            diagList = new ArrayList<>();
-            this.diagnostics.put(url, diagList);
-          }
-          createDiagnosticConsumer(diagList, source).accept(result);
-          break;
-        case Hover:
-          createHoverConsumer().accept(result);
-          break;
-        case CodeLens:
-          createCodeLensConsumer().accept(result);
-          break;
-        default:
-          break;
+      URL serverURL = result.position().getURL();
+      try {
+        URL clientURL = new URL(getClientUri(serverURL.toString()));
+        switch (result.kind()) {
+          case Diagnostic:
+            List<Diagnostic> diagList = null;
+            if (this.diagnostics.containsKey(clientURL)) {
+              diagList = diagnostics.get(clientURL);
+            } else {
+              diagList = new ArrayList<>();
+              this.diagnostics.put(clientURL, diagList);
+            }
+            createDiagnosticConsumer(publishDiags, diagList, source).accept(result);
+            break;
+          case Hover:
+            createHoverConsumer().accept(result);
+            break;
+          case CodeLens:
+            createCodeLensConsumer().accept(result);
+            break;
+          default:
+            break;
+        }
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
       }
+    }
+    for (String clientUri : publishDiags.keySet()) {
+      List<Diagnostic> diagList = publishDiags.get(clientUri);
+      PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
+      pdp.setDiagnostics(diagList);
+      pdp.setUri(clientUri);
+      client.publishDiagnostics(pdp);
     }
   }
 
@@ -378,12 +395,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Creates the diagnostic consumer.
    *
-   * @param diagList the diag list
+   * @param publishDiags map uri to the diag list to be published for the client.
+   * @param diagList the diag list stored on the server
    * @param source the source
    * @return the consumer
    */
   protected Consumer<AnalysisResult> createDiagnosticConsumer(
-      List<Diagnostic> diagList, String source) {
+      Map<String, List<Diagnostic>> publishDiags, List<Diagnostic> diagList, String source) {
     Consumer<AnalysisResult> consumer =
         result -> {
           Diagnostic d = new Diagnostic();
@@ -436,11 +454,70 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               e.printStackTrace();
             }
           }
-          PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
-          pdp.setDiagnostics(diagList);
           if (clientUri != null) {
-            pdp.setUri(clientUri);
-            client.publishDiagnostics(pdp);
+            publishDiags.put(clientUri, diagList);
+          }
+        };
+    return consumer;
+  }
+
+  /**
+   * Creates the hover consumer.
+   *
+   * @return the consumer
+   */
+  protected Consumer<AnalysisResult> createHoverConsumer() {
+    Consumer<AnalysisResult> consumer =
+        result -> {
+          try {
+            String serverUri = result.position().getURL().toURI().toString();
+            String clientUri = getClientUri(serverUri);
+            URL clientURL = new URL(clientUri);
+            Position pos = replaceURL(result.position(), clientURL);
+            Hover hover = new Hover();
+            List<Either<String, MarkedString>> contents = new ArrayList<>();
+            Either<String, MarkedString> content = Either.forLeft(result.toString(true));
+            contents.add(content);
+            hover.setContents(contents);
+            hover.setRange(getLocationFrom(pos).getRange());
+            NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
+            if (this.hovers.containsKey(clientURL)) {
+              hoverMap = this.hovers.get(clientURL);
+            }
+            hoverMap.put(pos, hover);
+            this.hovers.put(clientURL, hoverMap);
+          } catch (MalformedURLException e) {
+            e.printStackTrace();
+          } catch (URISyntaxException e1) {
+            e1.printStackTrace();
+          }
+        };
+    return consumer;
+  }
+
+  /**
+   * Creates the code lens consumer.
+   *
+   * @return the consumer
+   */
+  protected Consumer<AnalysisResult> createCodeLensConsumer() {
+    Consumer<AnalysisResult> consumer =
+        result -> {
+          try {
+            String serverUri = result.position().getURL().toString();
+            String clientUri = getClientUri(serverUri);
+            URL clientURL = new URL(clientUri);
+            CodeLens codeLens = new CodeLens();
+            codeLens.setCommand(new Command("repair", result.repair().snd));
+            codeLens.setRange(getLocationFrom(result.position()).getRange());
+            List<CodeLens> list = new ArrayList<>();
+            if (this.codeLenses.containsKey(clientURL)) {
+              list = this.codeLenses.get(clientURL);
+            }
+            list.add(codeLens);
+            this.codeLenses.put(clientURL, list);
+          } catch (MalformedURLException e) {
+            e.printStackTrace();
           }
         };
     return consumer;
@@ -448,6 +525,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /**
    * Check if URI is in the right format in windows.
+   *
    * @param uri
    * @return
    */
@@ -485,39 +563,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       }
     }
     return clientUri;
-  }
-
-  /**
-   * Creates the hover consumer.
-   *
-   * @return the consumer
-   */
-  protected Consumer<AnalysisResult> createHoverConsumer() {
-    Consumer<AnalysisResult> consumer =
-        result -> {
-          Hover hover = new Hover();
-          List<Either<String, MarkedString>> contents = new ArrayList<>();
-          Either<String, MarkedString> content = Either.forLeft(result.toString(true));
-          contents.add(content);
-          hover.setContents(contents);
-          hover.setRange(getLocationFrom(result.position()).getRange());
-        };
-    return consumer;
-  }
-
-  /**
-   * Creates the code lens consumer.
-   *
-   * @return the consumer
-   */
-  protected Consumer<AnalysisResult> createCodeLensConsumer() {
-    Consumer<AnalysisResult> consumer =
-        result -> {
-          CodeLens codeLens = new CodeLens();
-          codeLens.setCommand(new Command("repair", result.repair().snd));
-          codeLens.setRange(getLocationFrom(result.position()).getRange());
-        };
-    return consumer;
   }
 
   /**
@@ -560,6 +605,56 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     codeStart.setLine(line - 1);
     codeStart.setCharacter(column);
     return codeStart;
+  }
+
+  protected Position replaceURL(Position pos, URL url) {
+    return new AbstractSourcePosition() {
+
+      @Override
+      public int getLastOffset() {
+        return pos.getLastOffset();
+      }
+
+      @Override
+      public int getLastLine() {
+        return pos.getLastLine();
+      }
+
+      @Override
+      public int getLastCol() {
+        return pos.getLastCol();
+      }
+
+      @Override
+      public int getFirstOffset() {
+        return pos.getFirstOffset();
+      }
+
+      @Override
+      public int getFirstLine() {
+        return pos.getFirstLine();
+      }
+
+      @Override
+      public int getFirstCol() {
+        return pos.getFirstCol();
+      }
+
+      @Override
+      public URL getURL() {
+        return url;
+      }
+
+      @Override
+      public Reader getReader() throws IOException {
+        return new InputStreamReader(url.openConnection().getInputStream());
+      }
+
+      @Override
+      public String toString() {
+        return url + ":" + getFirstLine() + "," + getFirstCol();
+      }
+    };
   }
 
   /**
@@ -628,15 +723,44 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the hover
    */
   public Hover findHover(Position lookupPos) {
+    Hover hover = null;
     if (this.hovers.containsKey(lookupPos.getURL())) {
-
-      return this.hovers.get(lookupPos.getURL()).get(lookupPos);
+      NavigableMap<Position, Hover> map = this.hovers.get(lookupPos.getURL());
+      for (Position pos : map.keySet()) {
+        if (areNearPositions(pos, lookupPos, 5)) {
+          hover = map.get(pos);
+          break;
+        }
+      }
     }
-    return null;
+    return hover;
+  }
+
+  private boolean areNearPositions(Position pos1, Position pos2, int diff) {
+    if (pos1.getFirstLine() == pos2.getFirstLine()
+        && Math.abs(pos1.getFirstCol() - pos2.getFirstCol()) <= diff) return true;
+    return false;
   }
 
   /**
-   * Find code actions attached to the given diagnostics. 
+   * Find code lenses for the given uri.
+   *
+   * @param uri the uri
+   * @return the list of code lenses for the given uri.
+   */
+  public List<CodeLens> findCodeLenses(URI uri) {
+    try {
+      if (this.codeLenses.containsKey(uri.toURL())) {
+        return this.codeLenses.get(uri.toURL());
+      }
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * Find code actions attached to the given diagnostics.
    *
    * @param uri the uri
    * @param diagnostics the diagnostics
@@ -660,30 +784,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return actionForDiags;
   }
 
-  /**
-   * Find code lenses for the given uri. 
-   *
-   * @param uri the uri
-   * @return the list of code lenses for the given uri.
-   */
-  public List<CodeLens> findCodeLenses(URI uri) {
-    try {
-      if (this.codeLenses.containsKey(uri.toURL())) {
-        return this.codeLenses.get(uri.toURL());
-      }
-
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return Collections.emptyList();
-  }
-
-  /** Clean all diagnostics. */
-  public void cleanAllDiagnostics() {
+  /** Clean up all analysis results. */
+  public void cleanUp() {
     for (URL url : diagnostics.keySet()) {
       client.publishDiagnostics(
           new PublishDiagnosticsParams(getClientUri(url.toString()), Collections.emptyList()));
     }
-    diagnostics.clear();
+    this.diagnostics.clear();
+    this.codeActions.clear();
+    this.hovers.clear();
+    this.codeLenses.clear();
   }
 }

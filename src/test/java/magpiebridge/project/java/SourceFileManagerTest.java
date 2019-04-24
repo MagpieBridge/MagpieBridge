@@ -3,7 +3,9 @@ package magpiebridge.project.java;
 import static org.junit.Assert.assertEquals;
 
 import com.ibm.wala.classLoader.Module;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import magpiebridge.file.SourceFileManager;
@@ -27,5 +29,19 @@ public class SourceFileManagerTest {
     m.generateSourceFileModule(URI.create(uri), f2);
     modules = m.getSourceFileModules();
     assertEquals(1, modules.size());
+  }
+
+  @Test
+  public void test() {
+    try {
+      String old =
+          "file:///e%3A/Git/Github/magpie/crypto-lsp-demo/src/test/resources/DemoAllErrors/src/Demo.java";
+      String url = URLDecoder.decode(old, "UTF-8");
+      System.out.println(old);
+      System.out.println(url);
+    } catch (UnsupportedEncodingException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 }

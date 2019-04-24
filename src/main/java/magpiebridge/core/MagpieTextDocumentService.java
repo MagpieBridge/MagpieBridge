@@ -1,10 +1,12 @@
 package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -66,7 +68,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didChange(params);
     // TODO. it should be customized to clean all or just this changed file
-    server.cleanAllDiagnostics();
+    server.cleanUp();
   }
 
   @Override
@@ -86,10 +88,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
           Hover hover = new Hover();
           try {
             String uri = position.getTextDocument().getUri();
-            URL url = new URI(uri).toURL();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
+            URL url = new URI(decodedUri).toURL();
             Position lookupPos = server.lookupPos(position.getPosition(), url);
             hover = server.findHover(lookupPos);
-          } catch (MalformedURLException | URISyntaxException e) {
+          } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return hover;
@@ -101,10 +104,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
     return CompletableFuture.supplyAsync(
         () -> {
           List<CodeLens> codeLenses = new ArrayList<CodeLens>();
-          String uri = params.getTextDocument().getUri();
           try {
-            codeLenses = server.findCodeLenses(new URI(uri));
-          } catch (URISyntaxException e) {
+            String uri = params.getTextDocument().getUri();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
+            codeLenses = server.findCodeLenses(new URI(decodedUri));
+          } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return codeLenses;
@@ -118,14 +122,15 @@ public class MagpieTextDocumentService implements TextDocumentService {
           List<Either<Command, CodeAction>> actions = new ArrayList<>();
           try {
             String uri = params.getTextDocument().getUri();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
             List<CodeAction> matchedActions =
-                server.findCodeActions(new URI(uri), params.getContext().getDiagnostics());
+                server.findCodeActions(new URI(decodedUri), params.getContext().getDiagnostics());
             for (CodeAction action : matchedActions) {
               // FIXME. VSCode expects CodeAction, but Sublime expects Command. Now just send both
               actions.add(Either.forRight(action));
               // actions.add(Either.forLeft(action.getCommand()));
             }
-          } catch (URISyntaxException e) {
+          } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return actions;
