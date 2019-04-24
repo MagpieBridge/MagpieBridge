@@ -1,4 +1,4 @@
-package magpiebridge.core;
+package magpiebridge.file;
 
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;

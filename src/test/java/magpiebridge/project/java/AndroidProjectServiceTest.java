@@ -6,9 +6,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import magpiebridge.core.AndroidProjectService;
-import magpiebridge.core.JavaProjectService;
+import magpiebridge.projectservice.java.AndroidProjectService;
 import magpiebridge.projectservice.java.InferConfigGradle;
+import magpiebridge.projectservice.java.JavaProjectService;
 import org.junit.Test;
 
 public class AndroidProjectServiceTest {

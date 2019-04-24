@@ -8,8 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
-import magpiebridge.core.JavaProjectService;
 import magpiebridge.projectservice.java.InferConfigGradle;
+import magpiebridge.projectservice.java.JavaProjectService;
 import org.junit.Test;
 
 public class JavaProjectServiceTest {

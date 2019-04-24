@@ -1,4 +1,4 @@
-package magpiebridge.core;
+package magpiebridge.projectservice.java;
 
 import java.io.File;
 import java.nio.file.Path;

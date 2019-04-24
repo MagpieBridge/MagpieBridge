@@ -5,8 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import magpiebridge.core.JavaProjectService;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.projectservice.java.JavaProjectService;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.TextDocumentItem;

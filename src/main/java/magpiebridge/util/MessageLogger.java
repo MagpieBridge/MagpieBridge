@@ -1,10 +1,8 @@
-package magpiebridge.core;
+package magpiebridge.util;
 
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -13,7 +11,7 @@ import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
 
 /**
- * MessageLogger logs the input and output message with time stamp.
+ * MessageLogger logs the incoming and outgoing message with time stamp.
  *
  * @author Linghui Luo
  */
@@ -32,6 +30,12 @@ public class MessageLogger {
     }
   }
 
+  /**
+   * Gets the wrapper which logs the incoming and outgoing messages with time stamp and validates
+   * the messages.
+   *
+   * @return the wrapper
+   */
   public Function<MessageConsumer, MessageConsumer> getWrapper() {
     Function<MessageConsumer, MessageConsumer> wrapper =
         (MessageConsumer c) -> {
@@ -48,20 +52,7 @@ public class MessageLogger {
     return wrapper;
   }
 
-  public void copyLog(String targetDir) {
-    File file = new File(targetDir);
-    if (file.isDirectory()) {
-      if (log != null)
-        try {
-          File to = new File(targetDir + log.getName());
-          Files.copy(log, to);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-    }
-  }
-
   public void cleanUp() {
-    writer.close();
+    if (writer != null) writer.close();
   }
 }

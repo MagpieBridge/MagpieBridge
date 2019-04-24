@@ -21,15 +21,12 @@ public class MagpieWorkspaceService implements WorkspaceService {
 
   @Override
   public void didChangeConfiguration(DidChangeConfigurationParams params) {
-
     // TODO Auto-generated method stub
-
   }
 
   @Override
   public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
     // TODO Auto-generated method stub
-
   }
 
   @Override
@@ -37,7 +34,7 @@ public class MagpieWorkspaceService implements WorkspaceService {
     return CompletableFuture.supplyAsync(
         () -> {
           return server.client.applyEdit(
-              new ApplyWorkspaceEditParams(server.matchActions.get(0).getEdit()));
+              new ApplyWorkspaceEditParams(server.actionForDiags.get(0).getEdit()));
         });
   }
 }

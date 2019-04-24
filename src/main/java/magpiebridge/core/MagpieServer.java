@@ -29,14 +29,14 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import magpiebridge.file.SourceFileManager;
+import magpiebridge.util.MessageLogger;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
@@ -93,17 +93,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The code lenses. */
   protected Map<URL, List<CodeLens>> codeLenses;
 
-  /** The highlights. */
-  protected Map<URL, List<DocumentHighlight>> hightLights;
-
+  /** The code actions. */
   protected Map<URL, Map<Range, CodeAction>> codeActions;
 
-  protected List<CodeAction> matchActions;
+  /** The code actions for diagnostics. */
+  protected List<CodeAction> actionForDiags;
 
   /** The root path. */
   protected Optional<Path> rootPath;
 
-  /** The server client uri. Server-side URI mapped to Client-side URI. */
+  /** Map server-side URI to client-side URI. */
   private Map<String, String> serverClientUri;
 
   /** The connection socket. */
@@ -126,7 +125,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.hovers = new HashMap<>();
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
-    this.hightLights = new HashMap<>();
     this.serverClientUri = new HashMap<>();
     logger = new MessageLogger();
   }
@@ -187,21 +185,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.services.LanguageClient)
-   */
   @Override
   public void connect(LanguageClient client) {
     this.client = client;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.InitializeParams)
-   */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
     if (params.getRootUri() != null) {
@@ -215,7 +203,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setWorkspaceSymbolProvider(false);
     caps.setDocumentFormattingProvider(false);
     caps.setDocumentRangeFormattingProvider(false);
-    caps.setDocumentHighlightProvider(true);
+    caps.setDocumentHighlightProvider(false);
     caps.setColorProvider(false);
     caps.setDocumentSymbolProvider(false);
     caps.setDefinitionProvider(false);
@@ -227,7 +215,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     LinkedList<String> cmds = new LinkedList<String>();
-    cmds.add(CodeActionKind.QuickFix);
+    cmds.add("Fix");
     exec.setCommands(cmds);
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
@@ -235,37 +223,19 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return CompletableFuture.completedFuture(v);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.InitializedParams)
-   */
   @Override
   public void initialized(InitializedParams params) {}
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#shutdown()
-   */
   @Override
   public CompletableFuture<Object> shutdown() {
     return CompletableFuture.completedFuture(new Object());
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#exit()
-   */
   @Override
   public void exit() {
     try {
       if (connectionSocket != null) {
         connectionSocket.close();
-        if (rootPath.isPresent()) {
-          logger.copyLog(rootPath.get().toAbsolutePath().toString());
-        }
         logger.cleanUp();
       }
     } catch (IOException e) {
@@ -385,21 +355,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#getTextDocumentService()
-   */
   @Override
   public TextDocumentService getTextDocumentService() {
     return this.textDocumentService;
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.eclipse.lsp4j.services.LanguageServer#getWorkspaceService()
-   */
   @Override
   public WorkspaceService getWorkspaceService() {
     return this.workspaceService;
@@ -476,7 +436,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               e.printStackTrace();
             }
           }
-
           PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
           pdp.setDiagnostics(diagList);
           if (clientUri != null) {
@@ -487,6 +446,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return consumer;
   }
 
+  /**
+   * Check if URI is in the right format in windows.
+   * @param uri
+   * @return
+   */
   private String checkURI(String uri) {
     if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
       // take care of uri in windows
@@ -658,7 +622,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Find hover.
+   * Find hover for the given lookup position.
    *
    * @param lookupPos the lookup pos
    * @return the hover
@@ -671,40 +635,36 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return null;
   }
 
-  public List<DocumentHighlight> findHightLights(URI uri) {
-    try {
-      if (this.hightLights.containsKey(uri.toURL())) {
-        return this.hightLights.get(uri.toURL());
-      }
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    return Collections.emptyList();
-  }
-
+  /**
+   * Find code actions attached to the given diagnostics. 
+   *
+   * @param uri the uri
+   * @param diagnostics the diagnostics
+   * @return the list of code actions for the given diagnostics.
+   */
   public List<CodeAction> findCodeActions(URI uri, List<Diagnostic> diagnostics) {
-    this.matchActions = new ArrayList<>();
+    this.actionForDiags = new ArrayList<>();
     try {
       URL url = uri.toURL();
       if (this.codeActions.containsKey(url)) {
         Map<Range, CodeAction> actions = this.codeActions.get(url);
         for (Diagnostic dia : diagnostics) {
           if (actions.containsKey(dia.getRange())) {
-            matchActions.add(actions.get(dia.getRange()));
+            actionForDiags.add(actions.get(dia.getRange()));
           }
         }
       }
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
-    return matchActions;
+    return actionForDiags;
   }
 
   /**
-   * Find code lenses.
+   * Find code lenses for the given uri. 
    *
    * @param uri the uri
-   * @return the list
+   * @return the list of code lenses for the given uri.
    */
   public List<CodeLens> findCodeLenses(URI uri) {
     try {

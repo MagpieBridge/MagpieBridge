@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -17,7 +18,6 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
@@ -108,22 +108,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
             e.printStackTrace();
           }
           return codeLenses;
-        });
-  }
-
-  @Override
-  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
-      TextDocumentPositionParams params) {
-    return CompletableFuture.supplyAsync(
-        () -> {
-          List<DocumentHighlight> hightlights = new ArrayList<DocumentHighlight>();
-          String uri = params.getTextDocument().getUri();
-          try {
-            hightlights = server.findHightLights(new URI(uri));
-          } catch (URISyntaxException e) {
-            e.printStackTrace();
-          }
-          return hightlights;
         });
   }
 

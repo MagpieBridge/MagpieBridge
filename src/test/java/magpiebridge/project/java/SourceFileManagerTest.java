@@ -6,8 +6,8 @@ import com.ibm.wala.classLoader.Module;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import magpiebridge.core.SourceFileManager;
-import magpiebridge.core.VersionedSourceFile;
+import magpiebridge.file.SourceFileManager;
+import magpiebridge.file.VersionedSourceFile;
 import org.junit.Test;
 
 public class SourceFileManagerTest {
