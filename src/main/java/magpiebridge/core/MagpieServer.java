@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -28,6 +27,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
@@ -110,7 +110,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   private Socket connectionSocket;
 
   /** The logger. */
-  public StreamLogger logger;
+  public MessageLogger logger;
 
   /**
    * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link
@@ -128,7 +128,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.codeActions = new HashMap<>();
     this.hightLights = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    logger = new StreamLogger();
+    logger = new MessageLogger();
   }
 
   /**
@@ -156,9 +156,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param out the out
    */
   public void launchOnStream(InputStream in, OutputStream out) {
-    Launcher<LanguageClient> launcher =
+    Launcher<LanguageClient> launcher;
+    launcher =
         LSPLauncher.createServerLauncher(
-            this, logger.log(in), logger.log(out), true, new PrintWriter(System.err));
+            this, in, out, Executors.newCachedThreadPool(), logger.getWrapper());
     connect(launcher.getRemoteProxy());
     launcher.startListening();
   }
@@ -175,8 +176,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       Launcher<LanguageClient> launcher =
           LSPLauncher.createServerLauncher(
               this,
-              logger.log(connectionSocket.getInputStream()),
-              logger.log(connectionSocket.getOutputStream()));
+              connectionSocket.getInputStream(),
+              connectionSocket.getOutputStream(),
+              Executors.newCachedThreadPool(),
+              logger.getWrapper());
       connect(launcher.getRemoteProxy());
       launcher.startListening();
     } catch (IOException e) {
@@ -260,6 +263,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     try {
       if (connectionSocket != null) {
         connectionSocket.close();
+        if (rootPath.isPresent()) {
+          logger.copyLog(rootPath.get().toAbsolutePath().toString());
+        }
+        logger.cleanUp();
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -489,6 +496,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
     return uri;
   }
+
   /**
    * Gets the client uri.
    *
@@ -709,40 +717,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
     return Collections.emptyList();
   }
-
-  /**
-   * Log stream.
-   *
-   * @param is the is
-   * @param logFileName the log file name
-   * @return the input stream
-   */
-  //  static InputStream logStream(InputStream is, String logFileName) {
-  //    File log;
-  //    try {
-  //      log = File.createTempFile(logFileName, ".txt");
-  //      return new TeeInputStream(is, new FileOutputStream(log));
-  //    } catch (IOException e) {
-  //      return is;
-  //    }
-  //  }
-
-  /**
-   * Log stream.
-   *
-   * @param os the os
-   * @param logFileName the log file name
-   * @return the output stream
-   */
-  //  static OutputStream logStream(OutputStream os, String logFileName) {
-  //    File log;
-  //    try {
-  //      log = File.createTempFile(logFileName, ".txt");
-  //      return new TeeOutputStream(os, new FileOutputStream(log));
-  //    } catch (IOException e) {
-  //      return os;
-  //    }
-  //  }
 
   /** Clean all diagnostics. */
   public void cleanAllDiagnostics() {
