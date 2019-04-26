@@ -1,4 +1,4 @@
-package magpiebridge.project.java;
+package magpiebridge.projectservice.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
-import magpiebridge.projectservice.java.InferConfigGradle;
-import magpiebridge.projectservice.java.JavaProjectService;
 import org.junit.Test;
 
 public class JavaProjectServiceTest {

@@ -1,4 +1,4 @@
-package magpiebridge.project.java;
+package magpiebridge.projectservice.java;
 
 import static org.junit.Assert.assertEquals;
 
