@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
 /**
  * SourceCodeReader provides methods to get source code at a given {@link Position}.
  *
@@ -48,15 +49,15 @@ public class SourceCodeReader {
         } while (p.getFirstLine() > line);
 
         // first line
-        lines.add(currentLine.substring(p.getFirstCol()));
+        lines.add(removeComment(currentLine.substring(p.getFirstCol())));
 
         while (p.getLastLine() < line) {
           currentLine = reader.readLine();
           line++;
           if (p.getLastLine() == line) {
-            lines.add(currentLine.substring(0, p.getLastCol()));
+            lines.add(removeComment(currentLine.substring(0, p.getLastCol())));
           } else {
-            lines.add(currentLine);
+            lines.add(removeComment(currentLine));
           }
         }
       }
@@ -66,6 +67,21 @@ public class SourceCodeReader {
     return lines;
   }
 
+
+  /**
+   * Removes the comment in a line.
+   *
+   * @param line the line
+   * @return the string
+   */
+  public static String removeComment(String line)
+  {
+    if(line.contains("/"))
+    {
+      line=line.split("(\\s)*/")[0];
+    }
+    return line;
+  }
   /**
    * Gets the lines of code at the give position.
    *
