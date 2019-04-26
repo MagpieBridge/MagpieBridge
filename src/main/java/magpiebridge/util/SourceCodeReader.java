@@ -67,18 +67,15 @@ public class SourceCodeReader {
     return lines;
   }
 
-
   /**
    * Removes the comment in a line.
    *
    * @param line the line
    * @return the string
    */
-  public static String removeComment(String line)
-  {
-    if(line.contains("/"))
-    {
-      line=line.split("(\\s)*/")[0];
+  public static String removeComment(String line) {
+    if (line.contains("/")) {
+      line = line.split("(\\s)*/")[0];
     }
     return line;
   }
