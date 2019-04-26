@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,14 @@ public class SourceCodeReader {
   public static List<String> getLines(Position p) throws Exception {
     List<String> lines = new ArrayList<>();
     try {
-      File file = new File(p.getURL().getFile());
+      String url = p.getURL().toString();
+      if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+        // take care of url in windows
+        if (!url.startsWith("file:///")) {
+          url = url.replace("file://", "file:///");
+        }
+      }
+      File file = new File(new URL(url).getFile());
       if (file.exists() && file.isFile()) {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String currentLine = null;
