@@ -149,7 +149,7 @@ public class JimpleConverter {
     List<soot.SootClass> exceptions = new ArrayList<>();
 
     for (JavaClassType fromException : fromMethod.getExceptionSignatures()) {
-      //      soot.SootClass exception = convertSootClass(fromException);
+      // soot.SootClass exception = convertSootClass(fromException);
       soot.SootClass exception = this.getSootClass(Optional.empty(), Optional.of(fromException));
       exceptions.add(exception);
     }
@@ -610,7 +610,8 @@ public class JimpleConverter {
       } else if (from instanceof de.upb.soot.types.ReferenceType) {
         de.upb.soot.types.ReferenceType type = (de.upb.soot.types.ReferenceType) from;
         String className = type.toString();
-        return soot.RefType.v(className);
+        soot.RefType t = addRefTypeToScene(className);
+        return t;
       } else if (from instanceof de.upb.soot.types.NullType) {
         return soot.NullType.v();
       } else if (from instanceof de.upb.soot.types.VoidType) {
@@ -628,6 +629,20 @@ public class JimpleConverter {
       bytecode = bytecode | modifier.getBytecode();
     }
     return bytecode;
+  }
+
+  private soot.RefType addRefTypeToScene(String typeName) {
+    soot.RefType t = soot.RefType.v(typeName);
+    if (!t.hasSootClass())
+      Scene.v()
+          .forceResolve(
+              typeName,
+              soot.SootClass
+                  .SIGNATURES); // make sure every RefType is resolved, otherwise
+                                // TypeManager.isUnresolved will case problem in call graph
+                                // construction.
+    Scene.v().addRefType(t);
+    return t;
   }
 
   private SootMethodRef createSootMethodRef(MethodSignature methodSig, boolean isStatic) {
@@ -649,7 +664,7 @@ public class JimpleConverter {
       String typeName = typeSig.toString();
       if (Scene.v().getTypeUnsafe(typeName) == null) { // check if type is in scene
         if (!Scene.v().containsType(typeName)) {
-          Scene.v().addRefType(RefType.v(typeName));
+          addRefTypeToScene(typeName);
         }
       }
       parameterTypes.add(Scene.v().getType(typeName));
@@ -658,7 +673,7 @@ public class JimpleConverter {
     if (Scene.v().getTypeUnsafe(returnTypeName) == null) // check if type is in scene
     {
       if (!Scene.v().containsType(returnTypeName)) {
-        Scene.v().addRefType(RefType.v(returnTypeName));
+        addRefTypeToScene(returnTypeName);
       }
     }
 
