@@ -631,17 +631,18 @@ public class JimpleConverter {
     return bytecode;
   }
 
+  /**
+   * It adds RefType with the given typeName to Scene and makes sure every RefType is resolved,
+   * otherwise {@link soot.jimple.spark.internal.TypeManager#isUnresolved(soot.Type)} will case
+   * problem in call graph construction.
+   *
+   * @param typeName
+   * @return
+   */
   private soot.RefType addRefTypeToScene(String typeName) {
     soot.RefType t = soot.RefType.v(typeName);
-    if (!t.hasSootClass())
-      Scene.v()
-          .forceResolve(
-              typeName,
-              soot.SootClass
-                  .SIGNATURES); // make sure every RefType is resolved, otherwise
-                                // TypeManager.isUnresolved will case problem in call graph
-                                // construction.
-    Scene.v().addRefType(t);
+    if (!t.hasSootClass()) Scene.v().forceResolve(typeName, soot.SootClass.SIGNATURES);
+    if (!Scene.v().containsType(typeName)) Scene.v().addRefType(t);
     return t;
   }
 
@@ -663,18 +664,14 @@ public class JimpleConverter {
     for (Type typeSig : methodSig.getParameterSignatures()) {
       String typeName = typeSig.toString();
       if (Scene.v().getTypeUnsafe(typeName) == null) { // check if type is in scene
-        if (!Scene.v().containsType(typeName)) {
-          addRefTypeToScene(typeName);
-        }
+        addRefTypeToScene(typeName);
       }
       parameterTypes.add(Scene.v().getType(typeName));
     }
     String returnTypeName = methodSig.getSignature().toString();
     if (Scene.v().getTypeUnsafe(returnTypeName) == null) // check if type is in scene
     {
-      if (!Scene.v().containsType(returnTypeName)) {
-        addRefTypeToScene(returnTypeName);
-      }
+      addRefTypeToScene(returnTypeName);
     }
 
     soot.Type returnType = Scene.v().getType(returnTypeName);
