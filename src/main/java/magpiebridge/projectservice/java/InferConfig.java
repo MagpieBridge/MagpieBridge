@@ -25,7 +25,8 @@ import java.util.stream.Stream;
 /**
  * @author George Fraser
  * @see https://github.com/georgewfraser/java-language-server.git
- *     <p>Modified and extended by Linghui Luo & Christian Brüggemann
+ * @author Linghui Luo
+ * @author Christian Brüggemann
  */
 public class InferConfig {
   private static final Logger LOG = Logger.getLogger("main");
@@ -80,7 +81,6 @@ public class InferConfig {
     HashSet<Path> result = new HashSet<>();
     result.addAll(buildClassPath());
     Set<Path> workspaceClassPath = workspaceClassPath();
-    LOG.info("Workspace Class Path:" + workspaceClassPath);
     result.addAll(workspaceClassPath);
     return result;
   }
