@@ -4,7 +4,6 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,44 +24,48 @@ public class SourceCodeReader {
    * @throws Exception the exception
    */
   @SuppressWarnings("resource")
-  public static List<String> getLines(Position p) throws Exception {
+  public static List<String> getLines(Position p) {
     List<String> lines = new ArrayList<>();
-    try {
-      String url = p.getURL().toString();
-      if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-        // take care of url in windows
-        if (!url.startsWith("file:///")) {
-          url = url.replace("file://", "file:///");
-        }
+
+    String url = p.getURL().toString();
+    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+      // take care of url in windows
+      if (!url.startsWith("file:///")) {
+        url = url.replace("file://", "file:///");
       }
+    }
+    try {
       File file = new File(new URL(url).getFile());
       if (file.exists() && file.isFile()) {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        String currentLine = null;
-        int line = 0;
-        do {
-          currentLine = reader.readLine();
-          if (currentLine == null) {
-            return lines;
-          }
-          line++;
-        } while (p.getFirstLine() > line);
+        try (FileReader freader = new FileReader(file);
+            BufferedReader reader = new BufferedReader(freader)) {
 
-        // first line
-        lines.add(removeComment(currentLine.substring(p.getFirstCol())));
+          String currentLine = null;
+          int line = 0;
+          do {
+            currentLine = reader.readLine();
+            if (currentLine == null) {
+              return lines;
+            }
+            line++;
+          } while (p.getFirstLine() > line);
 
-        while (p.getLastLine() < line) {
-          currentLine = reader.readLine();
-          line++;
-          if (p.getLastLine() == line) {
-            lines.add(removeComment(currentLine.substring(0, p.getLastCol())));
-          } else {
-            lines.add(removeComment(currentLine));
+          // first line
+          lines.add(removeComment(currentLine.substring(p.getFirstCol())));
+
+          while (p.getLastLine() < line) {
+            currentLine = reader.readLine();
+            line++;
+            if (p.getLastLine() == line) {
+              lines.add(removeComment(currentLine.substring(0, p.getLastCol())));
+            } else {
+              lines.add(removeComment(currentLine));
+            }
           }
         }
       }
-    } catch (IOException e) {
-      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
     return lines;
   }
@@ -79,6 +82,7 @@ public class SourceCodeReader {
     }
     return line;
   }
+
   /**
    * Gets the lines of code at the give position.
    *

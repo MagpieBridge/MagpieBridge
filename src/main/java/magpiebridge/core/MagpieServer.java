@@ -237,14 +237,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   @Override
   public void exit() {
+    logger.cleanUp();
     try {
       if (connectionSocket != null) {
         connectionSocket.close();
-        logger.cleanUp();
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
+    System.exit(0);
   }
 
   /**

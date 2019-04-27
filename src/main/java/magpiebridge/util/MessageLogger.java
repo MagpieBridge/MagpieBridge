@@ -15,8 +15,9 @@ import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
  *
  * @author Linghui Luo
  */
-public class MessageLogger {
+public final class MessageLogger {
   private PrintWriter writer;
+  private FileOutputStream logStream;
   private File log;
 
   public MessageLogger() {
@@ -24,7 +25,8 @@ public class MessageLogger {
     String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
     log = new File(tempDir + "magpie_trace_" + suffix);
     try {
-      writer = new PrintWriter(new FileOutputStream(log));
+      logStream = new FileOutputStream(log);
+      writer = new PrintWriter(logStream);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
@@ -53,6 +55,11 @@ public class MessageLogger {
   }
 
   public void cleanUp() {
+    try {
+      if (logStream != null) logStream.close();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
     if (writer != null) writer.close();
   }
 }
