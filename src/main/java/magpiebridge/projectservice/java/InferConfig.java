@@ -339,6 +339,11 @@ public class InferConfig {
     return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".{aar,jar}";
   }
 
+  /**
+   * This method runs the command <code>mvn dependency:list</code> to get all dependencies.
+   *
+   * @return the collection
+   */
   private Collection<Artifact> mvnDependencies() {
     Path pomXml = workspaceRoot.resolve("pom.xml");
     try {
@@ -371,6 +376,7 @@ public class InferConfig {
   private static String getMvnCommand() {
     String mvnCommand = "mvn";
     if (File.separatorChar == '\\') {
+      // handle windows
       mvnCommand = findExecutableOnPath("mvn.cmd");
       if (mvnCommand == null) {
         mvnCommand = findExecutableOnPath("mvn.bat");

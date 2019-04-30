@@ -134,15 +134,20 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Instantiates a new magpie server using given {@link TextDocumentService} and {@link
-   * WorkspaceService}.
+   * Sets customized text document service.
    *
-   * @param textDocumentService the text document service
-   * @param workspaceService the workspace service
+   * @param textDocumentService the new text document service
    */
-  public MagpieServer(TextDocumentService textDocumentService, WorkspaceService workspaceService) {
-    this();
+  public void setTextDocumentService(TextDocumentService textDocumentService) {
     this.textDocumentService = textDocumentService;
+  }
+
+  /**
+   * Sets customized workspace service.
+   *
+   * @param workspaceService the new workspace service
+   */
+  public void setWorkspaceService(WorkspaceService workspaceService) {
     this.workspaceService = workspaceService;
   }
 
@@ -371,6 +376,15 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       pdp.setUri(clientUri);
       client.publishDiagnostics(pdp);
     }
+  }
+
+  public List<Diagnostic> getDiagnostics(URL url) {
+    if (this.diagnostics.containsKey(url)) return diagnostics.get(url);
+    else return new ArrayList<>();
+  }
+
+  public void sendDiagnostics(PublishDiagnosticsParams pdp) {
+    client.publishDiagnostics(pdp);
   }
 
   @Override
