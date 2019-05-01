@@ -112,7 +112,7 @@ public class JimpleConverter {
     for (IMethod method : fromClass.getMethods()) {
       de.upb.soot.core.SootMethod fromMethod = (de.upb.soot.core.SootMethod) method;
       soot.SootMethod m = convertSootMethod(toClass, fromMethod);
-      if (toClass.getMethodByNameUnsafe(m.getName()) == null) {
+      if (toClass.getMethodUnsafe(m.getSubSignature()) == null) {
         toClass.addMethod(m);
         m.setDeclaringClass(toClass);
         m.setDeclared(true);
