@@ -31,4 +31,14 @@ public class CodeActionGenerator {
     // codeAction.setCommand(new Command(title, CodeActionKind.QuickFix, new ArrayList<>()));
     return codeAction;
   }
+
+  public static CodeAction reportFalsePositive(String title, String uri, Diagnostic diag) {
+    CodeAction codeAction = new CodeAction(title);
+    codeAction.setKind(CodeActionKind.Source);
+    List<Object> args = new ArrayList<>();
+    args.add(uri);
+    args.add(diag);
+    codeAction.setCommand(new Command(title, "reportFP", args));
+    return codeAction;
+  }
 }

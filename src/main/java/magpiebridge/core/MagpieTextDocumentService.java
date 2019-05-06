@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -21,6 +22,8 @@ import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -36,6 +39,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   /** The server. */
   protected final MagpieServer server;
 
+  private boolean isFirstOpenedFile;
   /**
    * Instantiates a new magpie text document service.
    *
@@ -43,6 +47,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
    */
   public MagpieTextDocumentService(MagpieServer server) {
     this.server = server;
+    this.isFirstOpenedFile = true;
   }
 
   @Override
@@ -58,7 +63,12 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    server.doAnalysis(language);
+    if (isFirstOpenedFile) {
+      server.client.showMessage(
+          new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
+      server.doAnalysis(language);
+      isFirstOpenedFile = false;
+    }
   }
 
   @Override
@@ -68,7 +78,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didChange(params);
     // TODO. it should be customized to clean all or just this changed file
-    server.cleanUp();
+    // server.cleanUp();
   }
 
   @Override
@@ -76,6 +86,9 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
+    server.cleanUp();
+    server.client.showMessage(
+        new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language);
@@ -127,8 +140,9 @@ public class MagpieTextDocumentService implements TextDocumentService {
                 server.findCodeActions(new URI(decodedUri), params.getContext().getDiagnostics());
             for (CodeAction action : matchedActions) {
               // FIXME. VSCode expects CodeAction, but Sublime expects Command. Now just send both
-              actions.add(Either.forRight(action));
-              // actions.add(Either.forLeft(action.getCommand()));
+              if (action.getKind().equals(CodeActionKind.QuickFix))
+                actions.add(Either.forRight(action));
+              else actions.add(Either.forLeft(action.getCommand()));
             }
           } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();

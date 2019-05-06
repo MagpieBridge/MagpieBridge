@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -46,6 +47,8 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerCapabilities;
@@ -96,10 +99,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   protected Map<URL, List<CodeLens>> codeLenses;
 
   /** The code actions. */
-  protected Map<URL, Map<Range, CodeAction>> codeActions;
+  protected Map<URL, Map<Range, List<CodeAction>>> codeActions;
 
   /** The code actions for diagnostics. */
   protected List<CodeAction> actionForDiags;
+
+  protected Map<String, Set<Pair<String, String>>> falsePositives;
 
   /** The root path. */
   protected Optional<Path> rootPath;
@@ -130,6 +135,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
+    this.falsePositives = new HashMap<>();
     logger = new MessageLogger();
   }
 
@@ -224,7 +230,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     LinkedList<String> cmds = new LinkedList<String>();
-    cmds.add("Fix");
+    cmds.add("reportFP");
     exec.setCommands(cmds);
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
@@ -354,7 +360,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               diagList = new ArrayList<>();
               this.diagnostics.put(clientURL, diagList);
             }
-            createDiagnosticConsumer(publishDiags, diagList, source).accept(result);
+            if (!isFalsePositive(result)) {
+              createDiagnosticConsumer(publishDiags, diagList, source).accept(result);
+            }
             break;
           case Hover:
             createHoverConsumer().accept(result);
@@ -376,6 +384,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       pdp.setUri(clientUri);
       client.publishDiagnostics(pdp);
     }
+    client.showMessage(
+        new MessageParams(MessageType.Info, "The analyzer finished analyzing the code."));
   }
 
   public List<Diagnostic> getDiagnostics(URL url) {
@@ -408,6 +418,26 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
+   * Checks if the result was reported as false positive by comparing code and message.
+   *
+   * @param result the result
+   * @return true, if the result was reported as false positive
+   */
+  private boolean isFalsePositive(AnalysisResult result) {
+    String serverUri = result.position().getURL().toString();
+    String clientUri = getClientUri(serverUri);
+    for (String uri : falsePositives.keySet()) {
+      if (uri.equals(clientUri)) {
+        for (Pair<String, String> fp : falsePositives.get(clientUri)) {
+          if (result.code().equals(fp.fst) && result.toString(false).equals(fp.snd)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  /**
    * Creates the diagnostic consumer.
    *
    * @param publishDiags map uri to the diag list to be published for the client.
@@ -423,6 +453,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           d.setMessage(result.toString(false));
           d.setRange(getLocationFrom(result.position()).getRange());
           d.setSource(source);
+          d.setCode(result.code());
           List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
           for (Pair<Position, String> related : result.related()) {
             DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
@@ -437,16 +468,19 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           }
           String serverUri = result.position().getURL().toString();
           String clientUri = getClientUri(serverUri);
-          // add code action (quickfix) related to analysis result
-          if (result.repair() != null) {
-            try {
-              URL url = new URL(clientUri);
-              if (!this.codeActions.containsKey(url)) {
-                this.codeActions.put(url, new HashMap<>());
-              }
+          try {
+            URL url = new URL(clientUri);
+            if (!this.codeActions.containsKey(url)) {
+              this.codeActions.put(url, new HashMap<>());
+            }
+            Map<Range, List<CodeAction>> actionList = this.codeActions.get(url);
+            if (!actionList.containsKey(d.getRange())) {
+              actionList.put(d.getRange(), new ArrayList<>());
+            }
+            if (result.repair() != null) {
+              // add code action (quickfix) related to analysis result
               Position fixPos = result.repair().fst;
               if (fixPos != null) {
-                Map<Range, CodeAction> actionList = this.codeActions.get(url);
                 Range range = new Range();
                 String replace = result.repair().snd;
                 range.setStart(
@@ -461,13 +495,20 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                         replace,
                         clientUri,
                         Collections.singletonList(d));
-                if (!actionList.containsKey(d.getRange())) {
-                  actionList.put(d.getRange(), action);
-                }
+                List<CodeAction> actions = actionList.get(d.getRange());
+                if (!actions.contains(action)) actions.add(action);
+                actionList.put(d.getRange(), actions);
               }
-            } catch (MalformedURLException e) {
-              e.printStackTrace();
             }
+            // report false positive
+            String title = String.format("Report it as false alarm: \"%s\"", d.getMessage());
+            CodeAction reportFalsePositive =
+                CodeActionGenerator.reportFalsePositive(title, clientUri, d);
+            List<CodeAction> actions = actionList.get(d.getRange());
+            if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
+            actionList.put(d.getRange(), actions);
+          } catch (MalformedURLException e) {
+            e.printStackTrace();
           }
           if (clientUri != null) {
             publishDiags.put(clientUri, diagList);
@@ -786,10 +827,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     try {
       URL url = uri.toURL();
       if (this.codeActions.containsKey(url)) {
-        Map<Range, CodeAction> actions = this.codeActions.get(url);
+        Map<Range, List<CodeAction>> actions = this.codeActions.get(url);
         for (Diagnostic dia : diagnostics) {
           if (actions.containsKey(dia.getRange())) {
-            actionForDiags.add(actions.get(dia.getRange()));
+            return actions.get(dia.getRange());
           }
         }
       }
@@ -809,5 +850,23 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.codeActions.clear();
     this.hovers.clear();
     this.codeLenses.clear();
+  }
+
+  /**
+   * Record false positive reported by the user.
+   *
+   * @param uri the uri
+   * @param diag the code and message in the reported diagnositic
+   */
+  /*
+   *
+   */
+  protected void recordFalsePositive(String uri, Pair<String, String> diag) {
+    if (!falsePositives.containsKey(uri)) {
+      this.falsePositives.put(uri, new HashSet<Pair<String, String>>());
+    }
+    Set<Pair<String, String>> dias = this.falsePositives.get(uri);
+    dias.add(diag);
+    this.falsePositives.put(uri, dias);
   }
 }
