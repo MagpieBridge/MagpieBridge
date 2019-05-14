@@ -26,8 +26,12 @@ public class CodeActionGenerator {
     WorkspaceEdit edit = new WorkspaceEdit(changes);
     codeAction.setKind(CodeActionKind.QuickFix);
     codeAction.setEdit(edit);
-    codeAction.setCommand(
-        new Command(title + "(Command)", CodeActionKind.QuickFix, new ArrayList<>()));
+    codeAction.setDiagnostics(diags);
+    List<Object> args = new ArrayList<>();
+    for (Diagnostic diag : diags) {
+      args.add(diag);
+    }
+    codeAction.setCommand(new Command(title + "(Command)", CodeActionKind.QuickFix, args));
     // codeAction.setCommand(new Command(title, CodeActionKind.QuickFix, new ArrayList<>()));
     return codeAction;
   }
