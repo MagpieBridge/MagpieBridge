@@ -34,6 +34,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
@@ -104,7 +105,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The code actions for diagnostics. */
   protected List<CodeAction> actionForDiags;
 
-  protected Map<String, Set<Pair<String, String>>> falsePositives;
+  protected Map<String, Set<Triple<Integer, String, String>>> falsePositives;
 
   /** The root path. */
   protected Optional<Path> rootPath;
@@ -231,6 +232,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     LinkedList<String> cmds = new LinkedList<String>();
     cmds.add("reportFP");
+    cmds.add("reportConfusion");
     exec.setCommands(cmds);
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
@@ -428,8 +430,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     String clientUri = getClientUri(serverUri);
     for (String uri : falsePositives.keySet()) {
       if (uri.equals(clientUri)) {
-        for (Pair<String, String> fp : falsePositives.get(clientUri)) {
-          if (result.code().equals(fp.fst) && result.toString(false).equals(fp.snd)) {
+        for (Triple<Integer, String, String> fp : falsePositives.get(clientUri)) {
+          int diff = Math.abs((result.position().getFirstLine() + 1) - fp.getLeft());
+          int threshold = 5;
+          if (diff < threshold
+              && result.code().equals(fp.getMiddle())
+              && result.toString(false).equals(fp.getRight())) {
             return true;
           }
         }
@@ -490,7 +496,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                     new org.eclipse.lsp4j.Position(fixPos.getLastLine() - 1, fixPos.getLastCol()));
                 CodeAction action =
                     CodeActionGenerator.replace(
-                        "Replace it with " + replace,
+                        "Fix: replace it with " + replace,
                         range,
                         replace,
                         clientUri,
@@ -500,12 +506,18 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                 actionList.put(d.getRange(), actions);
               }
             }
-            // report false positive
-            String title = String.format("Report it as false alarm: \"%s\"", d.getMessage());
-            CodeAction reportFalsePositive =
-                CodeActionGenerator.reportFalsePositive(title, clientUri, d);
             List<CodeAction> actions = actionList.get(d.getRange());
+            // report false positive
+            String title = String.format("Report it as false alarm (%s).", d.getMessage());
+            CodeAction reportFalsePositive =
+                CodeActionGenerator.generateCommandAction(title, clientUri, d, "reportFP");
             if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
+            // report confusion about the warning message
+            title = String.format("I don't understand this warning message (%s).", d.getMessage());
+            CodeAction reportConfusion =
+                CodeActionGenerator.generateCommandAction(title, clientUri, d, "reportConfusion");
+            if (!actions.contains(reportConfusion)) actions.add(reportConfusion);
+
             actionList.put(d.getRange(), actions);
           } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -861,11 +873,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /*
    *
    */
-  protected void recordFalsePositive(String uri, Pair<String, String> diag) {
+  protected void recordFalsePositive(String uri, Triple<Integer, String, String> diag) {
     if (!falsePositives.containsKey(uri)) {
-      this.falsePositives.put(uri, new HashSet<Pair<String, String>>());
+      this.falsePositives.put(uri, new HashSet<Triple<Integer, String, String>>());
     }
-    Set<Pair<String, String>> dias = this.falsePositives.get(uri);
+    Set<Triple<Integer, String, String>> dias = this.falsePositives.get(uri);
     dias.add(diag);
     this.falsePositives.put(uri, dias);
   }

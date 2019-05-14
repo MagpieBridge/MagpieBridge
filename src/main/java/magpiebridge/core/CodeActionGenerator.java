@@ -32,13 +32,14 @@ public class CodeActionGenerator {
     return codeAction;
   }
 
-  public static CodeAction reportFalsePositive(String title, String uri, Diagnostic diag) {
+  public static CodeAction generateCommandAction(
+      String title, String uri, Diagnostic diag, String cmd) {
     CodeAction codeAction = new CodeAction(title);
     codeAction.setKind(CodeActionKind.Source);
     List<Object> args = new ArrayList<>();
     args.add(uri);
     args.add(diag);
-    codeAction.setCommand(new Command(title, "reportFP", args));
+    codeAction.setCommand(new Command(title, cmd, args));
     return codeAction;
   }
 }

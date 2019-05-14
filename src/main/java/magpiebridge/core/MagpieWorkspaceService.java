@@ -2,11 +2,11 @@ package magpiebridge.core;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.wala.util.collections.Pair;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -48,15 +48,28 @@ public class MagpieWorkspaceService implements WorkspaceService {
             List<Object> args = params.getArguments();
             JsonPrimitive uri = (JsonPrimitive) args.get(0);
             JsonObject jdiag = (JsonObject) args.get(1);
-            // just record code and message to identify diagnositc.
-            Pair<String, String> diag =
-                Pair.make(jdiag.get("code").getAsString(), jdiag.get("message").getAsString());
+            // just record start line number, code and message to identify diagnostic.
+            int lineNumber =
+                jdiag
+                    .get("range")
+                    .getAsJsonObject()
+                    .get("start")
+                    .getAsJsonObject()
+                    .get("line")
+                    .getAsInt();
+            String code = jdiag.get("code").getAsString();
+            String message = jdiag.get("message").getAsString();
+            Triple<Integer, String, String> diag = Triple.of(lineNumber, code, message);
             try {
               String decodedUri = URLDecoder.decode(uri.getAsString(), "UTF-8");
               server.recordFalsePositive(decodedUri, diag);
             } catch (UnsupportedEncodingException e) {
               e.printStackTrace();
             }
+            return null;
+          } else if (command.equals("reportConfusion")) {
+            server.client.showMessage(
+                new MessageParams(MessageType.Info, "Thank you for your feedback!"));
             return null;
           } else
             return server.client.applyEdit(
