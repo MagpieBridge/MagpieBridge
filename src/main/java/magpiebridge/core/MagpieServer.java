@@ -425,7 +425,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param result the result
    * @return true, if the result was reported as false positive
    */
-  private boolean isFalsePositive(AnalysisResult result) {
+  protected boolean isFalsePositive(AnalysisResult result) {
     String serverUri = result.position().getURL().toString();
     String clientUri = getClientUri(serverUri);
     for (String uri : falsePositives.keySet()) {
@@ -613,7 +613,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param serverUri the server uri
    * @return the client uri
    */
-  private String getClientUri(String serverUri) {
+  protected String getClientUri(String serverUri) {
     serverUri = checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {

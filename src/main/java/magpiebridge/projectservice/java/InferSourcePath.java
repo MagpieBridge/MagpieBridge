@@ -107,6 +107,10 @@ public class InferSourcePath {
               .ifPresent(
                   root -> {
                     int count = sourceRoots.getOrDefault(root, 0);
+                    if (!root.startsWith(
+                        workspaceRoot
+                            + File.separator
+                            + "target")) // filter generated java files of maven projects.
                     sourceRoots.put(root, count + 1);
                   });
         }
