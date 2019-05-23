@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
@@ -139,10 +138,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
             List<CodeAction> matchedActions =
                 server.findCodeActions(new URI(decodedUri), params.getContext().getDiagnostics());
             for (CodeAction action : matchedActions) {
-              // FIXME. VSCode expects CodeAction, but Sublime expects Command. Now just send both
-              if (action.getKind().equals(CodeActionKind.QuickFix))
-                actions.add(Either.forRight(action));
-              else actions.add(Either.forLeft(action.getCommand()));
+              actions.add(Either.forLeft(action.getCommand()));
             }
           } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();

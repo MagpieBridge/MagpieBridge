@@ -231,8 +231,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
     LinkedList<String> cmds = new LinkedList<String>();
-    cmds.add("reportFP");
-    cmds.add("reportConfusion");
+    cmds.add(CodeActionCommand.fix.name());
+    cmds.add(CodeActionCommand.reportFP.name());
+    cmds.add(CodeActionCommand.reportConfusion.name());
     exec.setCommands(cmds);
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
@@ -443,6 +444,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
     return false;
   }
+
   /**
    * Creates the diagnostic consumer.
    *
@@ -496,11 +498,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                     new org.eclipse.lsp4j.Position(fixPos.getLastLine() - 1, fixPos.getLastCol()));
                 CodeAction action =
                     CodeActionGenerator.replace(
-                        "Fix: replace it with " + replace,
-                        range,
-                        replace,
-                        clientUri,
-                        Collections.singletonList(d));
+                        "Fix: replace it with " + replace, range, replace, clientUri, d);
                 List<CodeAction> actions = actionList.get(d.getRange());
                 if (!actions.contains(action)) actions.add(action);
                 actionList.put(d.getRange(), actions);
@@ -510,12 +508,14 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
             // report false positive
             String title = String.format("Report it as false alarm (%s).", d.getMessage());
             CodeAction reportFalsePositive =
-                CodeActionGenerator.generateCommandAction(title, clientUri, d, "reportFP");
+                CodeActionGenerator.generateCommandAction(
+                    title, clientUri, d, CodeActionCommand.reportFP.name());
             if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
             // report confusion about the warning message
             title = String.format("I don't understand this warning message (%s).", d.getMessage());
             CodeAction reportConfusion =
-                CodeActionGenerator.generateCommandAction(title, clientUri, d, "reportConfusion");
+                CodeActionGenerator.generateCommandAction(
+                    title, clientUri, d, CodeActionCommand.reportConfusion.name());
             if (!actions.contains(reportConfusion)) actions.add(reportConfusion);
 
             actionList.put(d.getRange(), actions);
