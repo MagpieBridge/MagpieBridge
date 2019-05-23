@@ -22,6 +22,10 @@ public final class MessageLogger {
 
   public MessageLogger() {
     String tempDir = System.getProperty("java.io.tmpdir");
+    String seperator = System.getProperty("file.separator");
+    if (!tempDir.endsWith(seperator)){
+      tempDir += seperator;
+    }
     String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
     log = new File(tempDir + "magpie_trace_" + suffix);
     try {
