@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import soot.G;
 import soot.PackManager;
@@ -38,7 +40,7 @@ public class WalaClassLoaderTest {
 
   private boolean flag = false;
 
-  @Test
+  @Ignore
   public void testAndroidProject() {
     LoadClassesFromFutureSootAndOldSoot();
     PackManager.v().getPack("cg").apply();

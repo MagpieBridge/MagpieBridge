@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import soot.G;
 import soot.Scene;
@@ -49,7 +50,7 @@ public class JimpleConverterTest {
     // writer.close();
   }
 
-  @Test
+  @Ignore
   public void testSimple1() {
     declareClassSig = defaultFactories.getTypeFactory().getClassType("Simple1");
     Optional<SootClass> c = loader.getSootClass(declareClassSig);
@@ -57,7 +58,7 @@ public class JimpleConverterTest {
     klass = c.get();
   }
 
-  @Test
+  @Ignore
   public void testVarDeclInSwitch() {
     declareClassSig = defaultFactories.getTypeFactory().getClassType("bugfixes.VarDeclInSwitch");
     Optional<SootClass> c = loader.getSootClass(declareClassSig);
