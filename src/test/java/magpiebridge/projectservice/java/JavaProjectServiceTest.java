@@ -53,7 +53,7 @@ public class JavaProjectServiceTest {
     assertTrue(ps.getClassPath().contains(root.resolve("build").resolve("classes")));
   }
 
-  @Test
+  @Ignore
   public void testAndroidGradleProjectLocalRepo() throws IOException, InterruptedException {
     // This tests the old Android project format that does not use the public repo
     // maven.google.com, but instead a local one inside the Android SDK installation
@@ -83,7 +83,7 @@ public class JavaProjectServiceTest {
 
     JavaProjectService ps = new JavaProjectService();
     ps.setRootPath(root);
-    // assertEquals(5, ps.getClassPath().size());
+    assertEquals(5, ps.getClassPath().size());
     assertEquals(4, ps.getLibraryPath().size());
 
     // Ensure that a library was found not in the global Gradle cache, but inside the Android SDK
