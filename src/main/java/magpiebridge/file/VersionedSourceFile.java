@@ -1,4 +1,4 @@
-package magpiebridge.core;
+package magpiebridge.file;
 
 /**
  * This class represents a versioned source file.

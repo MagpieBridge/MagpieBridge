@@ -1,4 +1,4 @@
-package magpiebridge.project.java;
+package magpiebridge.projectservice.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -6,9 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import magpiebridge.core.AndroidProjectService;
-import magpiebridge.core.JavaProjectService;
-import magpiebridge.projectservice.java.InferConfigGradle;
 import org.junit.Test;
 
 public class AndroidProjectServiceTest {

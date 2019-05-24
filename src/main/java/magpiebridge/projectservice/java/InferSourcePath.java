@@ -21,10 +21,10 @@ import java.util.stream.Stream;
 /**
  * Infer the source path from a given project root path. Instead using the Parser from Java JDK
  * tool.jar from the original version, we use com.github.javaparser.JavaParser here. Modified by
- * Linghui Luo
+ * Code adapted from https://github.com/georgewfraser/java-language-server.git
  *
  * @author George Fraser
- * @see https://github.com/georgewfraser/java-language-server.git
+ * @author Linghui Luo
  */
 public class InferSourcePath {
 
@@ -74,9 +74,13 @@ public class InferSourcePath {
             packageName = cu.getPackageDeclaration().get().getNameAsString();
             packageNames.add(packageName);
             classFullQualifiedNames.add(packageName + "." + cu.getPrimaryTypeName().get());
-          } else classFullQualifiedNames.add(cu.getPrimaryTypeName().get());
+          } else {
+            classFullQualifiedNames.add(cu.getPrimaryTypeName().get());
+          }
         }
-        if (packageName.length() == 0) return Optional.of(java.getParent());
+        if (packageName.length() == 0) {
+          return Optional.of(java.getParent());
+        }
         String packagePath = packageName.replace('.', File.separatorChar);
         Path dir = java.getParent();
         if (!dir.endsWith(packagePath)) {
@@ -103,6 +107,10 @@ public class InferSourcePath {
               .ifPresent(
                   root -> {
                     int count = sourceRoots.getOrDefault(root, 0);
+                    if (!root.startsWith(
+                        workspaceRoot
+                            + File.separator
+                            + "target")) // filter generated java files of maven projects.
                     sourceRoots.put(root, count + 1);
                   });
         }

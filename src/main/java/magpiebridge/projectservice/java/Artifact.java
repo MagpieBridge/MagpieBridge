@@ -3,9 +3,10 @@ package magpiebridge.projectservice.java;
 import java.util.Objects;
 
 /**
+ * Code adapted from https://github.com/georgewfraser/java-language-server.git
+ *
  * @author George Fraser
- * @see https://github.com/georgewfraser/java-language-server.git
- *     <p>Modified by Linghui Luo
+ * @author Linghui Luo
  */
 public class Artifact {
   protected final String groupId, artifactId, version;

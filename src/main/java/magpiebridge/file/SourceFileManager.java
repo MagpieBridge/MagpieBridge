@@ -1,4 +1,4 @@
-package magpiebridge.core;
+package magpiebridge.file;
 
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;
@@ -109,8 +109,9 @@ public class SourceFileManager {
         writer.write(reader.readLine() + '\n');
         line++;
       }
-      for (int character = 0; character < range.getStart().getCharacter(); character++)
+      for (int character = 0; character < range.getStart().getCharacter(); character++) {
         writer.write(reader.read());
+      }
       // write the changed text
       writer.write(change.getText());
       // skip the old text

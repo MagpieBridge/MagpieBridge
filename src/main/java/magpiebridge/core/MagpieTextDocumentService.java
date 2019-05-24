@@ -1,13 +1,16 @@
 package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -17,8 +20,9 @@ import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.MessageParams;
+import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -34,6 +38,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   /** The server. */
   protected final MagpieServer server;
 
+  private boolean isFirstOpenedFile;
   /**
    * Instantiates a new magpie text document service.
    *
@@ -41,43 +46,48 @@ public class MagpieTextDocumentService implements TextDocumentService {
    */
   public MagpieTextDocumentService(MagpieServer server) {
     this.server = server;
+    this.isFirstOpenedFile = true;
   }
 
   @Override
   public void didOpen(DidOpenTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
     // set the rootPath for project service if it is not set yet.
     if (server.rootPath.isPresent()) {
-      if (server.getProjectService(language).isPresent())
+      if (server.getProjectService(language).isPresent()) {
         server.getProjectService(language).get().setRootPath(server.rootPath.get());
+      }
     }
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    server.doAnalysis(language);
+    if (isFirstOpenedFile) {
+      server.client.showMessage(
+          new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
+      server.doAnalysis(language);
+      isFirstOpenedFile = false;
+    }
   }
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
-    // update the changed file in file manager and clean diagnostics.
+    // update the changed file in file manager
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didChange(params);
-    // TODO. it should be customized to clean all or just this changed file
-    server.cleanAllDiagnostics();
+    // TODO. it could be customized to clean all diagnostics.
+    // server.cleanUp();
   }
 
   @Override
-  public void didClose(DidCloseTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
-  }
+  public void didClose(DidCloseTextDocumentParams params) {}
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    server.logger.logClientMsg(params.toString());
+    server.cleanUp();
+    server.client.showMessage(
+        new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language);
@@ -90,10 +100,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
           Hover hover = new Hover();
           try {
             String uri = position.getTextDocument().getUri();
-            URL url = new URI(uri).toURL();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
+            URL url = new URI(decodedUri).toURL();
             Position lookupPos = server.lookupPos(position.getPosition(), url);
             hover = server.findHover(lookupPos);
-          } catch (MalformedURLException | URISyntaxException e) {
+          } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return hover;
@@ -105,29 +116,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
     return CompletableFuture.supplyAsync(
         () -> {
           List<CodeLens> codeLenses = new ArrayList<CodeLens>();
-          String uri = params.getTextDocument().getUri();
           try {
-            codeLenses = server.findCodeLenses(new URI(uri));
-          } catch (URISyntaxException e) {
+            String uri = params.getTextDocument().getUri();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
+            codeLenses = server.findCodeLenses(new URI(decodedUri));
+          } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return codeLenses;
-        });
-  }
-
-  @Override
-  public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(
-      TextDocumentPositionParams params) {
-    return CompletableFuture.supplyAsync(
-        () -> {
-          List<DocumentHighlight> hightlights = new ArrayList<DocumentHighlight>();
-          String uri = params.getTextDocument().getUri();
-          try {
-            hightlights = server.findHightLights(new URI(uri));
-          } catch (URISyntaxException e) {
-            e.printStackTrace();
-          }
-          return hightlights;
         });
   }
 
@@ -138,14 +134,13 @@ public class MagpieTextDocumentService implements TextDocumentService {
           List<Either<Command, CodeAction>> actions = new ArrayList<>();
           try {
             String uri = params.getTextDocument().getUri();
+            String decodedUri = URLDecoder.decode(uri, "UTF-8");
             List<CodeAction> matchedActions =
-                server.findCodeActions(new URI(uri), params.getContext().getDiagnostics());
+                server.findCodeActions(new URI(decodedUri), params.getContext().getDiagnostics());
             for (CodeAction action : matchedActions) {
-              // FIXME. VSCode expects CodeAction, but Sublime expects Command. Now just send both
-              actions.add(Either.forRight(action));
-              // actions.add(Either.forLeft(action.getCommand()));
+              actions.add(Either.forLeft(action.getCommand()));
             }
-          } catch (URISyntaxException e) {
+          } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           return actions;
@@ -159,9 +154,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
    * @return the string
    */
   private String inferLanguage(String uri) {
-    if (uri.endsWith(".java")) return "java";
-    else if (uri.endsWith(".py")) return "python";
-    else if (uri.endsWith(".js")) return "javascript";
-    else throw new UnsupportedOperationException();
+    if (uri.endsWith(".java")) {
+      return "java";
+    } else if (uri.endsWith(".py")) {
+      return "python";
+    } else if (uri.endsWith(".js")) {
+      return "javascript";
+    } else {
+      throw new UnsupportedOperationException();
+    }
   }
 }

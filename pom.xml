@@ -7,12 +7,15 @@
 	<artifactId>magpiebridge</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-
 	<name>magpiebridge</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/MagpieBridge/MagpieBridge</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   		<soot.version>3.3.0</soot.version>
+   		<futuresoot.version>4.0.0.3</futuresoot.version>
+   		<wala.version>1.5.3.2</wala.version>
+   		<lsp4j.version>0.7.1</lsp4j.version>
 	</properties>
 
 	<dependencies>
@@ -21,31 +24,45 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency>	
+		<!-- lsp4j -->
 		<dependency>
 			<groupId>org.eclipse.lsp4j</groupId>
 			<artifactId>org.eclipse.lsp4j</artifactId>
-			<version>0.5.0</version>
+			<version>${lsp4j.version}</version>
 		</dependency>
+		<!-- soot  -->
+		<dependency>
+		 	<groupId>ca.mcgill.sable</groupId>
+   			 <artifactId>soot</artifactId>
+    		<version>${soot.version}</version>
+    	</dependency>
+    	<!-- futureSoot -->
+		<dependency>
+			<groupId>de.upb</groupId>
+			<artifactId>Soot</artifactId>
+			<version>${futuresoot.version}</version>
+		</dependency>
+		<!-- wala  -->
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
-			<version>1.5.3.2</version>
+			<version>${wala.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.cast</artifactId>
-			<version>1.5.3.2</version>
+			<version>${wala.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.cast.java</artifactId>
-			<version>1.5.3.2</version>
+			<version>${wala.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.util</artifactId>
-			<version>1.5.3.2</version>
+			<version>${wala.version}</version>
 		</dependency>
 		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>

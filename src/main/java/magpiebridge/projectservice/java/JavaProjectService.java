@@ -1,11 +1,10 @@
-package magpiebridge.core;
+package magpiebridge.projectservice.java;
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
-import magpiebridge.projectservice.java.InferConfig;
-import magpiebridge.projectservice.java.InferSourcePath;
+import magpiebridge.core.IProjectService;
 
 /**
  * The Class JavaProjectService provides the configuration information of a java project.
