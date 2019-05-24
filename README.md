@@ -1,8 +1,9 @@
+
+<p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
 
-
 [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
-
+</p> 
 
 ## What is MagpieBridge?
 MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. 
