@@ -31,7 +31,6 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
@@ -105,6 +104,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The code actions for diagnostics. */
   protected List<CodeAction> actionForDiags;
 
+  /** The false positives reported by users. */
   protected Map<String, Set<Triple<Integer, String, String>>> falsePositives;
 
   /** The root path. */
@@ -119,10 +119,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The logger. */
   private MessageLogger logger;
 
-  private static Logger log = Logger.getLogger("main");
-
   /**
-   * Instantiates a new magpie server using default {@link MagpieTextDocumentService} and {@link
+   * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
    * MagpieWorkspaceService}.
    */
   public MagpieServer() {
@@ -391,15 +389,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
         new MessageParams(MessageType.Info, "The analyzer finished analyzing the code."));
   }
 
-  public List<Diagnostic> getDiagnostics(URL url) {
-    if (this.diagnostics.containsKey(url)) return diagnostics.get(url);
-    else return new ArrayList<>();
-  }
-
-  public void sendDiagnostics(PublishDiagnosticsParams pdp) {
-    client.publishDiagnostics(pdp);
-  }
-
   @Override
   public TextDocumentService getTextDocumentService() {
     return this.textDocumentService;
@@ -448,8 +437,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Creates the diagnostic consumer.
    *
-   * @param publishDiags map uri to the diag list to be published for the client.
-   * @param diagList the diag list stored on the server
+   * @param publishDiags map URI to the list of diagnostics to be published for the client.
+   * @param diagList the list of diagnostics stored on the server
    * @param source the source
    * @return the consumer
    */
@@ -804,6 +793,14 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return hover;
   }
 
+  /**
+   * Check if two source code positions are near to each other.
+   *
+   * @param pos1
+   * @param pos2
+   * @param diff
+   * @return
+   */
   private boolean areNearPositions(Position pos1, Position pos2, int diff) {
     if (pos1.getFirstLine() == pos2.getFirstLine()
         && Math.abs(pos1.getFirstCol() - pos2.getFirstCol()) <= diff) return true;
@@ -865,10 +862,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Record false positive reported by the user.
+   * Record false positive reported by users.
    *
    * @param uri the uri
-   * @param diag the code and message in the reported diagnositic
+   * @param diag the code and message in the reported diagnostic
    */
   /*
    *

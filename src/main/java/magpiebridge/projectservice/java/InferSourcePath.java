@@ -21,10 +21,10 @@ import java.util.stream.Stream;
 /**
  * Infer the source path from a given project root path. Instead using the Parser from Java JDK
  * tool.jar from the original version, we use com.github.javaparser.JavaParser here. Modified by
- * Linghui Luo
+ * Code adapted from https://github.com/georgewfraser/java-language-server.git
  *
  * @author George Fraser
- * @see https://github.com/georgewfraser/java-language-server.git
+ * @author Linghui Luo
  */
 public class InferSourcePath {
 

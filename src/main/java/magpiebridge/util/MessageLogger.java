@@ -11,7 +11,8 @@ import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
 
 /**
- * MessageLogger logs the incoming and outgoing message with time stamp.
+ * MessageLogger logs the incoming and outgoing message with time stamp. The logs are stored in the
+ * temporary directory used by the JVM.
  *
  * @author Linghui Luo
  */
@@ -23,7 +24,7 @@ public final class MessageLogger {
   public MessageLogger() {
     String tempDir = System.getProperty("java.io.tmpdir");
     String seperator = System.getProperty("file.separator");
-    if (!tempDir.endsWith(seperator)){
+    if (!tempDir.endsWith(seperator)) {
       tempDir += seperator;
     }
     String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";

@@ -72,11 +72,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didChange(DidChangeTextDocumentParams params) {
-    // update the changed file in file manager and clean diagnostics.
+    // update the changed file in file manager
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didChange(params);
-    // TODO. it should be customized to clean all or just this changed file
+    // TODO. it could be customized to clean all diagnostics.
     // server.cleanUp();
   }
 

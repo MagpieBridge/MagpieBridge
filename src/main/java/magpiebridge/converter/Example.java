@@ -13,7 +13,7 @@ import soot.Transformer;
 import soot.options.Options;
 
 /**
- * This example demonstrate how we use WALA java source code fronend-end to generate jimple in old
+ * This example demonstrates how we use WALA java source code front-end to generate Jimple in old
  * soot and perform analysis.
  *
  * @author Linghui Luo

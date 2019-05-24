@@ -22,8 +22,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * This class infers the project configuration. Code adapted from
+ * https://github.com/georgewfraser/java-language-server.git
+ *
  * @author George Fraser
- * @see https://github.com/georgewfraser/java-language-server.git
  * @author Linghui Luo
  * @author Christian Brüggemann
  */

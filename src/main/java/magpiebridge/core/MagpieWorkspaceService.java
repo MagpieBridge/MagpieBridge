@@ -67,7 +67,6 @@ public class MagpieWorkspaceService implements WorkspaceService {
             changes.put(uri, Collections.singletonList(tEdit));
             WorkspaceEdit edit = new WorkspaceEdit(changes);
             server.client.applyEdit(new ApplyWorkspaceEditParams(edit));
-            return null;
           } else if (command.equals(CodeActionCommand.reportFP.name())) {
             server.client.showMessage(
                 new MessageParams(MessageType.Info, "False alarm was reported."));
@@ -92,14 +91,11 @@ public class MagpieWorkspaceService implements WorkspaceService {
             } catch (UnsupportedEncodingException e) {
               e.printStackTrace();
             }
-            return null;
           } else if (command.equals(CodeActionCommand.reportConfusion.name())) {
             server.client.showMessage(
                 new MessageParams(MessageType.Info, "Thank you for your feedback!"));
-            return null;
-          } else {
-            return null;
           }
+          return null;
         });
   }
 }
