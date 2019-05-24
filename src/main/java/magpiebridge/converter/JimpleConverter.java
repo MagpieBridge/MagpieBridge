@@ -65,7 +65,7 @@ import soot.util.Chain;
  */
 public class JimpleConverter {
   private Chain<Local> locals = null;
-  private Map<IStmt, Stmt> targets;
+  private Map<IStmt, Stmt> convertedStmts;
   List<de.upb.soot.core.SootClass> fromClasses;
 
   public JimpleConverter(List<de.upb.soot.core.SootClass> sootClasses) {
@@ -232,21 +232,12 @@ public class JimpleConverter {
       // TODO.
       traps.add(toTrap);
     }
-    // reset targets of body
-    targets = new HashMap<>();
+    // reset convertedStmts of body
+    convertedStmts = new HashMap<>();
     for (IStmt fromStmt : fromBody.getStmts()) {
-      Stmt toStmt = null;
-      if (targets.containsKey(fromStmt)) {
-        toStmt = targets.get(fromStmt);
-      } else {
-        toStmt = convertStmt(fromStmt);
-      }
-      if (toStmt != null) {
-        toStmt.addTag(new PositionInfoTag(fromStmt.getPositionInfo()));
-        units.add(toStmt);
-      } else {
-        System.out.println(fromStmt.getClass().toString());
-      }
+      Stmt toStmt = convertedStmts.computeIfAbsent(fromStmt, this::convertStmt);
+      toStmt.addTag(new PositionInfoTag(fromStmt.getPositionInfo()));
+      units.add(toStmt);
     }
 
     return toBody;
@@ -692,14 +683,7 @@ public class JimpleConverter {
       return null;
     }
     // TODO. what about the case when the target is the stmt itself?
-    Stmt target = null;
-    if (this.targets.containsKey(key)) {
-      target = this.targets.get(key);
-    } else {
-      target = convertStmt(key);
-      this.targets.put(key, target);
-    }
-    return target;
+    return convertedStmts.computeIfAbsent(key, this::convertStmt);
   }
 
   private soot.SootClass getSootClass(Optional<JavaClassType> op, Optional<JavaClassType> sigOp) {
