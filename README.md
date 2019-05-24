@@ -5,7 +5,7 @@
 
 ## What is MagpieBridge? [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 
-MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. 
+MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. MagpieBridge offers a default implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles requests like didOpen, didChange, didSave; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis.       
 
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
 
@@ -36,6 +36,6 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 ## Get Involved
 - Pull requests are welcome!
 - Submit github issues for any feature enhancements, bugs or documentation problems
-
+- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 ## Contact 
 &#x2709; linghui[at]outlook.de
