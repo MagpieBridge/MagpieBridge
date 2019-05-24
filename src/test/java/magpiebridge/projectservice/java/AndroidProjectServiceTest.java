@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AndroidProjectServiceTest {
@@ -22,7 +23,7 @@ public class AndroidProjectServiceTest {
             .toAbsolutePath());
   }
 
-  @Test
+  @Ignore
   public void testAndroidGradleProject() throws IOException, InterruptedException {
     Path root = Paths.get("src/test/resources/MyApplication/").toAbsolutePath();
 
@@ -33,7 +34,6 @@ public class AndroidProjectServiceTest {
       gradlePath = root.resolve("gradlew");
     }
     // Build the project to download JARs to system
-    System.out.println("Building app");
     int exitCode =
         InferConfigGradle.newProcessBuilderWithEnv(root)
             .directory(root.toFile())
