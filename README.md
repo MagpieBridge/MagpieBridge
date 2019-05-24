@@ -1,6 +1,6 @@
 
 <p align="center">
-    <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/magpieBridge.png" width="250">
+    <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
 </p>
 
 # MapgieBridge [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
