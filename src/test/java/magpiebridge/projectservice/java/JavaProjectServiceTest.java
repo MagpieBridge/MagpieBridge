@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
