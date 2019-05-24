@@ -38,6 +38,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   /** The server. */
   protected final MagpieServer server;
 
+  /** Flag to check if the file is the first opened one. */
   private boolean isFirstOpenedFile;
   /**
    * Instantiates a new magpie text document service.
@@ -62,7 +63,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    if (isFirstOpenedFile) {
+    if (isFirstOpenedFile && server.client != null) {
       server.client.showMessage(
           new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
       server.doAnalysis(language);
