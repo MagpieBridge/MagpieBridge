@@ -36,6 +36,6 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 ## Get Involved
 - Pull requests are welcome!
 - Submit github issues for any feature enhancements, bugs or documentation problems
-- Please format the code with mvn com.coveo:fmt-maven-plugin:format before git push
+- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 ## Contact 
 &#x2709; linghui[at]outlook.de
