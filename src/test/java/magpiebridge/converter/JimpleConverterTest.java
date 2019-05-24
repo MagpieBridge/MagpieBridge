@@ -12,7 +12,6 @@ import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 import soot.G;
 import soot.Scene;
 import soot.options.Options;

@@ -14,9 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.junit.Ignore;
-import org.junit.Test;
 import soot.G;
 import soot.PackManager;
 import soot.Scene;
