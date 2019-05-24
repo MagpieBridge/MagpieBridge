@@ -7,11 +7,12 @@
 
 
 ## What is MagpieBridge?
-MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. 
+MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the Language Server Protocol. It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. 
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
 </p>
-MagpieBridge is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. 
+
+
 
 ## Integrated Static Analyses using MagpieBridge
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
