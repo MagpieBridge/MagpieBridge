@@ -16,7 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,7 +28,7 @@ import java.util.stream.Stream;
  * @author Christian Brüggemann
  */
 public class InferConfig {
-  private static final Logger LOG = Logger.getLogger("main");
+  // private static final Logger LOG = Logger.getLogger("main");
 
   /** Root of the workspace that is currently open in VSCode */
   private final Path workspaceRoot;
@@ -158,8 +157,8 @@ public class InferConfig {
         if (found.isPresent()) {
           result.add(found.get());
         } else {
-          LOG.warning(
-              String.format("Couldn't find jar for %s in %s or %s", a, mavenHome, gradleHome));
+          // LOG.warning(String.format("Couldn't find jar for %s in %s or %s", a, mavenHome,
+          // gradleHome));
         }
       }
       cachedBuildClassPath = result;
@@ -174,7 +173,7 @@ public class InferConfig {
         if (found.isPresent()) {
           result.add(found.get());
         } else {
-          LOG.warning(String.format("Couldn't find jar for %s in %s", a, mavenHome));
+          // LOG.warning(String.format("Couldn't find jar for %s in %s", a, mavenHome));
         }
       }
       cachedBuildClassPath = result;
@@ -187,9 +186,9 @@ public class InferConfig {
       Path bazelGenFiles = workspaceRoot.resolve("bazel-genfiles");
 
       if (Files.exists(bazelGenFiles) && Files.isSymbolicLink(bazelGenFiles)) {
-        LOG.info("Looking for bazel generated files in " + bazelGenFiles);
+        // LOG.info("Looking for bazel generated files in " + bazelGenFiles);
         Set<Path> jars = bazelJars(bazelGenFiles);
-        LOG.info(String.format("Found %d generated-files directories", jars.size()));
+        // LOG.info(String.format("Found %d generated-files directories", jars.size()));
         result.addAll(jars);
       }
       cachedBuildClassPath = result;
@@ -241,11 +240,11 @@ public class InferConfig {
   private Set<Path> bazelOutputDirectories(Path bazelBin) {
     try {
       Path bazelBinTarget = Files.readSymbolicLink(bazelBin);
-      LOG.info("Searching for bazel output directories in " + bazelBinTarget);
+      // LOG.info("Searching for bazel output directories in " + bazelBinTarget);
 
       Set<Path> dirs = new HashSet<Path>();
       findBazelJavac(bazelBinTarget.toFile(), workspaceRoot.toFile(), dirs);
-      LOG.info(String.format("Found %d bazel output directories", dirs.size()));
+      // LOG.info(String.format("Found %d bazel output directories", dirs.size()));
 
       return dirs;
     } catch (IOException e) {
@@ -277,8 +276,8 @@ public class InferConfig {
         if (found.isPresent()) {
           result.add(found.get());
         } else {
-          LOG.warning(
-              String.format("Couldn't find doc jar for %s in %s or %s", a, mavenHome, gradleHome));
+          // LOG.warning(String.format("Couldn't find doc jar for %s in %s or %s", a, mavenHome,
+          // gradleHome));
         }
       }
       return result;
@@ -364,7 +363,7 @@ public class InferConfig {
             .filter(Matcher::find)
             .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(4)))
             .forEach(dependencies::add);
-        LOG.info("Maven Dependencies: " + dependencies);
+        // LOG.info("Maven Dependencies: " + dependencies);
         return dependencies;
       }
     } catch (IOException e) {

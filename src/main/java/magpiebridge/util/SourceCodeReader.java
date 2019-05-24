@@ -77,8 +77,8 @@ public class SourceCodeReader {
    * @return the string
    */
   public static String removeComment(String line) {
-    if (line.contains("/")) {
-      line = line.split("(\\s)*/")[0];
+    if (line.contains("//")) {
+      line = line.split("(\\s)*//")[0];
     }
     return line;
   }
