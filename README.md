@@ -20,7 +20,6 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
 ## How to use MapgieBridge for your own analysis?
-- Check if your analysis is built on top the analysis frameworks MagpieBridge supports (WALA, Soot)
 - [Check this tutorial to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki/Create-your-first-project-with-MagpieBridge)
 
 ## Build MagpieBridge with Maven
