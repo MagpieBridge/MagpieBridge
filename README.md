@@ -5,7 +5,8 @@
 
 ## What is MagpieBridge? [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=master)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 
-MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. MagpieBridge offers a default implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles requests like didOpen, didChange, didSave; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis.       
+MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. MagpieBridge offers a default implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles requests like didOpen, didChange, didSave; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis. For more information, please see our paper (ECOOP 2019): 
+[MagpieBridge: A General Approach to Integrating Static Analyses into IDEs and Editors](https://linghuiluo.github.io/ECOOP19MagpieBridge.pdf)
 
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
 
