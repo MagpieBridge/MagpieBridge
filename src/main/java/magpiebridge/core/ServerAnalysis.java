@@ -23,5 +23,5 @@ public interface ServerAnalysis {
    * @param files the files
    * @param server the server
    */
-  public void analyze(Collection<Module> files, MagpieServer server);
+  public void analyze(Collection<? extends Module> files, MagpieServer server);
 }

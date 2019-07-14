@@ -2,6 +2,8 @@ package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
+import com.ibm.wala.cast.tree.impl.LineNumberPosition;
+import com.ibm.wala.cast.util.SourceBuffer;
 import com.ibm.wala.util.collections.Pair;
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +36,7 @@ import java.util.function.Consumer;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
@@ -47,6 +50,7 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -119,6 +123,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The logger. */
   private MessageLogger logger;
 
+  /** Client config */
+  private ClientCapabilities clientConfig;
+  
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
    * MagpieWorkspaceService}.
@@ -138,7 +145,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     logger = new MessageLogger();
   }
 
-  /**
+  public LanguageClient getClient() {
+	return client;
+}
+
+/**
    * Sets customized text document service.
    *
    * @param textDocumentService the new text document service
@@ -211,6 +222,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     } else {
       this.rootPath = Optional.empty();
     }
+    clientConfig = params.getCapabilities();
+    
     final ServerCapabilities caps = new ServerCapabilities();
     caps.setTypeDefinitionProvider(false);
     caps.setImplementationProvider(false);
@@ -240,7 +253,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   @Override
-  public void initialized(InitializedParams params) {}
+  public void initialized(InitializedParams params) { }
 
   @Override
   public CompletableFuture<Object> shutdown() {
@@ -532,9 +545,20 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
             URL clientURL = new URL(clientUri);
             Position pos = replaceURL(result.position(), clientURL);
             Hover hover = new Hover();
+           
             List<Either<String, MarkedString>> contents = new ArrayList<>();
-            Either<String, MarkedString> content = Either.forLeft(result.toString(true));
-            contents.add(content);
+            if (clientConfig.getTextDocument().getHover().getContentFormat() != null && 
+            	clientConfig.getTextDocument().getHover().getContentFormat().contains(MarkupKind.MARKDOWN)) {
+             	for(String str : result.toString(true).split("\n")) {
+             		Either<String, MarkedString> content = Either.forRight(new MarkedString("markdown", str));
+             		contents.add(content);
+             	}
+            } else {
+            	for(String str : result.toString(false).split("\n")) {
+            		Either<String, MarkedString> content = Either.forLeft(str);
+            		contents.add(content);
+            	}
+            }
             hover.setContents(contents);
             hover.setRange(getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
@@ -622,6 +646,90 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return clientUri;
   }
 
+  private Position getPositionWithColumns(Position p) {
+	  if (p.getFirstCol() >= 0) {
+		  return p;
+	  } else {
+		  Position firstLineP = new LineNumberPosition(p.getURL(), p.getURL(), p.getFirstLine());
+		  SourceBuffer firstLine = null;
+		  try {
+			firstLine = new SourceBuffer(firstLineP);
+		} catch (IOException e) {
+			assert false : e;
+		}
+		  String firstLineText = firstLine.toString();
+		  
+		  String pText = null;
+		  try {
+			pText = new SourceBuffer(p).toString();
+		} catch (IOException e) {
+			assert false : e;
+		}
+
+		  int lines = pText.split("\n").length;
+		  
+		  String pFirst = pText;
+		  if (pText.contains("\n")) {
+			  pFirst = pText.substring(0,  pText.indexOf("\n"));
+		  }
+		  
+		  int endCol;
+		  int startCol = firstLineText.indexOf(pFirst);
+		  
+		  if (! pText.contains("\n")) {
+			  endCol = startCol + pText.length();
+		  } else {
+			  String lastLineText = pText.substring(pText.lastIndexOf("\n"), pText.length());
+			  endCol = lastLineText.length();
+		  }
+		  
+		  return new AbstractSourcePosition() {
+			@Override
+			public Reader getReader() throws IOException {
+				return p.getReader();
+			}
+
+			@Override
+			public URL getURL() {
+				return p.getURL();
+			}
+
+			@Override
+			public int getFirstCol() {
+				return startCol;
+			}
+
+			@Override
+			public int getFirstLine() {
+				return p.getFirstLine();
+			}
+
+			@Override
+			public int getFirstOffset() {
+				return p.getFirstOffset();
+			}
+
+			@Override
+			public int getLastCol() {
+				return endCol;
+			}
+
+			@Override
+			public int getLastLine() {
+				if (p.getLastLine() >= 0) {
+					return p.getLastLine();
+				} else{
+					return p.getFirstLine() + lines - 1;
+				}
+			}
+
+			@Override
+			public int getLastOffset() {
+				return p.getLastOffset();
+			}
+		  };
+	  }
+  }
   /**
    * Gets the location from given position.
    *
@@ -636,16 +744,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       e.printStackTrace();
     }
     Range codeRange = new Range();
-    if (pos.getFirstCol() < 0) {
-      codeRange.setStart(getPositionFrom(pos.getFirstLine(), 0)); // imprecise
-    } else {
-      codeRange.setStart(getPositionFrom(pos.getFirstLine(), pos.getFirstCol()));
-    }
-    if (pos.getLastLine() < 0) {
-      codeRange.setEnd(getPositionFrom(pos.getFirstLine() + 1, 0)); // imprecise
-    } else {
-      codeRange.setEnd(getPositionFrom(pos.getLastLine(), pos.getLastCol()));
-    }
+    Position detail = getPositionWithColumns(pos);
+    codeRange.setEnd(getPositionFrom(detail.getLastLine(), detail.getLastCol()));
+    codeRange.setStart(getPositionFrom(detail.getFirstLine(), detail.getFirstCol()));
     codeLocation.setRange(codeRange);
     return codeLocation;
   }
