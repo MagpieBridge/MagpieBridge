@@ -78,7 +78,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didChange(params);
     // TODO. it could be customized to clean all diagnostics.
-    // server.cleanUp();
+    server.cleanUp();
+    server.doAnalysis(language);
   }
 
   @Override

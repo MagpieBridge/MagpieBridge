@@ -2,7 +2,7 @@ package magpiebridge.converter;
 
 import static org.junit.Assert.assertTrue;
 
-import de.upb.soot.DefaultFactories;
+import de.upb.soot.DefaultIdentifierFactory;
 import de.upb.soot.core.SootClass;
 import de.upb.soot.frontends.java.WalaClassLoader;
 import de.upb.soot.types.JavaClassType;
@@ -20,7 +20,7 @@ import soot.options.Options;
 public class JimpleConverterTest {
 
   private WalaClassLoader loader;
-  private DefaultFactories defaultFactories;
+  private DefaultIdentifierFactory defaultIdentifierFactory;
   private JavaClassType declareClassSig;
   private SootClass klass;
 
@@ -28,7 +28,7 @@ public class JimpleConverterTest {
   public void loadClassesWithWala() {
     String srcDir = "src/test/resources/wala-tests/";
     loader = new WalaClassLoader(srcDir, null);
-    defaultFactories = DefaultFactories.create();
+    defaultIdentifierFactory = new DefaultIdentifierFactory();
   }
 
   @After
@@ -51,7 +51,7 @@ public class JimpleConverterTest {
 
   @Ignore
   public void testSimple1() {
-    declareClassSig = defaultFactories.getTypeFactory().getClassType("Simple1");
+    declareClassSig = defaultIdentifierFactory.getInstance().getClassType("Simple1");
     Optional<SootClass> c = loader.getSootClass(declareClassSig);
     assertTrue(c.isPresent());
     klass = c.get();
@@ -59,7 +59,8 @@ public class JimpleConverterTest {
 
   @Ignore
   public void testVarDeclInSwitch() {
-    declareClassSig = defaultFactories.getTypeFactory().getClassType("bugfixes.VarDeclInSwitch");
+    declareClassSig =
+        defaultIdentifierFactory.getInstance().getClassType("bugfixes.VarDeclInSwitch");
     Optional<SootClass> c = loader.getSootClass(declareClassSig);
     assertTrue(c.isPresent());
     klass = c.get();
