@@ -23,5 +23,5 @@ env:
   - ANDROID_HOME=$HOME/android-sdk
 
 script:
-  - mvn install -DskipTests
+  - mvn install
 
