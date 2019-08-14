@@ -19,8 +19,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
-## How to use MapgieBridge for your own analysis?
-- Check if your analysis is built on top the analysis frameworks MagpieBridge supports (WALA, Soot)
+## How to use MapgieBridge?
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki)
 
 ## Build MagpieBridge with Maven
