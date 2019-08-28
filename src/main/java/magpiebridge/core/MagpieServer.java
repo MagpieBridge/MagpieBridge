@@ -71,7 +71,7 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  *
  * @author Julian Dolby and Linghui Luo
  */
-public class MagpieServer implements LanguageServer, LanguageClientAware {
+public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
 
   /** The client. */
   protected LanguageClient client;
@@ -83,7 +83,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   protected WorkspaceService workspaceService;
 
   /** The language analyzes. language mapped to a set of analyzes. */
-  protected Map<String, Collection<ServerAnalysis>> languageAnalyzes;
+  protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyzes;
 
   /**
    * The language source file managers. language mapped to its corresponding source file manager.
@@ -133,7 +133,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   public MagpieServer() {
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
-    this.languageAnalyzes = new HashMap<String, Collection<ServerAnalysis>>();
+    this.languageAnalyzes = new HashMap<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
     this.languageProjectServices = new HashMap<String, IProjectService>();
     this.diagnostics = new HashMap<>();
@@ -331,9 +331,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param analysis
    *          the analysis
    */
-  public void addAnalysis(String language, ServerAnalysis analysis) {
+  public void addAnalysis(String language, Either<ServerAnalysis,ToolAnalysis> analysis) {
     if (!languageAnalyzes.containsKey(language)) {
-      languageAnalyzes.put(language, new HashSet<ServerAnalysis>());
+      languageAnalyzes.put(language, new HashSet<>());
     }
     languageAnalyzes.get(language).add(analysis);
   }
@@ -348,8 +348,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     if (!languageAnalyzes.containsKey(language)) {
       languageAnalyzes.put(language, Collections.emptyList());
     }
-    for (ServerAnalysis analysis : languageAnalyzes.get(language)) {
-      analysis.analyze(fileManager.getSourceFileModules().values(), this);
+    for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
+      if (analysis.isLeft()) {
+    	  analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this);
+      } else {
+    	  analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this);
+      }
     }
   }
 
