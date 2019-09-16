@@ -69,6 +69,9 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  */
 public class MagpieServer implements LanguageServer, LanguageClientAware {
 
+  /** The server configuration. */
+  protected ServerConfiguration config;
+
   /** The client. */
   protected LanguageClient client;
 
@@ -122,8 +125,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
    * MagpieWorkspaceService}.
+   *
+   * @param config the config
    */
-  public MagpieServer() {
+  public MagpieServer(ServerConfiguration config) {
+    this.config = config;
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
     this.languageAnalyzes = new HashMap<String, Collection<ServerAnalysis>>();
@@ -199,11 +205,21 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.services.LanguageClient)
+   */
   @Override
   public void connect(LanguageClient client) {
     this.client = client;
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.InitializeParams)
+   */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
     if (params.getRootUri() != null) {
@@ -239,14 +255,29 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return CompletableFuture.completedFuture(v);
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.InitializedParams)
+   */
   @Override
   public void initialized(InitializedParams params) {}
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#shutdown()
+   */
   @Override
   public CompletableFuture<Object> shutdown() {
     return CompletableFuture.completedFuture(new Object());
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#exit()
+   */
   @Override
   public void exit() {
     logger.cleanUp();
@@ -389,11 +420,21 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
         new MessageParams(MessageType.Info, "The analyzer finished analyzing the code."));
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#getTextDocumentService()
+   */
   @Override
   public TextDocumentService getTextDocumentService() {
     return this.textDocumentService;
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.eclipse.lsp4j.services.LanguageServer#getWorkspaceService()
+   */
   @Override
   public WorkspaceService getWorkspaceService() {
     return this.workspaceService;
@@ -494,19 +535,23 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               }
             }
             List<CodeAction> actions = actionList.get(d.getRange());
-            // report false positive
-            String title = String.format("Report it as false alarm (%s).", d.getMessage());
-            CodeAction reportFalsePositive =
-                CodeActionGenerator.generateCommandAction(
-                    title, clientUri, d, CodeActionCommand.reportFP.name());
-            if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
-            // report confusion about the warning message
-            title = String.format("I don't understand this warning message (%s).", d.getMessage());
-            CodeAction reportConfusion =
-                CodeActionGenerator.generateCommandAction(
-                    title, clientUri, d, CodeActionCommand.reportConfusion.name());
-            if (!actions.contains(reportConfusion)) actions.add(reportConfusion);
-
+            if (config.reportFalsePositive()) {
+              // report false positive
+              String title = String.format("Report it as false alarm (%s).", d.getMessage());
+              CodeAction reportFalsePositive =
+                  CodeActionGenerator.generateCommandAction(
+                      title, clientUri, d, CodeActionCommand.reportFP.name());
+              if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
+            }
+            if (config.reportConfusion()) {
+              // report confusion about the warning message
+              String title =
+                  String.format("I don't understand this warning message (%s).", d.getMessage());
+              CodeAction reportConfusion =
+                  CodeActionGenerator.generateCommandAction(
+                      title, clientUri, d, CodeActionCommand.reportConfusion.name());
+              if (!actions.contains(reportConfusion)) actions.add(reportConfusion);
+            }
             actionList.put(d.getRange(), actions);
           } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -583,14 +628,26 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Check if URI is in the right format in windows.
    *
-   * @param uri
-   * @return
+   * @param uri the uri
+   * @return the string
    */
   private String checkURI(String uri) {
-    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-      // take care of uri in windows
-      if (!uri.startsWith("file:///")) {
-        uri = uri.replace("file://", "file:///");
+    if (uri.startsWith("file")) {
+      if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+        // take care of uri in windows
+        if (!uri.startsWith("file:///")) {
+          uri = uri.replace("file://", "file:///");
+        }
+      } else {
+        if (!uri.startsWith("file://")) {
+          String[] splits = uri.split(":");
+          if (splits.length == 2) {
+            String path = splits[1];
+            if (path.matches("^(/[^/ ]*)+/?$")) {
+              uri = "file://" + path;
+            }
+          }
+        }
       }
     }
     return uri;
@@ -664,6 +721,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return codeStart;
   }
 
+  /**
+   * Replace URL.
+   *
+   * @param pos the pos
+   * @param url the url
+   * @return the position
+   */
   protected Position replaceURL(Position pos, URL url) {
     return new AbstractSourcePosition() {
 
@@ -796,10 +860,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * Check if two source code positions are near to each other.
    *
-   * @param pos1
-   * @param pos2
-   * @param diff
-   * @return
+   * @param pos1 the pos 1
+   * @param pos2 the pos 2
+   * @param diff the diff
+   * @return true, if successful
    */
   private boolean areNearPositions(Position pos1, Position pos2, int diff) {
     if (pos1.getFirstLine() == pos2.getFirstLine()

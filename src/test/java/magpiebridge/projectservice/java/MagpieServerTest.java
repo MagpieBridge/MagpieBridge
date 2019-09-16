@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.core.ServerConfiguration;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -14,7 +15,7 @@ import org.junit.Test;
 public class MagpieServerTest {
   @Test
   public void testProjectService() {
-    MagpieServer server = new MagpieServer();
+    MagpieServer server = new MagpieServer(new ServerConfiguration());
     String lang = "java";
     server.addProjectService(lang, new JavaProjectService());
     assertTrue(server.getProjectService(lang).isPresent());
