@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
 import org.eclipse.lsp4j.TextDocumentItem;
@@ -35,6 +36,7 @@ public class SourceFileManager {
   /** Server-side URI string mapped to client-side URI string. */
   private Map<String, String> serverClientUri;
 
+  private ProjectState projectState;
   /**
    * Instantiates a new source file manager.
    *
@@ -185,5 +187,14 @@ public class SourceFileManager {
    */
   public Map<URI, Module> getSourceFileModules() {
     return sourceFileModules;
+  }
+
+  public ProjectState getProjectState() {
+    return this.projectState;
+  }
+
+  public void didSave(DidSaveTextDocumentParams params) {
+    // TODO Auto-generated method stub
+    // Keep track of save files
   }
 }

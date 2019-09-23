@@ -9,7 +9,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import magpiebridge.file.ProjectState;
 import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -64,6 +66,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
     if (isFirstOpenedFile && server.client != null) {
+      if (server.config.doPreparation()) {
+        for (ServerAnalysis analysis : server.languageAnalyzes.get(language)) {
+          Optional<IProjectService> op = server.getProjectService(language);
+          if (op.isPresent()) {
+            analysis.prepare(op.get());
+          }
+        }
+      }
       server.client.showMessage(
           new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
       server.doAnalysis(language);
@@ -87,11 +97,17 @@ public class MagpieTextDocumentService implements TextDocumentService {
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
     server.cleanUp();
-    server.client.showMessage(
-        new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
-    // re-analyze when file is saved.
+
     String language = inferLanguage(params.getTextDocument().getUri());
-    server.doAnalysis(language);
+    SourceFileManager fileManager = server.getSourceFileManager(language);
+    if (fileManager.getProjectState() == ProjectState.allSaved) {
+      server.client.showMessage(
+          new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+      // re-analyze when all changed file are saved.
+      server.doAnalysis(language);
+    } else {
+      fileManager.didSave(params);
+    }
   }
 
   @Override

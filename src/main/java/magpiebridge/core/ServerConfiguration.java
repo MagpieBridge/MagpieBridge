@@ -8,10 +8,12 @@ package magpiebridge.core;
 public class ServerConfiguration {
   private boolean reportFalsePositive;
   private boolean reportConfusion;
+  private boolean doPreparation;
 
   public ServerConfiguration() {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
+    this.doPreparation = false;
   }
 
   public boolean reportFalsePositive() {
@@ -28,5 +30,13 @@ public class ServerConfiguration {
 
   public void setReportConfusion(boolean reportConfusion) {
     this.reportConfusion = reportConfusion;
+  }
+
+  public boolean doPreparation() {
+    return doPreparation;
+  }
+
+  public void setDoPreparation(boolean doPreparation) {
+    this.doPreparation = doPreparation;
   }
 }

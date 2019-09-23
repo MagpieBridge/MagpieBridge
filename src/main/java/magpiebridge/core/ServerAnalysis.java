@@ -18,10 +18,18 @@ public interface ServerAnalysis {
   public String source();
 
   /**
-   * The files to be analyzed.
+   * Perform analysis.
    *
-   * @param files the files
+   * @param files the files to be considered
    * @param server the server
    */
   public void analyze(Collection<Module> files, MagpieServer server);
+
+  /**
+   * Do anything which ought to be done before the actual analysis. It is only called once when the
+   * first file is opened.
+   *
+   * @param ps the project service
+   */
+  public void prepare(IProjectService ps);
 }
