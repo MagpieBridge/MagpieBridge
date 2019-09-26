@@ -117,10 +117,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   private Map<String, String> serverClientUri;
 
   /** The connection socket. */
-  private Socket connectionSocket;
+  protected Socket connectionSocket;
 
   /** The logger. */
-  private MessageLogger logger;
+  protected MessageLogger logger;
 
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
