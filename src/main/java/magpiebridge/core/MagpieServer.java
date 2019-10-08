@@ -87,7 +87,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /**
    * The language source file managers. language mapped to its corresponding source file manager.
    */
-  private Map<String, SourceFileManager> languageSourceFileManagers;
+  protected Map<String, SourceFileManager> languageSourceFileManagers;
 
   /** The language project services. language mapped to its project service. */
   protected Map<String, IProjectService> languageProjectServices;
@@ -114,7 +114,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   protected Optional<Path> rootPath;
 
   /** Map server-side URI to client-side URI. */
-  private Map<String, String> serverClientUri;
+  protected Map<String, String> serverClientUri;
 
   /** The connection socket. */
   protected Socket connectionSocket;
@@ -631,7 +631,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param uri the uri
    * @return the string
    */
-  private String checkURI(String uri) {
+  protected String checkURI(String uri) {
     if (uri.startsWith("file")) {
       if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
         // take care of uri in windows

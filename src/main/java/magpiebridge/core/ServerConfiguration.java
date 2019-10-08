@@ -8,10 +8,14 @@ package magpiebridge.core;
 public class ServerConfiguration {
   private boolean reportFalsePositive;
   private boolean reportConfusion;
+  private boolean doAnalysisByOpen;
+  private boolean doAnalysisBySave;
 
   public ServerConfiguration() {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
+    this.doAnalysisByOpen = true;
+    this.doAnalysisBySave = true;
   }
 
   public boolean reportFalsePositive() {
@@ -28,5 +32,21 @@ public class ServerConfiguration {
 
   public void setReportConfusion(boolean reportConfusion) {
     this.reportConfusion = reportConfusion;
+  }
+
+  public void setDoAnalysisByOpen(boolean doAnalysisByOpen) {
+    this.doAnalysisByOpen = doAnalysisByOpen;
+  }
+
+  public void setDoAnalysisBySave(boolean doAnalysisBySave) {
+    this.doAnalysisBySave = doAnalysisBySave;
+  }
+
+  public boolean doAnalysisByOpen() {
+    return this.doAnalysisByOpen;
+  }
+
+  public boolean doAnalysisBySave() {
+    return this.doAnalysisBySave;
   }
 }

@@ -63,7 +63,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    if (isFirstOpenedFile && server.client != null) {
+    if (isFirstOpenedFile && server.client != null && server.config.doAnalysisByOpen()) {
       server.client.showMessage(
           new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
       server.doAnalysis(language);
@@ -86,12 +86,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    server.cleanUp();
-    server.client.showMessage(
-        new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
-    // re-analyze when file is saved.
-    String language = inferLanguage(params.getTextDocument().getUri());
-    server.doAnalysis(language);
+    if (server.config.doAnalysisBySave()) {
+      server.cleanUp();
+      server.client.showMessage(
+          new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+      // re-analyze when file is saved.
+      String language = inferLanguage(params.getTextDocument().getUri());
+      server.doAnalysis(language);
+    }
   }
 
   @Override
