@@ -1,3 +1,6 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.projectservice.java;
 
 import java.io.File;
@@ -27,14 +30,23 @@ public class AndroidProjectService extends JavaProjectService {
       String root = this.getRootPath().get().toString();
       // TODO consider customized build path
       File apkDir = Paths.get(root, "app/build/outputs/apk/debug").toFile();
-      for (File f : apkDir.listFiles()) {
-        if (f.isFile() && f.getName().endsWith(".apk")) {
-          apkPath = Optional.of(Paths.get(f.getAbsolutePath()));
-          break;
+      Optional<File> file = searchAPKFile(apkDir);
+      if (file.isPresent()) apkPath = Optional.of(Paths.get(file.get().getAbsolutePath()));
+    }
+    return this.apkPath;
+  }
+
+  private Optional<File> searchAPKFile(File dir) {
+    if (dir.isFile() && dir.getName().endsWith(".apk")) {
+      return Optional.of(dir);
+    } else {
+      if (dir.isDirectory()) {
+        for (File f : dir.listFiles()) {
+          Optional<File> op = searchAPKFile(f);
+          if (op.isPresent()) return op;
         }
       }
+      return Optional.empty();
     }
-
-    return this.apkPath;
   }
 }

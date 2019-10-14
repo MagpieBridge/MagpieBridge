@@ -1,7 +1,11 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import magpiebridge.command.CodeActionCommand;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.Command;

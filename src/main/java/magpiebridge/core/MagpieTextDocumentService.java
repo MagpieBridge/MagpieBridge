@@ -1,3 +1,6 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -39,7 +42,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   protected final MagpieServer server;
 
   /** Flag to check if the file is the first opened one. */
-  private boolean isFirstOpenedFile;
+  protected boolean isFirstOpenedFile;
   /**
    * Instantiates a new magpie text document service.
    *
@@ -54,12 +57,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
-    // set the rootPath for project service if it is not set yet.
-    if (server.rootPath.isPresent()) {
-      if (server.getProjectService(language).isPresent()) {
-        server.getProjectService(language).get().setRootPath(server.rootPath.get());
-      }
-    }
+    setProjectRootPath(language);
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
@@ -68,6 +66,19 @@ public class MagpieTextDocumentService implements TextDocumentService {
           new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
       server.doAnalysis(language);
       isFirstOpenedFile = false;
+    }
+  }
+
+  /**
+   * Set the rootPath for project service if it is not set yet.
+   *
+   * @param language
+   */
+  protected void setProjectRootPath(String language) {
+    if (server.rootPath.isPresent()) {
+      if (server.getProjectService(language).isPresent()) {
+        server.getProjectService(language).get().setRootPath(server.rootPath.get());
+      }
     }
   }
 
@@ -138,8 +149,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
           try {
             String uri = params.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
-            List<CodeAction> matchedActions =
-                server.findCodeActions(new URI(decodedUri), params.getContext().getDiagnostics());
+            List<CodeAction> matchedActions = server.findCodeActions(new URI(decodedUri), params);
             for (CodeAction action : matchedActions) {
               actions.add(Either.forLeft(action.getCommand()));
             }

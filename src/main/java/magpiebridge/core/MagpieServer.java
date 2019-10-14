@@ -1,3 +1,6 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -10,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,7 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -31,10 +34,12 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import magpiebridge.command.CodeActionCommand;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.Command;
@@ -56,6 +61,7 @@ import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.launch.LSPLauncher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
@@ -103,9 +109,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
 
   /** The code actions. */
   protected Map<URL, Map<Range, List<CodeAction>>> codeActions;
-
-  /** The code actions for diagnostics. */
-  protected List<CodeAction> actionForDiags;
 
   /** The false positives reported by users. */
   protected Map<String, Set<Triple<Integer, String, String>>> falsePositives;
@@ -183,7 +186,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Launch on socket port.
+   * Launch on socket port with given host.
    *
    * @param host the host
    * @param port the port
@@ -205,10 +208,37 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
+  /**
+   * Launch on socket port.
+   *
+   * @param port the port
+   */
+  public void launchOnSocketPort(int port) {
+    try {
+      ServerSocket serverSocket = new ServerSocket(port);
+      connectionSocket = serverSocket.accept();
+      Launcher<LanguageClient> launcher =
+          new Builder<LanguageClient>()
+              .setLocalService(this)
+              .setRemoteInterface(LanguageClient.class)
+              .setInput(connectionSocket.getInputStream())
+              .setOutput(connectionSocket.getOutputStream())
+              .setExecutorService(Executors.newCachedThreadPool())
+              .wrapMessages(this.logger.getWrapper())
+              .create();
+      connect(launcher.getRemoteProxy());
+      launcher.startListening();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.services.LanguageClient)
+   * @see
+   * org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.
+   * services.LanguageClient)
    */
   @Override
   public void connect(LanguageClient client) {
@@ -218,7 +248,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.InitializeParams)
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.
+   * InitializeParams)
    */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -244,11 +275,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     caps.setHoverProvider(true);
     caps.setTextDocumentSync(TextDocumentSyncKind.Full);
     ExecuteCommandOptions exec = new ExecuteCommandOptions();
-    LinkedList<String> cmds = new LinkedList<String>();
-    cmds.add(CodeActionCommand.fix.name());
-    cmds.add(CodeActionCommand.reportFP.name());
-    cmds.add(CodeActionCommand.reportConfusion.name());
-    exec.setCommands(cmds);
+    MagpieWorkspaceService service = (MagpieWorkspaceService) workspaceService;
+    exec.setCommands(service.getCommandNames());
     caps.setExecuteCommandProvider(exec);
     caps.setCodeActionProvider(true);
     InitializeResult v = new InitializeResult(caps);
@@ -258,7 +286,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.InitializedParams)
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialized(org.eclipse.lsp4j.
+   * InitializedParams)
    */
   @Override
   public void initialized(InitializedParams params) {}
@@ -312,11 +341,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    *
    * <pre>
    * {
-   *   &#64;code
-   *   MagpieServer server = new MagpieServer();
-   *   String language = "java";
-   *   IProjectService javaProjectService = new JavaProjectService();
-   *   server.addProjectService(language, javaProjectService);
+   * 	&#64;code
+   * 	MagpieServer server = new MagpieServer();
+   * 	String language = "java";
+   * 	IProjectService javaProjectService = new JavaProjectService();
+   * 	server.addProjectService(language, javaProjectService);
    * }
    * </pre>
    *
@@ -330,8 +359,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Adds the analysis for different languages running on the server. This should be specified by the user of
-   * MagpieServer.<br>
+   * Adds the analysis for different languages running on the server. This should
+   * be specified by the user of MagpieServer.<br>
    * An example for adding a user-defined analysis.
    *
    * <pre>
@@ -344,10 +373,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    *
    * <pre>
    *
-   * @param language
-   *          the language
-   * @param analysis
-   *          the analysis
+   * @param language the language
+   * @param analysis the analysis
    */
   public void addAnalysis(String language, ServerAnalysis analysis) {
     if (!languageAnalyzes.containsKey(language)) {
@@ -476,6 +503,26 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
+   * Adds the given code action for the given url and range.
+   *
+   * @param url the url which the code action belongs to.
+   * @param range the range which the code action belongs to
+   * @param action the action
+   */
+  protected void addCodeAction(URL url, Range range, CodeAction action) {
+    if (!this.codeActions.containsKey(url)) {
+      this.codeActions.put(url, new HashMap<>());
+    }
+    Map<Range, List<CodeAction>> actionList = this.codeActions.get(url);
+    if (!actionList.containsKey(range)) {
+      actionList.put(range, new ArrayList<>());
+    }
+    List<CodeAction> actions = actionList.get(range);
+    if (!actions.contains(action)) actions.add(action);
+    actionList.put(range, actions);
+  }
+
+  /**
    * Creates the diagnostic consumer.
    *
    * @param publishDiags map URI to the list of diagnostics to be published for the client.
@@ -508,13 +555,6 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
           String clientUri = getClientUri(serverUri);
           try {
             URL url = new URL(clientUri);
-            if (!this.codeActions.containsKey(url)) {
-              this.codeActions.put(url, new HashMap<>());
-            }
-            Map<Range, List<CodeAction>> actionList = this.codeActions.get(url);
-            if (!actionList.containsKey(d.getRange())) {
-              actionList.put(d.getRange(), new ArrayList<>());
-            }
             if (result.repair() != null) {
               // add code action (quickfix) related to analysis result
               Position fixPos = result.repair().fst;
@@ -526,22 +566,19 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                         fixPos.getFirstLine() - 1, fixPos.getFirstCol()));
                 range.setEnd(
                     new org.eclipse.lsp4j.Position(fixPos.getLastLine() - 1, fixPos.getLastCol()));
-                CodeAction action =
+                CodeAction fix =
                     CodeActionGenerator.replace(
                         "Fix: replace it with " + replace, range, replace, clientUri, d);
-                List<CodeAction> actions = actionList.get(d.getRange());
-                if (!actions.contains(action)) actions.add(action);
-                actionList.put(d.getRange(), actions);
+                addCodeAction(url, d.getRange(), fix);
               }
             }
-            List<CodeAction> actions = actionList.get(d.getRange());
             if (config.reportFalsePositive()) {
               // report false positive
               String title = String.format("Report it as false alarm (%s).", d.getMessage());
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportFP.name());
-              if (!actions.contains(reportFalsePositive)) actions.add(reportFalsePositive);
+              addCodeAction(url, d.getRange(), reportFalsePositive);
             }
             if (config.reportConfusion()) {
               // report confusion about the warning message
@@ -550,9 +587,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportConfusion.name());
-              if (!actions.contains(reportConfusion)) actions.add(reportConfusion);
+              addCodeAction(url, d.getRange(), reportConfusion);
             }
-            actionList.put(d.getRange(), actions);
           } catch (MalformedURLException e) {
             e.printStackTrace();
           }
@@ -638,6 +674,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
         if (!uri.startsWith("file:///")) {
           uri = uri.replace("file://", "file:///");
         }
+        if (!uri.startsWith("file:///")) uri = uri.replace("file:/", "file:///");
       } else {
         if (!uri.startsWith("file://")) {
           String[] splits = uri.split(":");
@@ -889,28 +926,35 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Find code actions attached to the given diagnostics.
+   * Find code actions attached to the given code action params.
    *
    * @param uri the uri
-   * @param diagnostics the diagnostics
-   * @return the list of code actions for the given diagnostics.
+   * @param params the code action params
+   * @return the list of code actions for the given code action params.
    */
-  public List<CodeAction> findCodeActions(URI uri, List<Diagnostic> diagnostics) {
-    this.actionForDiags = new ArrayList<>();
+  public List<CodeAction> findCodeActions(URI uri, CodeActionParams params) {
+    List<Diagnostic> diagnostics = params.getContext().getDiagnostics();
     try {
       URL url = uri.toURL();
       if (this.codeActions.containsKey(url)) {
         Map<Range, List<CodeAction>> actions = this.codeActions.get(url);
+        // First look for diagnostics.
         for (Diagnostic dia : diagnostics) {
           if (actions.containsKey(dia.getRange())) {
             return actions.get(dia.getRange());
           }
         }
+        if (diagnostics == null || diagnostics.isEmpty()) {
+          // if there is no diagnostic, just find code action for this line.
+          Range range = params.getRange();
+          for (Range r : actions.keySet())
+            if (range.getStart().getLine() == r.getStart().getLine()) return actions.get(r);
+        }
       }
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
-    return actionForDiags;
+    return new ArrayList<>();
   }
 
   /** Clean up all analysis results. */
@@ -934,7 +978,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /*
    *
    */
-  protected void recordFalsePositive(String uri, Triple<Integer, String, String> diag) {
+  public void recordFalsePositive(String uri, Triple<Integer, String, String> diag) {
     if (!falsePositives.containsKey(uri)) {
       this.falsePositives.put(uri, new HashSet<Triple<Integer, String, String>>());
     }
