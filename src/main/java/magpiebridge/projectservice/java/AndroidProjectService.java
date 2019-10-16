@@ -36,6 +36,12 @@ public class AndroidProjectService extends JavaProjectService {
     return this.apkPath;
   }
 
+  /**
+   * Search an apk file in the given directory .
+   *
+   * @param dir directory where to search apk
+   * @return the apk file
+   */
   private Optional<File> searchAPKFile(File dir) {
     if (dir.isFile() && dir.getName().endsWith(".apk")) {
       return Optional.of(dir);

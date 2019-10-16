@@ -388,13 +388,13 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    *
    * @param language the language
    */
-  public void doAnalysis(String language) {
+  public void doAnalysis(String language, boolean rerun) {
     SourceFileManager fileManager = getSourceFileManager(language);
     if (!languageAnalyzes.containsKey(language)) {
       languageAnalyzes.put(language, Collections.emptyList());
     }
     for (ServerAnalysis analysis : languageAnalyzes.get(language)) {
-      analysis.analyze(fileManager.getSourceFileModules().values(), this);
+      analysis.analyze(fileManager.getSourceFileModules().values(), this, rerun);
     }
   }
 
@@ -696,7 +696,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @param serverUri the server uri
    * @return the client uri
    */
-  protected String getClientUri(String serverUri) {
+  public String getClientUri(String serverUri) {
     serverUri = checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {

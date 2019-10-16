@@ -64,8 +64,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
     if (isFirstOpenedFile && server.client != null && server.config.doAnalysisByOpen()) {
       server.client.showMessage(
           new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
-      server.doAnalysis(language);
+      server.doAnalysis(language, true);
       isFirstOpenedFile = false;
+    } else {
+      // don't need to rerun the analysis if no file is changed.
+      server.doAnalysis(language, false);
     }
   }
 
@@ -103,7 +106,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
           new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
       // re-analyze when file is saved.
       String language = inferLanguage(params.getTextDocument().getUri());
-      server.doAnalysis(language);
+      server.doAnalysis(language, true);
     }
   }
 

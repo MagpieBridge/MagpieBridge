@@ -1,3 +1,6 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.projectservice.java;
 
 import java.io.BufferedReader;
@@ -20,6 +23,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * This class infers the project configuration. Code adapted from
@@ -125,9 +134,42 @@ public class InferConfig {
       return InferConfigGradle.workspaceClassPath(workspaceRoot);
     }
 
+    // Eclipse Java Project
+    Path classPath = workspaceRoot.resolve(workspaceRoot.resolve(".classpath"));
+    if (Files.exists(classPath)) {
+      return parseClassPathFile(classPath);
+    }
+
     return Collections.emptySet();
   }
 
+  public Set<Path> parseClassPathFile(Path classPath) {
+    Set<Path> path = new HashSet<Path>();
+    try {
+      File file = classPath.toFile();
+
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      Document doc = builder.parse(file);
+      NodeList list = doc.getElementsByTagName("classpathentry");
+      for (int i = 0; i < list.getLength(); i++) {
+        Node node = list.item(i);
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+          Element element = (Element) node;
+          String kind = element.getAttribute("kind");
+          String p = element.getAttribute("path");
+          if (kind.equals("output")) {
+            String str = workspaceRoot.toAbsolutePath() + File.separator + p;
+            Path cp = Paths.get(str).toAbsolutePath();
+            if (Files.exists(cp)) path.add(cp);
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return path;
+  }
   /** Recognize build root files like pom.xml and return compiler output directories */
   public Stream<Path> mavenOutputDirectory(Path file) {
     if (file.getFileName().toString().equals("pom.xml")) {
