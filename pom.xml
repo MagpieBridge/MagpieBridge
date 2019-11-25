@@ -10,12 +10,98 @@
 	<name>magpiebridge</name>
 	<url>https://github.com/MagpieBridge/MagpieBridge</url>
 
+	<licenses>
+		<license>
+			<name>Eclipse Public License 2.0</name>
+			<url>https://www.eclipse.org/legal/epl-2.0/</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Linghui Luo</name>
+			<email>linghui.luo@upb.de</email>
+			<organization>Paderborn University</organization>
+			<organizationUrl>https://www.hni.uni-paderborn.de/en/software-engineering/</organizationUrl>
+		</developer>
+	</developers>
+	<profiles>
+		<profile>
+			<id>deploy</id>
+			<activation>
+				<property>
+					<name>deploy</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>3.0.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>3.0.1</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<phase>deploy</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.8</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>ossrh</serverId>
+							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-   		<soot.version>3.3.0</soot.version>
-   		<futuresoot.version>4.0.0.3</futuresoot.version>
-   		<wala.version>1.5.3.2</wala.version>
-   		<lsp4j.version>0.7.1</lsp4j.version>
+		<soot.version>3.3.0</soot.version>
+		<futuresoot.version>4.0.0.3</futuresoot.version>
+		<wala.version>1.5.3.2</wala.version>
+		<lsp4j.version>0.7.1</lsp4j.version>
 	</properties>
 
 	<dependencies>
@@ -24,26 +110,26 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
-		</dependency>	
+		</dependency>
 		<!-- lsp4j -->
 		<dependency>
 			<groupId>org.eclipse.lsp4j</groupId>
 			<artifactId>org.eclipse.lsp4j</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
-		<!-- soot  -->
+		<!-- soot -->
 		<dependency>
-		 	<groupId>ca.mcgill.sable</groupId>
-   			 <artifactId>soot</artifactId>
-    		<version>${soot.version}</version>
-    	</dependency>
-    	<!-- futureSoot -->
+			<groupId>ca.mcgill.sable</groupId>
+			<artifactId>soot</artifactId>
+			<version>${soot.version}</version>
+		</dependency>
+		<!-- futureSoot -->
 		<dependency>
 			<groupId>de.upb</groupId>
 			<artifactId>Soot</artifactId>
 			<version>${futuresoot.version}</version>
 		</dependency>
-		<!-- wala  -->
+		<!-- wala -->
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
@@ -107,4 +193,21 @@
 			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
 		</repository>
 	</repositories>
+
+	<scm>
+		<connection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</connection>
+		<developerConnection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</developerConnection>
+		<url>https://github.com/MagpieBridge/MagpieBridge/tree/develop</url>
+	</scm>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
