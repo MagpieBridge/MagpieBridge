@@ -24,9 +24,21 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 ## How to use MapgieBridge?
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki)
 
-## Build MagpieBridge with Maven
-1. check out the develop branch with `git clone -b develop https://github.com/MagpieBridge/MagpieBridge.git`
-2. run `mvn install` in the project root directory to build the tool and run all tests. To skip tests, run `mvn install -DskipTests`.
+## Use MagpieBridge in your Maven project
+You can either 
+1. use the release by adding this to your `pom.xml` directly (see [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.1) ) 
+````
+<dependency>
+  <groupId>magpiebridge</groupId>
+  <artifactId>magpiebridge</artifactId>
+  <version>0.0.1</version>
+</dependency>
+
+````
+
+2. or build MagpieBridge by yourself 
+    -  check out the develop branch with `git clone -b develop https://github.com/MagpieBridge/MagpieBridge.git`
+    -  run `mvn install` in the project root directory to build the tool and run all tests. To skip tests, run `mvn install -DskipTests`.
 
 ## Build MagpieBridge in IDE
 1. Simply import the project as maven project in your IDE, Maven should take care of all required dependences. For Eclipse: 
