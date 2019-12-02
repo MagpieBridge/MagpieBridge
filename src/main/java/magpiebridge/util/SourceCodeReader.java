@@ -1,3 +1,6 @@
+/*
+ * @author Linghui Luo
+ */
 package magpiebridge.util;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -20,7 +23,6 @@ public class SourceCodeReader {
    *
    * @param p the position where to get the code
    * @return the lines
-   * @throws Exception the exception
    */
   @SuppressWarnings("resource")
   public static List<String> getLines(Position p) {

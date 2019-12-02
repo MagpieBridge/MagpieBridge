@@ -359,19 +359,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   }
 
   /**
-   * Adds the analysis for different languages running on the server. This should
-   * be specified by the user of MagpieServer.<br>
+   * Adds the analysis for different languages running on the server. This should be specified by
+   * the user of MagpieServer.<br>
    * An example for adding a user-defined analysis.
    *
-   * <pre>
-   * {@code
-   * MagpieServer server = new MagpieServer();
-   * String language = "java";
-   * ServerAnalysis myAnalysis = new MyAnalysis();
-   * server.addAnalysis(language, myAnalysis);
-   * }
-   *
-   * <pre>
+   * <p>{@code MagpieServer server = new MagpieServer(); String language = "java"; ServerAnalysis
+   * myAnalysis = new MyAnalysis(); server.addAnalysis(language, myAnalysis); }
    *
    * @param language the language
    * @param analysis the analysis
@@ -387,6 +380,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * Do analysis.
    *
    * @param language the language
+   * @param rerun tells if the analysis should be reran.
    */
   public void doAnalysis(String language, boolean rerun) {
     SourceFileManager fileManager = getSourceFileManager(language);

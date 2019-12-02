@@ -75,7 +75,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   /**
    * Set the rootPath for project service if it is not set yet.
    *
-   * @param language
+   * @param language the language
    */
   protected void setProjectRootPath(String language) {
     if (server.rootPath.isPresent()) {

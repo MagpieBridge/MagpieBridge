@@ -86,7 +86,6 @@ public class InferConfig {
     return Paths.get(System.getProperty("user.home")).resolve(".gradle");
   }
 
-  /** @return */
   public Set<Path> classPath() {
     HashSet<Path> result = new HashSet<>();
     result.addAll(buildClassPath());
@@ -102,6 +101,8 @@ public class InferConfig {
   /**
    * Find directories that contain java .class files in the workspace, for example files generated
    * by maven in target/classes
+   *
+   * @return the class path.
    */
   public Set<Path> workspaceClassPath() {
     // externalDependencies
@@ -143,6 +144,12 @@ public class InferConfig {
     return Collections.emptySet();
   }
 
+  /**
+   * Parses the class path file.
+   *
+   * @param classPath the class path
+   * @return the sets the
+   */
   public Set<Path> parseClassPathFile(Path classPath) {
     Set<Path> path = new HashSet<Path>();
     try {
@@ -170,7 +177,13 @@ public class InferConfig {
     }
     return path;
   }
-  /** Recognize build root files like pom.xml and return compiler output directories */
+
+  /**
+   * Recognize build root files like pom.xml and return compiler output directories
+   *
+   * @param file the file
+   * @return the stream
+   */
   public Stream<Path> mavenOutputDirectory(Path file) {
     if (file.getFileName().toString().equals("pom.xml")) {
       Path target = file.resolveSibling("target");

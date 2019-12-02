@@ -26,82 +26,15 @@
 			<organizationUrl>https://www.hni.uni-paderborn.de/en/software-engineering/</organizationUrl>
 		</developer>
 	</developers>
-	<profiles>
-		<profile>
-			<id>deploy</id>
-			<activation>
-				<property>
-					<name>deploy</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>3.0.1</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar-no-fork</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.0.1</version>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<phase>deploy</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<soot.version>3.3.0</soot.version>
 		<futuresoot.version>4.0.0.3</futuresoot.version>
 		<wala.version>1.5.3.2</wala.version>
 		<lsp4j.version>0.7.1</lsp4j.version>
+		<javaparser.version>3.13.0</javaparser.version>
+		<commonio.version>2.6</commonio.version>
 	</properties>
 
 	<dependencies>
@@ -154,12 +87,12 @@
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
-			<version>3.13.0</version>
+			<version>${javaparser.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
+			<version>${commonio.version}</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -184,6 +117,32 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<repositories>
@@ -201,10 +160,10 @@
 	</scm>
 
 	<distributionManagement>
-	   <repository>
-	     <id>github</id>
-	     <name>GitHub MagpieBridge Apache Maven Packages</name>
-	     <url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url>
-	   </repository>
-</distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub MagpieBridge Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url>
+		</repository>
+	</distributionManagement>
 </project>
