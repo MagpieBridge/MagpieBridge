@@ -26,7 +26,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 
 ## Use MagpieBridge in your Maven project
 You can either 
-1. use the release by adding this to your `pom.xml` directly (see [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.1)) 
+1. use the release by adding this to your `pom.xml` directly (see [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.2)) 
 ````
 <dependency>
   <groupId>magpiebridge</groupId>
