@@ -1,4 +1,6 @@
 language: java
+jdk: 
+  - oraclejdk8
 install:
   # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
   # Latest version available here: https://developer.android.com/studio/#command-tools
