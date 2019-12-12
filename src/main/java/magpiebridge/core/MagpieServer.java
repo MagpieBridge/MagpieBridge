@@ -5,6 +5,9 @@ package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
+import com.ibm.wala.cast.tree.impl.LineNumberPosition;
+import com.ibm.wala.cast.util.SourceBuffer;
+import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Pair;
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +24,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +42,7 @@ import magpiebridge.command.CodeActionCommand;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -52,6 +57,7 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -73,7 +79,7 @@ import org.eclipse.lsp4j.services.WorkspaceService;
  *
  * @author Julian Dolby and Linghui Luo
  */
-public class MagpieServer implements LanguageServer, LanguageClientAware {
+public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
 
   /** The server configuration. */
   protected ServerConfiguration config;
@@ -88,7 +94,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   protected WorkspaceService workspaceService;
 
   /** The language analyzes. language mapped to a set of analyzes. */
-  protected Map<String, Collection<ServerAnalysis>> languageAnalyzes;
+  protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyzes;
 
   /**
    * The language source file managers. language mapped to its corresponding source file manager.
@@ -125,6 +131,11 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   /** The logger. */
   protected MessageLogger logger;
 
+  /** Client config */
+  private ClientCapabilities clientConfig;
+
+  final Map<String, Consumer<Command>> commands = HashMapFactory.make();
+
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
    * MagpieWorkspaceService}.
@@ -135,7 +146,7 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.config = config;
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
-    this.languageAnalyzes = new HashMap<String, Collection<ServerAnalysis>>();
+    this.languageAnalyzes = new HashMap<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
     this.languageProjectServices = new HashMap<String, IProjectService>();
     this.diagnostics = new HashMap<>();
@@ -145,6 +156,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     this.serverClientUri = new HashMap<>();
     this.falsePositives = new HashMap<>();
     logger = new MessageLogger();
+  }
+
+  public LanguageClient getClient() {
+    return client;
   }
 
   /**
@@ -258,6 +273,8 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     } else {
       this.rootPath = Optional.empty();
     }
+    clientConfig = params.getCapabilities();
+
     final ServerCapabilities caps = new ServerCapabilities();
     caps.setTypeDefinitionProvider(false);
     caps.setImplementationProvider(false);
@@ -358,6 +375,10 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     }
   }
 
+  public void addCommand(String commandName, Consumer<Command> processor) {
+    commands.put(commandName, processor);
+  }
+
   /**
    * Adds the analysis for different languages running on the server. This should be specified by
    * the user of MagpieServer.<br>
@@ -366,14 +387,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * <p>{@code MagpieServer server = new MagpieServer(); String language = "java"; ServerAnalysis
    * myAnalysis = new MyAnalysis(); server.addAnalysis(language, myAnalysis); }
    *
-   * @param language the language
    * @param analysis the analysis
+   * @param languages the languages handled by this analysis
    */
-  public void addAnalysis(String language, ServerAnalysis analysis) {
-    if (!languageAnalyzes.containsKey(language)) {
-      languageAnalyzes.put(language, new HashSet<ServerAnalysis>());
+  public void addAnalysis(Either<ServerAnalysis, ToolAnalysis> analysis, String... languages) {
+    for (String language : languages) {
+      if (!languageAnalyzes.containsKey(language)) {
+        languageAnalyzes.put(language, new HashSet<>());
+      }
+      languageAnalyzes.get(language).add(analysis);
     }
-    languageAnalyzes.get(language).add(analysis);
   }
 
   /**
@@ -387,8 +410,12 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     if (!languageAnalyzes.containsKey(language)) {
       languageAnalyzes.put(language, Collections.emptyList());
     }
-    for (ServerAnalysis analysis : languageAnalyzes.get(language)) {
-      analysis.analyze(fileManager.getSourceFileModules().values(), this, rerun);
+    for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
+      if (analysis.isLeft()) {
+        analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this);
+      } else {
+        analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this);
+      }
     }
   }
 
@@ -459,6 +486,18 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
   @Override
   public WorkspaceService getWorkspaceService() {
     return this.workspaceService;
+  }
+
+  public boolean clientSupportsMarkdown() {
+    return clientConfig != null
+        && clientConfig.getTextDocument() != null
+        && clientConfig.getTextDocument().getHover() != null
+        && clientConfig.getTextDocument().getHover().getContentFormat() != null
+        && clientConfig
+            .getTextDocument()
+            .getHover()
+            .getContentFormat()
+            .contains(MarkupKind.MARKDOWN);
   }
 
   /**
@@ -565,6 +604,18 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
                         "Fix: replace it with " + replace, range, replace, clientUri, d);
                 addCodeAction(url, d.getRange(), fix);
               }
+            } else if (result.command() != null) {
+              result
+                  .command()
+                  .forEach(
+                      (cmd) -> {
+                        CodeAction act = new CodeAction();
+                        act.setCommand(cmd);
+                        act.setTitle(cmd.getTitle());
+                        act.setDiagnostics(Collections.singletonList(d));
+                        act.setKind("info");
+                        addCodeAction(url, d.getRange(), act);
+                      });
             }
             if (config.reportFalsePositive()) {
               // report false positive
@@ -607,9 +658,23 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
             URL clientURL = new URL(clientUri);
             Position pos = replaceURL(result.position(), clientURL);
             Hover hover = new Hover();
+
             List<Either<String, MarkedString>> contents = new ArrayList<>();
-            Either<String, MarkedString> content = Either.forLeft(result.toString(true));
-            contents.add(content);
+            if (clientConfig != null
+                && clientConfig.getTextDocument().getHover().getContentFormat() != null
+                && clientConfig
+                    .getTextDocument()
+                    .getHover()
+                    .getContentFormat()
+                    .contains(MarkupKind.MARKDOWN)) {
+              contents.add(
+                  Either.forRight(new MarkedString(MarkupKind.MARKDOWN, result.toString(true))));
+            } else {
+              for (String str : result.toString(false).split("\n")) {
+                Either<String, MarkedString> content = Either.forLeft(str);
+                contents.add(content);
+              }
+            }
             hover.setContents(contents);
             hover.setRange(getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
@@ -640,7 +705,16 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
             String clientUri = getClientUri(serverUri);
             URL clientURL = new URL(clientUri);
             CodeLens codeLens = new CodeLens();
-            codeLens.setCommand(new Command("repair", result.repair().snd));
+            if (result.repair() != null) {
+              codeLens.setCommand(new Command("repair", "repair " + result.repair().snd));
+              codeLens
+                  .getCommand()
+                  .setArguments(
+                      Arrays.asList(
+                          this.getLocationFrom(result.repair().fst), result.repair().snd));
+            } else {
+              codeLens.setCommand(result.command().iterator().next());
+            }
             codeLens.setRange(getLocationFrom(result.position()).getRange());
             List<CodeLens> list = new ArrayList<>();
             if (this.codeLenses.containsKey(clientURL)) {
@@ -710,6 +784,90 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
     return clientUri;
   }
 
+  private Position getPositionWithColumns(Position p) {
+    if (p.getFirstCol() >= 0) {
+      return p;
+    } else {
+      Position firstLineP = new LineNumberPosition(p.getURL(), p.getURL(), p.getFirstLine());
+      SourceBuffer firstLine = null;
+      try {
+        firstLine = new SourceBuffer(firstLineP);
+      } catch (IOException e) {
+        assert false : e;
+      }
+      String firstLineText = firstLine.toString();
+
+      String pText = null;
+      try {
+        pText = new SourceBuffer(p).toString();
+      } catch (IOException e) {
+        assert false : e;
+      }
+
+      int lines = pText.split("\n").length;
+
+      String pFirst = pText;
+      if (pText.contains("\n")) {
+        pFirst = pText.substring(0, pText.indexOf("\n"));
+      }
+
+      int endCol;
+      int startCol = firstLineText.indexOf(pFirst);
+
+      if (!pText.contains("\n")) {
+        endCol = startCol + pText.length();
+      } else {
+        String lastLineText = pText.substring(pText.lastIndexOf("\n"), pText.length());
+        endCol = lastLineText.length();
+      }
+
+      return new AbstractSourcePosition() {
+        @Override
+        public Reader getReader() throws IOException {
+          return p.getReader();
+        }
+
+        @Override
+        public URL getURL() {
+          return p.getURL();
+        }
+
+        @Override
+        public int getFirstCol() {
+          return startCol;
+        }
+
+        @Override
+        public int getFirstLine() {
+          return p.getFirstLine();
+        }
+
+        @Override
+        public int getFirstOffset() {
+          return p.getFirstOffset();
+        }
+
+        @Override
+        public int getLastCol() {
+          return endCol;
+        }
+
+        @Override
+        public int getLastLine() {
+          if (p.getLastLine() >= 0) {
+            return p.getLastLine();
+          } else {
+            return p.getFirstLine() + lines - 1;
+          }
+        }
+
+        @Override
+        public int getLastOffset() {
+          return p.getLastOffset();
+        }
+      };
+    }
+  }
   /**
    * Gets the location from given position.
    *
@@ -724,16 +882,9 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
       e.printStackTrace();
     }
     Range codeRange = new Range();
-    if (pos.getFirstCol() < 0) {
-      codeRange.setStart(getPositionFrom(pos.getFirstLine(), 0)); // imprecise
-    } else {
-      codeRange.setStart(getPositionFrom(pos.getFirstLine(), pos.getFirstCol()));
-    }
-    if (pos.getLastLine() < 0) {
-      codeRange.setEnd(getPositionFrom(pos.getFirstLine() + 1, 0)); // imprecise
-    } else {
-      codeRange.setEnd(getPositionFrom(pos.getLastLine(), pos.getLastCol()));
-    }
+    Position detail = getPositionWithColumns(pos);
+    codeRange.setEnd(getPositionFrom(detail.getLastLine(), detail.getLastCol()));
+    codeRange.setStart(getPositionFrom(detail.getFirstLine(), detail.getFirstCol()));
     codeLocation.setRange(codeRange);
     return codeLocation;
   }
@@ -875,13 +1026,23 @@ public class MagpieServer implements LanguageServer, LanguageClientAware {
    * @return the hover
    */
   public Hover findHover(Position lookupPos) {
+    int size = Integer.MAX_VALUE;
     Hover hover = null;
     if (this.hovers.containsKey(lookupPos.getURL())) {
       NavigableMap<Position, Hover> map = this.hovers.get(lookupPos.getURL());
       for (Position pos : map.keySet()) {
-        if (areNearPositions(pos, lookupPos, 5)) {
-          hover = map.get(pos);
-          break;
+        if ((pos.getFirstLine() <= lookupPos.getFirstLine()
+                && (pos.getLastLine() >= lookupPos.getFirstLine()))
+            && ((pos.getFirstCol() - 5 <= lookupPos.getFirstCol())
+                && (pos.getLastCol() + 5 >= lookupPos.getLastCol()))) {
+          int sz =
+              (pos.getFirstLine() == pos.getLastLine())
+                  ? pos.getLastCol() - pos.getFirstCol()
+                  : 80 * (pos.getLastLine() - pos.getFirstLine());
+          if (sz < size) {
+            hover = map.get(pos);
+            size = sz;
+          }
         }
       }
     }
