@@ -11,9 +11,8 @@ import org.eclipse.lsp4j.services.LanguageClient;
  *
  * @author Linghui Luo
  */
+@FunctionalInterface
 public interface WorkspaceCommand {
-
-  public String getName();
 
   public void execute(ExecuteCommandParams params, MagpieServer server, LanguageClient client);
 }

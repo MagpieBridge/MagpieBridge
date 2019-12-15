@@ -72,7 +72,6 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
-import org.eclipse.lsp4j.services.WorkspaceService;
 
 /**
  * The Class MagpieServer.
@@ -91,7 +90,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected TextDocumentService textDocumentService;
 
   /** The workspace service. */
-  protected WorkspaceService workspaceService;
+  protected MagpieWorkspaceService workspaceService;
 
   /** The language analyzes. language mapped to a set of analyzes. */
   protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyzes;
@@ -176,7 +175,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    *
    * @param workspaceService the new workspace service
    */
-  public void setWorkspaceService(WorkspaceService workspaceService) {
+  public void setWorkspaceService(MagpieWorkspaceService workspaceService) {
     this.workspaceService = workspaceService;
   }
 
@@ -375,8 +374,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
-  public void addCommand(String commandName, Consumer<Command> processor) {
-    commands.put(commandName, processor);
+  public void addCommand(String commandName, WorkspaceCommand processor) {
+    getWorkspaceService().commands.put(commandName, processor);
   }
 
   /**
@@ -484,7 +483,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @see org.eclipse.lsp4j.services.LanguageServer#getWorkspaceService()
    */
   @Override
-  public WorkspaceService getWorkspaceService() {
+  public MagpieWorkspaceService getWorkspaceService() {
     return this.workspaceService;
   }
 

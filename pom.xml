@@ -32,7 +32,7 @@
 		<soot.version>3.3.0</soot.version>
 		<futuresoot.version>4.0.0.3</futuresoot.version>
 		<wala.version>1.5.5-SNAPSHOT</wala.version>
-   		<lsp4j.version>0.6.0-SNAPSHOT</lsp4j.version>
+   		<lsp4j.version>0.8.1</lsp4j.version>
 		<javaparser.version>3.13.0</javaparser.version>
 		<commonio.version>2.6</commonio.version>
 	</properties>
@@ -47,7 +47,7 @@
 		<!-- lsp4j -->
 		<dependency>
 			<groupId>org.eclipse.lsp4j</groupId>
-			<artifactId>org.eclipse.lsp4j.websockets</artifactId>
+			<artifactId>org.eclipse.lsp4j.websocket</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
 		<dependency>
@@ -146,6 +146,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.1.1</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
