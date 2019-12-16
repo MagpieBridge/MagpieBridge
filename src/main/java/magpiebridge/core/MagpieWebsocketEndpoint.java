@@ -18,8 +18,7 @@ public class MagpieWebsocketEndpoint extends WebSocketEndpoint<LanguageClient> {
     builder
         .setLocalService(server)
         .setRemoteInterface(LanguageClient.class)
-        .setExecutorService(Executors.newCachedThreadPool())
-        .wrapMessages(server.logger.getWrapper());
+        .setExecutorService(Executors.newCachedThreadPool());
   }
 
   @Override
