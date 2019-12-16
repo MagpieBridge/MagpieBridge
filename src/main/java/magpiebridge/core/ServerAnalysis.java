@@ -1,11 +1,8 @@
-/*
- * @author Linghui Luo
- */
 package magpiebridge.core;
 
 /**
- * The Interface ServerAnalysis.
+ * The Interface for analysis which reports warnings in the client IDE.
  *
  * @author Julian Dolby and Linghui Luo
  */
-public interface ServerAnalysis extends AbstractAnalysis<MagpieServer> {}
+public interface ServerAnalysis extends Analysis<MagpieServer> {}

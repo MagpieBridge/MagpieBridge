@@ -10,6 +10,11 @@ import magpiebridge.core.WorkspaceCommand;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
+/**
+ * Implementation of opening an URL in browser.
+ *
+ * @author Julian Dolby
+ */
 public class OpenURLCommand implements WorkspaceCommand {
 
   @Override

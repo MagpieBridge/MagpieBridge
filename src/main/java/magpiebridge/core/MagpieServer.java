@@ -384,7 +384,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * An example for adding a user-defined analysis.
    *
    * <p>{@code MagpieServer server = new MagpieServer(); String language = "java"; ServerAnalysis
-   * myAnalysis = new MyAnalysis(); server.addAnalysis(language, myAnalysis); }
+   * myAnalysis = new MyAnalysis(); server.addAnalysis(myAnalysis, Either.forLeft(myAnalysis)); }
    *
    * @param analysis the analysis
    * @param languages the languages handled by this analysis
@@ -411,9 +411,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
     for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
       if (analysis.isLeft()) {
-        analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this);
+        analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
       } else {
-        analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this);
+        analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
       }
     }
   }
