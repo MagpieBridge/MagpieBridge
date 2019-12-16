@@ -591,13 +591,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               // add code action (quickfix) related to analysis result
               Position fixPos = result.repair().fst;
               if (fixPos != null) {
-                Range range = new Range();
                 String replace = result.repair().snd;
-                range.setStart(
-                    new org.eclipse.lsp4j.Position(
-                        fixPos.getFirstLine() - 1, fixPos.getFirstCol()));
-                range.setEnd(
-                    new org.eclipse.lsp4j.Position(fixPos.getLastLine() - 1, fixPos.getLastCol()));
+                Range range = getLocationFrom(fixPos).getRange();
                 CodeAction fix =
                     CodeActionGenerator.replace(
                         "Fix: replace it with " + replace, range, replace, clientUri, d);
@@ -705,12 +700,11 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             URL clientURL = new URL(clientUri);
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
-              codeLens.setCommand(new Command("repair", "repair " + result.repair().snd));
+              Location loc = this.getLocationFrom(result.repair().fst);
+              codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
               codeLens
                   .getCommand()
-                  .setArguments(
-                      Arrays.asList(
-                          this.getLocationFrom(result.repair().fst), result.repair().snd));
+                  .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));
             } else {
               codeLens.setCommand(result.command().iterator().next());
             }
