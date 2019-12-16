@@ -27,11 +27,6 @@ import org.eclipse.lsp4j.services.LanguageClient;
 public class FixCommand implements WorkspaceCommand {
 
   @Override
-  public String getName() {
-    return CodeActionCommand.fix.name();
-  }
-
-  @Override
   public void execute(ExecuteCommandParams params, MagpieServer server, LanguageClient client) {
     List<Object> args = params.getArguments();
     JsonPrimitive juri = (JsonPrimitive) args.get(0);

@@ -1,6 +1,5 @@
 package magpiebridge.file;
 
-import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.SourceFileModule;
 import com.ibm.wala.util.io.TemporaryFile;
 import java.io.BufferedReader;
@@ -31,7 +30,7 @@ public class SourceFileManager {
   /** Client-side URI mapped to versioned source file. */
   private Map<URI, VersionedSourceFile> versionedFiles;
   /** Client-side URI mapped to source file module. */
-  private Map<URI, Module> sourceFileModules;
+  private Map<URI, SourceFileModule> sourceFileModules;
   /** Server-side URI string mapped to client-side URI string. */
   private Map<String, String> serverClientUri;
 
@@ -147,6 +146,10 @@ public class SourceFileManager {
       URI serverUri = Paths.get(file.toURI()).toUri();
       // store the mapping from server-side URI to client-side URI.
       this.serverClientUri.put(serverUri.toString(), clientUri.toString());
+      if (serverUri.toString().startsWith("file:///")) {
+        this.serverClientUri.put(
+            "file:/" + serverUri.toString().substring(8), clientUri.toString());
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -160,12 +163,12 @@ public class SourceFileManager {
   private String getFileSuffix() {
     if (language.equals("java")) {
       return ".java";
-    } else if (language.equals("python")) {
+    } else if (language.equals("python") || language.equals("py")) {
       return ".py";
-    } else if (language.equals("javascript")) {
+    } else if (language.equals("javascript") || language.equals("js")) {
       return ".js";
     } else {
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException("unsupportd language " + language);
     }
   }
 
@@ -183,7 +186,7 @@ public class SourceFileManager {
    *
    * @return the source file modules
    */
-  public Map<URI, Module> getSourceFileModules() {
+  public Map<URI, SourceFileModule> getSourceFileModules() {
     return sourceFileModules;
   }
 }

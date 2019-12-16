@@ -24,11 +24,6 @@ import org.eclipse.lsp4j.services.LanguageClient;
 public class ReportFalsePositiveCommand implements WorkspaceCommand {
 
   @Override
-  public String getName() {
-    return CodeActionCommand.reportFP.name();
-  }
-
-  @Override
   public void execute(ExecuteCommandParams params, MagpieServer server, LanguageClient client) {
     client.showMessage(new MessageParams(MessageType.Info, "False alarm was reported."));
     List<Object> args = params.getArguments();

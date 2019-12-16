@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
@@ -18,11 +19,13 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.ColorInformation;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
+import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -51,6 +54,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public MagpieTextDocumentService(MagpieServer server) {
     this.server = server;
     this.isFirstOpenedFile = true;
+  }
+
+  @Override
+  public CompletableFuture<List<ColorInformation>> documentColor(DocumentColorParams params) {
+    return CompletableFuture.completedFuture(Collections.emptyList());
   }
 
   @Override
