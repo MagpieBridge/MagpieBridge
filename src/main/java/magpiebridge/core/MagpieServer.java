@@ -15,12 +15,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -137,7 +139,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
-   * MagpieWorkspaceService}.
+   * MagpieWorkspaceService} with given {@link ServerConfiguration}.
    *
    * @param config the config
    */
@@ -384,7 +386,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * An example for adding a user-defined analysis.
    *
    * <p>{@code MagpieServer server = new MagpieServer(); String language = "java"; ServerAnalysis
-   * myAnalysis = new MyAnalysis(); server.addAnalysis(myAnalysis, Either.forLeft(myAnalysis)); }
+   * myAnalysis = new MyAnalysis(); Either<ServerAnalysis, ToolAnalysis>
+   * analysis=Either.forLeft(myAnalysis); server.addAnalysis(analysis,language); }
    *
    * @param analysis the analysis
    * @param languages the languages handled by this analysis
@@ -572,12 +575,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           d.setSource(source);
           d.setCode(result.code());
           List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
-          for (Pair<Position, String> related : result.related()) {
-            DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-            di.setLocation(getLocationFrom(related.fst));
-            di.setMessage(related.snd);
-            relatedList.add(di);
-          }
+          if (result.related() != null)
+            for (Pair<Position, String> related : result.related()) {
+              DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
+              di.setLocation(getLocationFrom(related.fst));
+              di.setMessage(related.snd);
+              relatedList.add(di);
+            }
           d.setRelatedInformation(relatedList);
           d.setSeverity(result.severity());
           if (!diagList.contains(d)) {
@@ -586,7 +590,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           String serverUri = result.position().getURL().toString();
           String clientUri = getClientUri(serverUri);
           try {
-            URL url = new URL(clientUri);
+            URL url = new URL(URLDecoder.decode(clientUri, "UTF-8"));
             if (result.repair() != null) {
               // add code action (quickfix) related to analysis result
               Position fixPos = result.repair().fst;
@@ -628,7 +632,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                       title, clientUri, d, CodeActionCommand.reportConfusion.name());
               addCodeAction(url, d.getRange(), reportConfusion);
             }
-          } catch (MalformedURLException e) {
+          } catch (MalformedURLException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
           if (clientUri != null) {

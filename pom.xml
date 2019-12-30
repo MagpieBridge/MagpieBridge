@@ -5,7 +5,7 @@
 
 	<groupId>magpiebridge</groupId>
 	<artifactId>magpiebridge</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.6</version>
 	<packaging>jar</packaging>
 	<name>magpiebridge</name>
 	<url>https://github.com/MagpieBridge/MagpieBridge</url>
@@ -26,13 +26,12 @@
 			<organizationUrl>https://www.hni.uni-paderborn.de/en/software-engineering/</organizationUrl>
 		</developer>
 	</developers>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<soot.version>3.3.0</soot.version>
-		<futuresoot.version>4.0.0.3</futuresoot.version>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<wala.version>1.5.4</wala.version>
-   		<lsp4j.version>0.8.1</lsp4j.version>
+		<lsp4j.version>0.8.1</lsp4j.version>
 		<javaparser.version>3.13.0</javaparser.version>
 		<commonio.version>2.6</commonio.version>
 	</properties>
@@ -55,30 +54,21 @@
 			<artifactId>org.eclipse.lsp4j</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
-		<!-- soot -->
-		<dependency>
-			<groupId>ca.mcgill.sable</groupId>
-			<artifactId>soot</artifactId>
-			<version>${soot.version}</version>
-		</dependency>
-		<!-- futureSoot -->
-		<dependency>
-			<groupId>de.upb</groupId>
-			<artifactId>Soot</artifactId>
-			<version>${futuresoot.version}</version>
-		</dependency>
 		<!-- wala -->
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
 			<version>${wala.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.cast</artifactId>
 			<version>${wala.version}</version>
-			<scope>test</scope>
+		</dependency>
+		<!-- <dependency>
+			<groupId>com.ibm.wala</groupId>
+			<artifactId>com.ibm.wala.shrike</artifactId>
+			<version>${wala.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
@@ -89,7 +79,7 @@
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.util</artifactId>
 			<version>${wala.version}</version>
-		</dependency>
+		</dependency> -->
 		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
@@ -102,9 +92,9 @@
 			<version>${commonio.version}</version>
 		</dependency>
 		<dependency>
-		  <groupId>org.apache.commons</groupId>
-		  <artifactId>commons-lang3</artifactId>
-		  <version>3.9</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.9</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -130,9 +120,7 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -142,11 +130,8 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.1.1</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -158,14 +143,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>wala</id>
-			<name>wala snapshots</name>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/wala/</url>
-		</repository>
-	</repositories>
-
 	<scm>
 		<connection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</connection>
 		<developerConnection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</developerConnection>
