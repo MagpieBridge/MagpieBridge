@@ -25,7 +25,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
 ## How to use MapgieBridge?
-- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki)
+- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Use MagpieBridge in your Maven project
 You can either 
