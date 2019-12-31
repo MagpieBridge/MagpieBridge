@@ -20,12 +20,12 @@ on opposite sides of the Milky Way. However, on the seventh day of the seventh l
 thousands of magpies form a bridge, called 鹊桥 in Chinese and Queqiao in pinyin, allowing the lovers
 to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary static analysis to arbitrary IDE.
 
+## How to use MapgieBridge?
+- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
+
 ## Integrated Static Analyses using MagpieBridge
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
-
-## How to use MapgieBridge?
-- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Use MagpieBridge in your Maven project
 You can either 
