@@ -29,7 +29,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 
 ## Use MagpieBridge in your Maven project
 You can either 
-1. use the release by adding the following lines to your `pom.xml` (See all [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.6)). You can follow [this instruction](https://github.com/MagpieBridge/MagpieBridge/wiki/How-To-Install-a-GitHub-Maven-Package) 
+1. MagpieBridge is published on the GitHub Package Registry. You can use the release by adding the following lines to your `pom.xml` (See all [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.6)). You can follow [this instruction](https://github.com/MagpieBridge/MagpieBridge/wiki/How-To-Install-a-GitHub-Maven-Package). 
 ````
 <dependencies>
   ...
