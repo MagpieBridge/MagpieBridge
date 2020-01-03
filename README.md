@@ -31,12 +31,22 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 You can either 
 1. use the release by adding this to your `pom.xml` directly (see [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.6)) 
 ````
-<dependency>
-  <groupId>magpiebridge</groupId>
-  <artifactId>magpiebridge</artifactId>
-  <version>0.0.6</version>
-</dependency>
+<dependencies>
+  ...
+  <dependency>
+    <groupId>magpiebridge</groupId>
+    <artifactId>magpiebridge</artifactId>
+    <version>0.0.6</version>
+  </dependency>
+</dependencies>
 
+<repositories>
+  <repository>
+    <id>github</id>
+    <name>GitHub MagpieBridge Apache Maven Packages</name>
+    <url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url>
+  </repository>
+</repositories>
 ````
 
 2. or build MagpieBridge by yourself 
