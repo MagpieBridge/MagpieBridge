@@ -5,5 +5,5 @@ import java.util.Collection;
 @FunctionalInterface
 public interface AnalysisConsumer {
 
-  void consume(Collection<AnalysisResult> results, String source);
+  void consume(Collection<AnalysisResult> results, Analysis source);
 }

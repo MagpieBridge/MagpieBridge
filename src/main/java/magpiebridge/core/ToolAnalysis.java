@@ -5,4 +5,4 @@ package magpiebridge.core;
  *
  * @author Julian Dolby
  */
-public interface ToolAnalysis extends Analysis<AnalysisConsumer> {}
+public interface ToolAnalysis extends Analysis {}

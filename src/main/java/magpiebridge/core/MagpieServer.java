@@ -3,24 +3,33 @@
  */
 package magpiebridge.core;
 
+import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 import com.ibm.wala.cast.tree.impl.LineNumberPosition;
 import com.ibm.wala.cast.util.SourceBuffer;
 import com.ibm.wala.util.collections.HashMapFactory;
+import com.ibm.wala.util.collections.HashSetFactory;
 import com.ibm.wala.util.collections.Pair;
+import com.ibm.wala.util.io.FileUtil;
+import com.sun.net.httpserver.HttpServer;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,6 +51,8 @@ import magpiebridge.command.CodeActionCommand;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -66,12 +77,12 @@ import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.launch.LSPLauncher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.springframework.util.SocketUtils;
 
 /**
  * The Class MagpieServer.
@@ -103,9 +114,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The language project services. language mapped to its project service. */
   protected Map<String, IProjectService> languageProjectServices;
 
-  /** The diagnostics. */
-  protected Map<URL, List<Diagnostic>> diagnostics;
-
   /** The hovers. */
   protected Map<URL, NavigableMap<Position, Hover>> hovers;
 
@@ -133,6 +141,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** Client config */
   private ClientCapabilities clientConfig;
 
+  private Object configGuard = new Object();
+
   final Map<String, Consumer<Command>> commands = HashMapFactory.make();
 
   /**
@@ -148,7 +158,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.languageAnalyzes = new HashMap<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
     this.languageProjectServices = new HashMap<String, IProjectService>();
-    this.diagnostics = new HashMap<>();
     this.hovers = new HashMap<>();
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
@@ -191,12 +200,22 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param out the out
    */
   public void launchOnStream(InputStream in, OutputStream out) {
-    Launcher<LanguageClient> launcher;
-    launcher =
-        LSPLauncher.createServerLauncher(
-            this, in, out, Executors.newCachedThreadPool(), logger.getWrapper());
+    Launcher<MagpieLanguageClient> launcher = clientLauncher(in, out);
     connect(launcher.getRemoteProxy());
     launcher.startListening();
+  }
+
+  private Launcher<MagpieLanguageClient> clientLauncher(InputStream in, OutputStream out) {
+    Launcher<MagpieLanguageClient> launcher =
+        new Builder<MagpieLanguageClient>()
+            .setLocalService(this)
+            .setRemoteInterface(MagpieLanguageClient.class)
+            .setInput(in)
+            .setOutput(out)
+            .setExecutorService(Executors.newCachedThreadPool())
+            .wrapMessages(logger.getWrapper())
+            .create();
+    return launcher;
   }
 
   /**
@@ -208,13 +227,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public void launchOnSocketPort(String host, int port) {
     try {
       connectionSocket = new Socket(host, port);
-      Launcher<LanguageClient> launcher =
-          LSPLauncher.createServerLauncher(
-              this,
-              connectionSocket.getInputStream(),
-              connectionSocket.getOutputStream(),
-              Executors.newCachedThreadPool(),
-              logger.getWrapper());
+      Launcher<MagpieLanguageClient> launcher =
+          clientLauncher(connectionSocket.getInputStream(), connectionSocket.getOutputStream());
       connect(launcher.getRemoteProxy());
       launcher.startListening();
     } catch (IOException e) {
@@ -231,10 +245,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     try {
       ServerSocket serverSocket = new ServerSocket(port);
       connectionSocket = serverSocket.accept();
-      Launcher<LanguageClient> launcher =
-          new Builder<LanguageClient>()
+      Launcher<MagpieLanguageClient> launcher =
+          new Builder<MagpieLanguageClient>()
               .setLocalService(this)
-              .setRemoteInterface(LanguageClient.class)
+              .setRemoteInterface(MagpieLanguageClient.class)
               .setInput(connectionSocket.getInputStream())
               .setOutput(connectionSocket.getOutputStream())
               .setExecutorService(Executors.newCachedThreadPool())
@@ -306,7 +320,111 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * InitializedParams)
    */
   @Override
-  public void initialized(InitializedParams params) {}
+  public void initialized(InitializedParams params) {
+    configureAnalyses();
+  }
+
+  @SuppressWarnings("restriction")
+  private void configureAnalyses() {
+    StringBuffer form = new StringBuffer();
+    this.languageAnalyzes
+        .values()
+        .forEach(
+            a -> {
+              a.forEach(
+                  e -> {
+                    Analysis x = e.isLeft() ? e.getLeft() : e.getRight();
+                    String config = x.configuration();
+                    if (config != null) {
+                      form.append("<H3>" + x.source() + "</H3>" + config + "<BR>\n");
+                    }
+                  });
+            });
+    if (form.length() > 0) {
+      String hostname;
+      try {
+        InetAddress addr = InetAddress.getLocalHost();
+        hostname = addr.getHostAddress();
+      } catch (UnknownHostException e) {
+        hostname = "localhost";
+      }
+
+      InetSocketAddress socket =
+          new InetSocketAddress(hostname, SocketUtils.findAvailableTcpPort());
+
+      try {
+        HttpServer receiver = HttpServer.create(socket, 0);
+        receiver.createContext(
+            "/config",
+            he -> {
+              URI uri = he.getRequestURI();
+              // String response = "configured";
+              // he.sendResponseHeaders(200, response.length());
+              // OutputStream os = he.getResponseBody();
+              // os.write(response.getBytes());
+              // os.close();
+              he.close();
+              List<NameValuePair> qparams = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
+              this.languageAnalyzes
+                  .values()
+                  .forEach(
+                      a ->
+                          a.forEach(
+                              e -> (e.isLeft() ? e.getLeft() : e.getRight()).configure(qparams)));
+              if (configGuard != null) {
+                configGuard = null;
+
+                MessageParams mp = new MessageParams();
+                mp.setType(MessageType.Info);
+                mp.setMessage("Analyses configured");
+                client.showMessage(mp);
+
+                onConfig();
+              }
+            });
+        receiver.start();
+
+        /*
+         * It might seem more natural if the form below had a submit button.  Indeed, it would
+         * be more natural; however, misguided notions of security in VSCode prevent it from
+         * submitting forms and making most other requests.  But it does permit ordinary
+         * <a href="..."> links, so the setit function below uses JavaScript to put the
+         * query parameters into the href property of an ordinary link.  The function returns
+         * true so that, after it executes, the link then fires with the altered href.
+         */
+        String html =
+            "<html><head><title>MagpieBridge Configuration</title></head>\n"
+                + "<body><form id=\"config\" >\n"
+                + form
+                + "</form>\n<script>\nfunction setit() { "
+                + "  x=document.getElementById(\"lnk\");\n"
+                + "  f=document.getElementById(\"config\");\n"
+                + "  for(let p of f.elements) { x.href = x.href + \"?\" + p.name + \"=\" + p.value; }\n  return true; }\n</script>\n"
+                + "<a id=\"lnk\" onclick=\"setit();\" href=\"http://"
+                + hostname
+                + ":"
+                + socket.getPort()
+                + "/config\">Set</a>\n"
+                + "</body></html>";
+
+        if (clientSupportsShowHTML()) {
+          MessageParams mp = new MessageParams();
+          mp.setMessage(html);
+          mp.setType(MessageType.Info);
+          ((MagpieLanguageClient) client).showHTML(mp);
+        } else if (Desktop.isDesktopSupported()) {
+          File f = File.createTempFile("config", ".html");
+          FileUtil.writeFile(f, html);
+          f.deleteOnExit();
+          Desktop.getDesktop().browse(f.toURI());
+        }
+
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+  }
 
   /*
    * (non-Javadoc)
@@ -398,6 +516,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
+  private final Set<Pair<String, Analysis>> awaitConfig = HashSetFactory.make();
+
+  private void onConfig() {
+    awaitConfig.forEach(
+        p -> {
+          SourceFileManager fileManager = getSourceFileManager(p.fst);
+          p.snd.analyze(fileManager.getSourceFileModules().values(), this, false);
+        });
+    awaitConfig.clear();
+  }
+
   /**
    * Do analysis.
    *
@@ -410,11 +539,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       languageAnalyzes.put(language, Collections.emptyList());
     }
     for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
-      if (analysis.isLeft()) {
-        analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
-      } else {
-        analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+      Analysis a = analysis.isLeft() ? analysis.getLeft() : analysis.getRight();
+      if (a.configuration() != null && configGuard != null) {
+        awaitConfig.add(Pair.make(language, a));
+        return;
       }
+      a.analyze(fileManager.getSourceFileModules().values(), this, rerun);
     }
   }
 
@@ -422,9 +552,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * Consume the analysis results.
    *
    * @param results the results
-   * @param source the source
+   * @param analysis the analysis
    */
-  public void consume(Collection<AnalysisResult> results, String source) {
+  public void consume(Collection<AnalysisResult> results, Analysis analysis) {
+    String source = analysis.source();
     Map<String, List<Diagnostic>> publishDiags = new HashMap<>();
     for (AnalysisResult result : results) {
       URL serverURL = result.position().getURL();
@@ -433,11 +564,11 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         switch (result.kind()) {
           case Diagnostic:
             List<Diagnostic> diagList = null;
-            if (this.diagnostics.containsKey(clientURL)) {
-              diagList = diagnostics.get(clientURL);
+            if (publishDiags.containsKey(clientURL.toString())) {
+              diagList = publishDiags.get(clientURL.toString());
             } else {
               diagList = new ArrayList<>();
-              this.diagnostics.put(clientURL, diagList);
+              publishDiags.put(clientURL.toString(), diagList);
             }
             if (!isFalsePositive(result)) {
               createDiagnosticConsumer(publishDiags, diagList, source).accept(result);
@@ -497,6 +628,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             .getHover()
             .getContentFormat()
             .contains(MarkupKind.MARKDOWN);
+  }
+
+  public boolean clientSupportsShowHTML() {
+    return clientConfig != null
+        && clientConfig.getExperimental() instanceof JsonObject
+        && ((JsonObject) clientConfig.getExperimental()).has("supportsShowHTML")
+        && ((JsonObject) clientConfig.getExperimental()).get("supportsShowHTML").getAsBoolean();
   }
 
   /**
@@ -1107,11 +1245,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /** Clean up all analysis results. */
   public void cleanUp() {
-    for (URL url : diagnostics.keySet()) {
-      client.publishDiagnostics(
-          new PublishDiagnosticsParams(getClientUri(url.toString()), Collections.emptyList()));
-    }
-    this.diagnostics.clear();
     this.codeActions.clear();
     this.hovers.clear();
     this.codeLenses.clear();
