@@ -110,8 +110,10 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didSave(DidSaveTextDocumentParams params) {
     if (server.config.doAnalysisBySave()) {
       server.cleanUp();
-      server.client.showMessage(
-          new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+      if (server.client != null) {
+        server.client.showMessage(
+            new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+      }
       // re-analyze when file is saved.
       String language = inferLanguage(params.getTextDocument().getUri());
       server.doAnalysis(language, true);
