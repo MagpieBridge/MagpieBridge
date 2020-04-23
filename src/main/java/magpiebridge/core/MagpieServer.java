@@ -38,8 +38,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import magpiebridge.command.CodeActionCommand;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MessageLogger;
@@ -81,6 +84,10 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  * @author Julian Dolby and Linghui Luo
  */
 public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
+
+  private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
+
+  private static ServerSocket serverSocket;
 
   /** The server configuration. */
   protected ServerConfiguration config;
@@ -125,9 +132,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /** Map server-side URI to client-side URI. */
   protected Map<String, String> serverClientUri;
-
-  /** The connection socket. */
-  protected Socket connectionSocket;
 
   /** The logger. */
   protected MessageLogger logger;
@@ -194,29 +198,30 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void launchOnStream(InputStream in, OutputStream out) {
     Launcher<LanguageClient> launcher;
-    launcher =
-        LSPLauncher.createServerLauncher(
-            this, in, out, Executors.newCachedThreadPool(), logger.getWrapper());
+    launcher = LSPLauncher.createServerLauncher(this, in, out, THREAD_POOL, logger.getWrapper());
     connect(launcher.getRemoteProxy());
     launcher.startListening();
   }
 
   /**
-   * Launch on socket port with given host.
+   * Launch on socket port.
    *
-   * @param host the host
    * @param port the port
+   * @deprecated use {@link #launchOnSocketPort(int, Supplier)} instead
    */
-  public void launchOnSocketPort(String host, int port) {
+  public void launchOnSocketPort(int port) {
     try {
-      connectionSocket = new Socket(host, port);
+      serverSocket = new ServerSocket(port);
+      Socket connectionSocket = serverSocket.accept();
       Launcher<LanguageClient> launcher =
-          LSPLauncher.createServerLauncher(
-              this,
-              connectionSocket.getInputStream(),
-              connectionSocket.getOutputStream(),
-              Executors.newCachedThreadPool(),
-              logger.getWrapper());
+          new Builder<LanguageClient>()
+              .setLocalService(this)
+              .setRemoteInterface(LanguageClient.class)
+              .setInput(connectionSocket.getInputStream())
+              .setOutput(connectionSocket.getOutputStream())
+              .setExecutorService(Executors.newCachedThreadPool())
+              .wrapMessages(logger.getWrapper())
+              .create();
       connect(launcher.getRemoteProxy());
       launcher.startListening();
     } catch (IOException e) {
@@ -225,25 +230,42 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Launch on socket port.
+   * Launch on socket port. Will create a new {@link MagpieServer} instance for each new connecting
+   * client using the given supplier.
    *
    * @param port the port
    */
-  public void launchOnSocketPort(int port) {
+  public static void launchOnSocketPort(int port, Supplier<MagpieServer> createServer) {
     try {
-      ServerSocket serverSocket = new ServerSocket(port);
-      connectionSocket = serverSocket.accept();
-      Launcher<LanguageClient> launcher =
-          new Builder<LanguageClient>()
-              .setLocalService(this)
-              .setRemoteInterface(LanguageClient.class)
-              .setInput(connectionSocket.getInputStream())
-              .setOutput(connectionSocket.getOutputStream())
-              .setExecutorService(Executors.newCachedThreadPool())
-              .wrapMessages(this.logger.getWrapper())
-              .create();
-      connect(launcher.getRemoteProxy());
-      launcher.startListening();
+      if (serverSocket != null) {
+        serverSocket.close();
+      }
+      serverSocket = new ServerSocket(port);
+      while (!serverSocket.isClosed()) {
+        MagpieServer server = createServer.get();
+        Socket connectionSocket = serverSocket.accept();
+        Launcher<LanguageClient> launcher =
+            new Builder<LanguageClient>()
+                .setLocalService(server)
+                .setRemoteInterface(LanguageClient.class)
+                .setInput(connectionSocket.getInputStream())
+                .setOutput(connectionSocket.getOutputStream())
+                .setExecutorService(THREAD_POOL)
+                .wrapMessages(server.logger.getWrapper())
+                .create();
+        server.connect(launcher.getRemoteProxy());
+        new Thread(
+                () -> {
+                  try {
+                    // wait for future to return, signaling connection was closed
+                    launcher.startListening().get();
+                  } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                  }
+                },
+                connectionSocket.getRemoteSocketAddress() + " connected")
+            .start();
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -329,8 +351,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public void exit() {
     logger.cleanUp();
     try {
-      if (connectionSocket != null) {
-        connectionSocket.close();
+      if (serverSocket != null) {
+        serverSocket.close();
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -865,6 +887,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       };
     }
   }
+
   /**
    * Gets the location from given position.
    *
