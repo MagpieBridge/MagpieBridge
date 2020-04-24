@@ -1,6 +1,6 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
@@ -68,6 +68,7 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 <table>
   <tr>
     <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a></td>
+    <td align="center"><a href="https://cbruegg.com"><img src="https://avatars0.githubusercontent.com/u/175421?v=4" width="100px;" alt=""/><br /><sub><b>Christian Brüggemann</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=cbruegg" title="Code">💻</a></td>
   </tr>
 </table>
 
