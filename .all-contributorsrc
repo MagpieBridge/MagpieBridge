@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jcp",
+      "name": "James C. Palmer",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/334449?v=4",
+      "profile": "https://jcp.io",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
