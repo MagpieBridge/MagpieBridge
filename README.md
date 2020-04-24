@@ -65,7 +65,10 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 - Submit github issues for any feature enhancements, bugs or documentation problems
 - Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 
-## Contributors:
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
@@ -84,7 +87,8 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
-</a>
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
 
 ## Contact 
 &#x2709; linghui[at]outlook.de
