@@ -38,7 +38,7 @@ You can either
   <dependency>
     <groupId>magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
   </dependency>
 </dependencies>
 

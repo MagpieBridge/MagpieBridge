@@ -237,7 +237,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    *
    * <pre>
    * <code>
-   *  Supplier<MagpieServer> supplier = ()->{
+   *  Supplier&#60;MagpieServer&#62; supplier = ()-&#62;{
    *    MagpieServer server = new MagpieServer(new ServerConfiguration());
    *    String language = "java";
    *    IProjectService javaProjectService = new JavaProjectService();
@@ -248,6 +248,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * </pre>
    *
    * @param port the port
+   * @param createServer the server supplier
    */
   public static void launchOnSocketPort(int port, Supplier<MagpieServer> createServer) {
     try {
@@ -420,15 +421,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * Adds the analysis for different languages running on the server. This should be specified by
    * the user of MagpieServer.<br>
    * An example for adding a user-defined analysis.
+   *
    * <pre>
    * <code>
    * MagpieServer server = new MagpieServer(new ServerConfiguration());
    * String language = "java";
    * ServerAnalysis myAnalysis = new MyAnalysis();
-   * Either<ServerAnalysis, ToolAnalysis> analysis=Either.forLeft(myAnalysis);
+   * Either&#60;ServerAnalysis, ToolAnalysis&#62; analysis=Either.forLeft(myAnalysis);
    * server.addAnalysis(analysis,language);
    * </code>
-   * <pre>
+   * </pre>
+   *
    * @param analysis the analysis
    * @param languages the languages handled by this analysis
    */

@@ -71,8 +71,8 @@ public class ServerConfiguration {
    * Set up the MagpieMessageLogger for logging messages in any format you can define.The default
    * logger does nothing. Use {@link MessageLogger} to log messages into your temporary directory.
    *
-   * @param logger
-   * @return
+   * @param logger the MagpieMessageLogger
+   * @return the ServerConfiguration with the logger set up
    */
   public ServerConfiguration setMagpieMessageLogger(@NonNull MagpieMessageLogger logger) {
     this.logger = logger;
@@ -83,8 +83,8 @@ public class ServerConfiguration {
    * Set up the LSPMessageTracer for only logging LSP messages in a way that the LSP Inspector can
    * parse. https://microsoft.github.io/language-server-protocol/inspector/
    *
-   * @param writer
-   * @return
+   * @param writer the PrintWriter for writing the trace
+   * @return the ServerConfiguration with the tracer set up
    */
   public ServerConfiguration setLSPMessageTracer(PrintWriter writer) {
     this.traceWriter = writer;
