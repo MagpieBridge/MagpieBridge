@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "linghuiluo",
+      "name": "Linghui Luo",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/18470909?v=4",
+      "profile": "https://linghuiluo.github.io/",
+      "contributions": [
+        "code"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "MagpieBridge",
+  "projectOwner": "MagpieBridge",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
