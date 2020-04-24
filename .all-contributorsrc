@@ -14,6 +14,8 @@
         "code"
         "design"
       ]
+   }
+
     },{
       "login": "juliandolby",
       "name": "Julian Dolby",
@@ -32,7 +34,16 @@
       "contributions": [
         "code"
       ]
-     }
+     },
+    {
+      "login": "jonasmanuel",
+      "name": "Jonas Manuel",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/8150255?v=4",
+      "profile": "https://github.com/jonasmanuel",
+      "contributions": [
+        "code"
+      ]
+    }
   ],
   "contributorsPerLine": 7,
   "projectName": "MagpieBridge",
