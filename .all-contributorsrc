@@ -13,6 +13,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "cbruegg",
+      "name": "Christian Brüggemann",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/175421?v=4",
+      "profile": "https://cbruegg.com",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
