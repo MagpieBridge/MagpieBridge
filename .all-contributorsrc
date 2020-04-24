@@ -14,7 +14,8 @@
         "code",
         "design"
       ]
-   },{
+    },
+    {
       "login": "juliandolby",
       "name": "Julian Dolby",
       "avatar_url": "https://avatars0.githubusercontent.com/u/1652606?v=4",
@@ -32,7 +33,7 @@
       "contributions": [
         "code"
       ]
-     },
+    },
     {
       "login": "jonasmanuel",
       "name": "Jonas Manuel",
@@ -40,6 +41,15 @@
       "profile": "https://github.com/jonasmanuel",
       "contributions": [
         "code"
+      ]
+    },
+    {
+      "login": "swissiety",
+      "name": "Markus Schmidt",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5645864?v=4",
+      "profile": "https://github.com/swissiety",
+      "contributions": [
+        "test"
       ]
     }
   ],
