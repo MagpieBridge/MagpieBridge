@@ -62,8 +62,6 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 ```
 
 ## Contributors:
-<a href="https://github.com/MagpieBridge/MagpieBridge/graphs/contributors">
-    <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/contributor.png"/>
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
