@@ -12,6 +12,7 @@
       "profile": "https://linghuiluo.github.io/",
       "contributions": [
         "code",
+        "doc", 
         "design"
       ]
     },
@@ -40,7 +41,8 @@
       "avatar_url": "https://avatars1.githubusercontent.com/u/8150255?v=4",
       "profile": "https://github.com/jonasmanuel",
       "contributions": [
-        "code"
+        "code",
+        "doc"
       ]
     },
     {
