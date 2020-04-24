@@ -11,7 +11,7 @@
       "avatar_url": "https://avatars3.githubusercontent.com/u/18470909?v=4",
       "profile": "https://linghuiluo.github.io/",
       "contributions": [
-        "code"
+        "code",
         "design"
       ]
    }
@@ -42,15 +42,6 @@
       "profile": "https://github.com/jonasmanuel",
       "contributions": [
         "code"
-      ]
-    },
-    {
-      "login": "jcp",
-      "name": "James C. Palmer",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/334449?v=4",
-      "profile": "https://jcp.io",
-      "contributions": [
-        "bug"
       ]
     }
   ],
