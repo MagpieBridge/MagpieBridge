@@ -12,7 +12,64 @@
       "profile": "https://linghuiluo.github.io/",
       "contributions": [
         "code",
+        "doc", 
+        "design"
+      ]
+    },
+    {
+      "login": "juliandolby",
+      "name": "Julian Dolby",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1652606?v=4",
+      "profile": "http://researcher.watson.ibm.com/researcher/view.php?person=us-dolby",
+      "contributions": [
+        "code",
+        "design"
+      ]
+    },
+    {
+      "login": "cbruegg",
+      "name": "Christian Brüggemann",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/175421?v=4",
+      "profile": "https://cbruegg.com",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jonasmanuel",
+      "name": "Jonas Manuel",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/8150255?v=4",
+      "profile": "https://github.com/jonasmanuel",
+      "contributions": [
+        "code",
         "doc"
+      ]
+    },
+    {
+      "login": "swissiety",
+      "name": "Markus Schmidt",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/5645864?v=4",
+      "profile": "https://github.com/swissiety",
+      "contributions": [
+        "test"
+      ]
+    },
+    {
+      "login": "jcp19",
+      "name": "João Pereira",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/6281876?v=4",
+      "profile": "http://joaocpereira.me",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "SvenEV",
+      "name": "Sven Erik Vinkemeier",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5737127?v=4",
+      "profile": "https://github.com/SvenEV",
+      "contributions": [
+        "bug"
       ]
     }
   ],

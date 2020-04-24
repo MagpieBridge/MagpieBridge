@@ -1,6 +1,6 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
@@ -60,16 +60,24 @@ You can either
 ```
 Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your local repository > Finish
 ```
+## Get Involved
+- Pull requests are welcome!
+- Submit github issues for any feature enhancements, bugs or documentation problems
+- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 
 ## Contributors:
-<a href="https://github.com/MagpieBridge/MagpieBridge/graphs/contributors">
-    <img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/contributor.png"/>
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a> <a href="#design-linghuiluo" title="Design">🎨</a><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Documentation">📖</a></td>
+    <td align="center"><a href="http://researcher.watson.ibm.com/researcher/view.php?person=us-dolby"><img src="https://avatars0.githubusercontent.com/u/1652606?v=4" width="100px;" alt=""/><br /><sub><b>Julian Dolby</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=juliandolby" title="Code">💻</a> <a href="#design-juliandolby" title="Design">🎨</a></td>
+    <td align="center"><a href="https://cbruegg.com"><img src="https://avatars0.githubusercontent.com/u/175421?v=4" width="100px;" alt=""/><br /><sub><b>Christian Brüggemann</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=cbruegg" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jonasmanuel"><img src="https://avatars1.githubusercontent.com/u/8150255?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Manuel</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=jonasmanuel" title="Code">💻</a><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=jonasmanuel" title="Code">📖</a></td>
+    <td align="center"><a href="https://github.com/swissiety"><img src="https://avatars0.githubusercontent.com/u/5645864?v=4" width="100px;" alt=""/><br /><sub><b>Markus Schmidt</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=swissiety" title="Tests">⚠️</a></td>
+    <td align="center"><a href="http://joaocpereira.me"><img src="https://avatars0.githubusercontent.com/u/6281876?v=4" width="100px;" alt=""/><br /><sub><b>João Pereira</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/issues?q=author%3Ajcp19" title="Bug reports">🐛</a></td>
+    <td align="center"><a href="https://github.com/SvenEV"><img src="https://avatars3.githubusercontent.com/u/5737127?v=4" width="100px;" alt=""/><br /><sub><b>Sven Erik Vinkemeier</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/issues?q=author%3ASvenEV" title="Bug reports">🐛</a></td>
   </tr>
 </table>
 
@@ -78,9 +86,5 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 </a>
 
-## Get Involved
-- Pull requests are welcome!
-- Submit github issues for any feature enhancements, bugs or documentation problems
-- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 ## Contact 
 &#x2709; linghui[at]outlook.de
