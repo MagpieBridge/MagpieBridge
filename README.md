@@ -69,7 +69,7 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a></td>
+    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Documentation">📖</a></td>
   </tr>
 </table>
 
