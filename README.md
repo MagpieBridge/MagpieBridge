@@ -60,14 +60,21 @@ You can either
 ```
 Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your local repository > Finish
 ```
+## Get Involved
+- Pull requests are welcome!
+- Submit github issues for any feature enhancements, bugs or documentation problems
+- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 
 ## Contributors:
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 <table>
-  <tr>
-    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a></td>
+  <tr>  
+    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a><a href="#design-juliandolby" title="Design">🎨</a></td>
+    <td align="center"><a href="http://researcher.watson.ibm.com/researcher/view.php?person=us-dolby"><img src="https://avatars0.githubusercontent.com/u/1652606?v=4" width="100px;" alt=""/><br /><sub><b>Julian Dolby</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=juliandolby" title="Code">💻</a> <a href="#design-juliandolby" title="Design">🎨</a></td>
+    <td align="center"><a href="https://cbruegg.com"><img src="https://avatars0.githubusercontent.com/u/175421?v=4" width="100px;" alt=""/><br /><sub><b>Christian Brüggemann</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=cbruegg" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jonasmanuel"><img src="https://avatars1.githubusercontent.com/u/8150255?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Manuel</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=jonasmanuel" title="Code">💻</a></td>
     <td align="center"><a href="https://jcp.io"><img src="https://avatars3.githubusercontent.com/u/334449?v=4" width="100px;" alt=""/><br /><sub><b>James C. Palmer</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/issues?q=author%3Ajcp" title="Bug reports">🐛</a></td>
   </tr>
 </table>
@@ -77,9 +84,5 @@ Eclipse> File> Import > Maven > Existing Maven Projects > Enter the path to your
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 </a>
 
-## Get Involved
-- Pull requests are welcome!
-- Submit github issues for any feature enhancements, bugs or documentation problems
-- Please format the code with `mvn com.coveo:fmt-maven-plugin:format` before `git push`
 ## Contact 
 &#x2709; linghui[at]outlook.de
