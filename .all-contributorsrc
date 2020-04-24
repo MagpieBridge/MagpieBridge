@@ -60,6 +60,15 @@
       "contributions": [
         "bug"
       ]
+    },
+    {
+      "login": "SvenEV",
+      "name": "Sven Erik Vinkemeier",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5737127?v=4",
+      "profile": "https://github.com/SvenEV",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
