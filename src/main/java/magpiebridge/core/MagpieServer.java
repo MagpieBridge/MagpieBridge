@@ -45,7 +45,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import magpiebridge.command.CodeActionCommand;
 import magpiebridge.file.SourceFileManager;
-import magpiebridge.util.MessageLogger;
+import magpiebridge.util.MagpieMessageLogger;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
@@ -90,7 +90,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   private static ServerSocket serverSocket;
 
   /** The server configuration. */
-  protected ServerConfiguration config;
+  protected final ServerConfiguration config;
 
   /** The client. */
   protected LanguageClient client;
@@ -134,7 +134,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected Map<String, String> serverClientUri;
 
   /** The logger. */
-  protected MessageLogger logger;
+  protected MagpieMessageLogger logger;
 
   /** Client config */
   private ClientCapabilities clientConfig;
@@ -160,7 +160,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
     this.falsePositives = new HashMap<>();
-    logger = new MessageLogger();
+    logger = config.getMagpieMessageLogger();
   }
 
   public LanguageClient getClient() {
@@ -221,6 +221,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               .setInput(connectionSocket.getInputStream())
               .setOutput(connectionSocket.getOutputStream())
               .setExecutorService(Executors.newCachedThreadPool())
+              .traceMessages(config.traceWriter())
               .wrapMessages(logger.getWrapper())
               .create();
       connect(launcher.getRemoteProxy());
@@ -265,6 +266,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                 .setOutput(connectionSocket.getOutputStream())
                 .setExecutorService(THREAD_POOL)
                 .wrapMessages(server.logger.getWrapper())
+                .traceMessages(server.config.traceWriter())
                 .create();
         server.connect(launcher.getRemoteProxy());
         new Thread(

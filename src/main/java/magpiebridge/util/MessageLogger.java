@@ -16,7 +16,7 @@ import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
  *
  * @author Linghui Luo
  */
-public final class MessageLogger {
+public final class MessageLogger implements MagpieMessageLogger {
   private PrintWriter writer;
   private FileOutputStream logStream;
   private File log;
