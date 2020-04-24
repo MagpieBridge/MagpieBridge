@@ -207,7 +207,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * Launch on socket port.
    *
    * @param port the port
-   * @deprecated use {@link #launchOnSocketPort(int, Supplier)} instead
+   * @deprecated The server will crash after the first client disconnects. To support more clients
+   *     use {@link #launchOnSocketPort(int, Supplier)} instead.
    */
   public void launchOnSocketPort(int port) {
     try {
@@ -231,7 +232,19 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /**
    * Launch on socket port. Will create a new {@link MagpieServer} instance for each new connecting
-   * client using the given supplier.
+   * client using the given supplier. Example:
+   *
+   * <pre>
+   * <code>
+   *  Supplier<MagpieServer> supplier = ()->{
+   *    MagpieServer server = new MagpieServer(new ServerConfiguration());
+   *    String language = "java";
+   *    IProjectService javaProjectService = new JavaProjectService();
+   *    server.addProjectService(language, javaProjectService);
+   *    return server.
+   *  }
+   * </code>
+   * </pre>
    *
    * @param port the port
    */
@@ -380,13 +393,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * An example for using MagpieServer for java projects.
    *
    * <pre>
-   * {
-   * 	&#64;code
-   * 	MagpieServer server = new MagpieServer();
+   * <code>
+   * 	MagpieServer server = new MagpieServer(new ServerConfiguration());
    * 	String language = "java";
    * 	IProjectService javaProjectService = new JavaProjectService();
    * 	server.addProjectService(language, javaProjectService);
-   * }
+   * </code>
    * </pre>
    *
    * @param language the language
@@ -406,11 +418,15 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * Adds the analysis for different languages running on the server. This should be specified by
    * the user of MagpieServer.<br>
    * An example for adding a user-defined analysis.
-   *
-   * <p>{@code MagpieServer server = new MagpieServer(); String language = "java"; ServerAnalysis
-   * myAnalysis = new MyAnalysis(); Either<ServerAnalysis, ToolAnalysis>
-   * analysis=Either.forLeft(myAnalysis); server.addAnalysis(analysis,language); }
-   *
+   * <pre>
+   * <code>
+   * MagpieServer server = new MagpieServer(new ServerConfiguration());
+   * String language = "java";
+   * ServerAnalysis myAnalysis = new MyAnalysis();
+   * Either<ServerAnalysis, ToolAnalysis> analysis=Either.forLeft(myAnalysis);
+   * server.addAnalysis(analysis,language);
+   * </code>
+   * <pre>
    * @param analysis the analysis
    * @param languages the languages handled by this analysis
    */
