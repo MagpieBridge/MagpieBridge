@@ -1,13 +1,12 @@
-
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/MagpieBridge/MagpieBridge)
 [![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)
+[![Gitter](https://badges.gitter.im/MagpieBridgeHelp/community.svg)](https://gitter.im/MagpieBridgeHelp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
 </p> 
 
-## What is MagpieBridge? [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)[![Gitter](https://badges.gitter.im/MagpieBridgeHelp/community.svg)](https://gitter.im/MagpieBridgeHelp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
+## What is MagpieBridge?
 MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). It is a part of the [FutureSoot](http://sable.github.io/soot/future-soot/) project. MagpieBridge offers a default implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles requests like didOpen, didChange, didSave; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis. For more information, please read our paper:
 [MagpieBridge: A General Approach to Integrating Static Analyses into IDEs and Editors](https://drops.dagstuhl.de/opus/volltexte/2019/10813/pdf/LIPIcs-ECOOP-2019-21.pdf) (ECOOP 2019).
 A [Poster](https://linghuiluo.github.io/ECOOP19MagpieBridgePoster.pdf) is also available. You can find the IRConverter under  [https://github.com/MagpieBridge/IRConverter](https://github.com/MagpieBridge/IRConverter) for converting WALA IR to Soot IR, if you want to analyze Java source code with Soot. 
