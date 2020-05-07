@@ -414,6 +414,7 @@ public class InferConfig {
             .filter(Matcher::find)
             .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(4)))
             .forEach(dependencies::add);
+        reader.close();
         return dependencies;
       }
     } catch (IOException e) {

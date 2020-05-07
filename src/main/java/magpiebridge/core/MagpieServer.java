@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
@@ -502,11 +503,11 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         e.printStackTrace();
       }
     }
-    for (String clientUri : publishDiags.keySet()) {
-      List<Diagnostic> diagList = publishDiags.get(clientUri);
+    for (Entry<String, List<Diagnostic>> entry : publishDiags.entrySet()) {
+      List<Diagnostic> diagList = entry.getValue();
       PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
       pdp.setDiagnostics(diagList);
-      pdp.setUri(clientUri);
+      pdp.setUri(entry.getKey());
       client.publishDiagnostics(pdp);
     }
     client.showMessage(

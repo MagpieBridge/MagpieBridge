@@ -67,7 +67,8 @@ public class InferConfigGradle {
           return null;
         } else {
           String path = op.get();
-          if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+          String os = System.getProperty("os.name");
+          if (os != null && os.toLowerCase().indexOf("win") >= 0) {
             // take care of windows
             path = path.replace("\\:", ":");
           }
