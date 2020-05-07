@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.function.Function;
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
+import org.slf4j.LoggerFactory;
 
 /**
  * MessageLogger logs the incoming and outgoing message with time stamp. The logs are stored in the
@@ -24,7 +25,9 @@ public final class MessageLogger implements MagpieMessageLogger {
   public MessageLogger() {
     String tempDir = System.getProperty("java.io.tmpdir");
     String seperator = System.getProperty("file.separator");
-    if (!tempDir.endsWith(seperator)) {
+    if (tempDir == null) {
+      LoggerFactory.getLogger(getClass()).warn("System property java.io.tmpdir doesn't exist");
+    } else if (!tempDir.endsWith(seperator)) {
       tempDir += seperator;
     }
     String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";

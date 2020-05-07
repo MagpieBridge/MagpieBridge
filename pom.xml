@@ -65,22 +65,11 @@
 			<artifactId>com.ibm.wala.cast</artifactId>
 			<version>${wala.version}</version>
 		</dependency>
-		<!-- <dependency>
-			<groupId>com.ibm.wala</groupId>
-			<artifactId>com.ibm.wala.shrike</artifactId>
-			<version>${wala.version}</version>
-		</dependency>
 		<dependency>
-			<groupId>com.ibm.wala</groupId>
-			<artifactId>com.ibm.wala.cast.java</artifactId>
-			<version>${wala.version}</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.30</version>
 		</dependency>
-		<dependency>
-			<groupId>com.ibm.wala</groupId>
-			<artifactId>com.ibm.wala.util</artifactId>
-			<version>${wala.version}</version>
-		</dependency> -->
-		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
