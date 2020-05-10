@@ -290,8 +290,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /*
    * (non-Javadoc)
    *
-   * @see
-   * org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.
+   * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.
    * services.LanguageClient)
    */
   @Override
@@ -302,8 +301,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.
-   * InitializeParams)
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j. InitializeParams)
    */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -1181,5 +1179,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     Set<Triple<Integer, String, String>> dias = this.falsePositives.get(uri);
     dias.add(diag);
     this.falsePositives.put(uri, dias);
+  }
+
+  /**
+   * This method allows to submit new runnable task to the thread pool of the server.
+   *
+   * @param task the runnable task which should be ran by the server.
+   */
+  public void submittNewTask(Runnable task) {
+    THREAD_POOL.submit(task);
   }
 }

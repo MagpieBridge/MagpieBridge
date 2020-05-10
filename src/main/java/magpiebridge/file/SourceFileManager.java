@@ -13,8 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
+import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 
@@ -34,6 +36,8 @@ public class SourceFileManager {
   /** Server-side URI string mapped to client-side URI string. */
   private Map<String, String> serverClientUri;
 
+  private Map<URI, FileState> fileStates;
+
   /**
    * Instantiates a new source file manager.
    *
@@ -45,6 +49,7 @@ public class SourceFileManager {
     this.versionedFiles = new HashMap<>();
     this.sourceFileModules = new HashMap<>();
     this.serverClientUri = serverClientUri;
+    this.fileStates = new HashMap<>();
   }
 
   /**
@@ -58,6 +63,7 @@ public class SourceFileManager {
       String uri = doc.getUri();
       VersionedSourceFile sourceFile = new VersionedSourceFile(doc.getText(), doc.getVersion());
       URI clientUri = URI.create(uri);
+      this.fileStates.put(clientUri, FileState.OPENED);
       this.versionedFiles.put(clientUri, sourceFile);
       generateSourceFileModule(clientUri, sourceFile);
     }
@@ -71,6 +77,8 @@ public class SourceFileManager {
   public void didChange(DidChangeTextDocumentParams params) {
     VersionedTextDocumentIdentifier doc = params.getTextDocument();
     String uri = doc.getUri();
+    URI clientUri = URI.create(uri);
+    this.fileStates.put(clientUri, FileState.CHANGED);
     VersionedSourceFile existFile = versionedFiles.get(URI.create(uri));
     int newVersion = doc.getVersion();
     if (newVersion > existFile.getVersion()) {
@@ -85,10 +93,24 @@ public class SourceFileManager {
         }
       }
       VersionedSourceFile newFile = new VersionedSourceFile(newText, newVersion);
-      URI clientUri = URI.create(uri);
       this.versionedFiles.put(clientUri, newFile);
       generateSourceFileModule(clientUri, newFile);
     }
+  }
+
+  public void didSave(DidSaveTextDocumentParams params) {
+    TextDocumentIdentifier doc = params.getTextDocument();
+    String uri = doc.getUri();
+    URI clientUri = URI.create(uri);
+    this.fileStates.put(clientUri, FileState.SAVED);
+  }
+
+  public boolean allFilesSaved() {
+    for (FileState state : this.fileStates.values())
+      if (!state.equals(FileState.SAVED)) {
+        return false;
+      }
+    return true;
   }
 
   /**

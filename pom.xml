@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>magpiebridge</groupId>
 	<artifactId>magpiebridge</artifactId>
-	<version>0.0.7</version>
+	<version>0.0.8</version>
 	<packaging>jar</packaging>
 	<name>magpiebridge</name>
 	<url>https://github.com/MagpieBridge/MagpieBridge</url>
@@ -43,7 +42,7 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- lsp4j -->
+		
 		<dependency>
 			<groupId>org.eclipse.lsp4j</groupId>
 			<artifactId>org.eclipse.lsp4j.websocket</artifactId>
@@ -54,7 +53,7 @@
 			<artifactId>org.eclipse.lsp4j</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
-		<!-- wala -->
+		
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
@@ -103,7 +102,7 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>check</goal>
+							<goal>format</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -147,4 +146,22 @@
 			<url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url>
 		</repository>
 	</distributionManagement>
-</project>
+<profiles><profile>
+      <id>infer-capture</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <configuration>
+              <compilerId>javac</compilerId>
+              <forceJavacCompilerUse>true</forceJavacCompilerUse>
+              <fork>true</fork>
+              <executable>/usr/local/Cellar/infer/0.17.0/lib/infer/infer/bin/infer</executable>
+              
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile></profiles></project>

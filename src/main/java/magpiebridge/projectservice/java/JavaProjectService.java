@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import magpiebridge.core.IProjectService;
+import magpiebridge.core.ProjectType;
 
 /**
  * The Class JavaProjectService provides the configuration information of a java project.
@@ -30,6 +31,8 @@ public class JavaProjectService implements IProjectService {
 
   /** The external dependencies. */
   private Set<String> externalDependencies;
+
+  private ProjectType projectType;
 
   /** Instantiates a new java project service. */
   public JavaProjectService() {
@@ -163,5 +166,14 @@ public class JavaProjectService implements IProjectService {
    */
   public void setExternalDependencies(Set<String> dependences) {
     this.externalDependencies = dependences;
+  }
+
+  @Override
+  public ProjectType getProjectType() {
+    if (projectType == null) {
+      InferConfig infer = new InferConfig(rootPath.get(), externalDependencies);
+      projectType = infer.getProjectType();
+    }
+    return this.projectType;
   }
 }

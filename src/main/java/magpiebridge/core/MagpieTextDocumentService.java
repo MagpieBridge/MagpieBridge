@@ -13,6 +13,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import org.eclipse.lsp4j.CodeAction;
@@ -44,8 +46,14 @@ public class MagpieTextDocumentService implements TextDocumentService {
   /** The server. */
   protected final MagpieServer server;
 
+  protected Timer timer = new Timer();
+
   /** Flag to check if the file is the first opened one. */
   protected boolean isFirstOpenedFile;
+
+  private TimerTask timerTask;
+  private Runnable task;
+
   /**
    * Instantiates a new magpie text document service.
    *
@@ -101,6 +109,10 @@ public class MagpieTextDocumentService implements TextDocumentService {
     fileManager.didChange(params);
     // TODO. it could be customized to clean all diagnostics.
     // server.cleanUp();
+    if (server.config.doAnalysisByIdle()) {
+      // cancel the task running the analysis
+      restartTimer();
+    }
   }
 
   @Override
@@ -108,15 +120,45 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    if (server.config.doAnalysisBySave()) {
-      server.cleanUp();
-      if (server.client != null) {
-        server.client.showMessage(
-            new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+    // update the saved file in file manager
+    String language = inferLanguage(params.getTextDocument().getUri());
+    SourceFileManager fileManager = server.getSourceFileManager(language);
+    // run analysis depending on the configuration
+    fileManager.didSave(params);
+    if (server.config.doAnalysisByIdle()) {
+      this.task =
+          () -> {
+            if (fileManager.allFilesSaved()) runAnalysis(params);
+          };
+      restartTimer();
+    } else {
+      if (server.config.doAnalysisBySave()) {
+        runAnalysis(params);
       }
-      // re-analyze when file is saved.
-      String language = inferLanguage(params.getTextDocument().getUri());
-      server.doAnalysis(language, true);
+    }
+  }
+
+  private void runAnalysis(DidSaveTextDocumentParams params) {
+    server.cleanUp();
+    if (server.client != null) {
+      server.client.showMessage(
+          new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
+    }
+    // re-analyze when file is saved.
+    String language = inferLanguage(params.getTextDocument().getUri());
+    server.doAnalysis(language, true);
+  }
+
+  private void restartTimer() {
+    if (this.timerTask != null) timerTask.cancel();
+    if (this.task != null) {
+      this.timerTask =
+          new TimerTask() {
+            public void run() {
+              task.run();
+            }
+          };
+      timer.schedule(timerTask, server.config.timeOut());
     }
   }
 
