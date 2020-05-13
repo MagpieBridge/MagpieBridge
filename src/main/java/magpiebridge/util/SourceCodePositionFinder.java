@@ -69,7 +69,10 @@ public class SourceCodePositionFinder {
     for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
       File file = (File) iterator.next();
       String fileName = file.getName();
-      if (fileName.endsWith(".java") && file.getName().equals(className + ".java")) return file;
+      String[] pathSegments = fileName.split(File.separator);
+      fileName=pathSegments[pathSegments.length-1];
+      if (fileName.endsWith(".java") && file.getName().equals(className + ".java")) 
+    	  return file;
     }
     return null;
   }
