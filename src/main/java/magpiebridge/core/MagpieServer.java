@@ -3,6 +3,7 @@
  */
 package magpiebridge.core;
 
+import com.google.common.io.ByteStreams;
 import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
@@ -325,104 +326,155 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   @SuppressWarnings("restriction")
+  private HttpServer magpieWebEndpoint = null;
+
+  @SuppressWarnings("restriction")
+  public HttpServer getHttpServer() {
+    if (magpieWebEndpoint == null) {
+      startHttpServer();
+    }
+    return magpieWebEndpoint;
+  }
+
+  @SuppressWarnings("restriction")
+  private void startHttpServer() {
+    try {
+      InetSocketAddress socket =
+          new InetSocketAddress(
+              "0.0.0.0",
+              config.getServerPort() == -1
+                  ? SocketUtils.findAvailableTcpPort()
+                  : config.getServerPort());
+
+      magpieWebEndpoint = HttpServer.create(socket, 0);
+
+      magpieWebEndpoint.createContext(
+          "/static/",
+          he -> {
+            String fileName = he.getRequestURI().getPath().substring(1);
+            byte[] bytes =
+                ByteStreams.toByteArray(getClass().getClassLoader().getResourceAsStream(fileName));
+            he.sendResponseHeaders(200, bytes.length);
+            OutputStream os = he.getResponseBody();
+            os.write(bytes);
+            os.close();
+            he.getResponseBody().close();
+          });
+
+      magpieWebEndpoint.start();
+    } catch (IOException e) {
+      System.err.println(e);
+      assert false : e;
+    }
+  }
+
+  public String getHostName() {
+    String hostname = null;
+    try {
+      InetAddress addr = InetAddress.getLocalHost();
+      hostname = addr.getHostAddress();
+    } catch (UnknownHostException e) {
+
+    }
+    return hostname == null ? "localhost" : hostname;
+  }
+
+  @SuppressWarnings("restriction")
   private void configureAnalyses() {
     StringBuffer form = new StringBuffer();
     this.languageAnalyzes
         .values()
         .forEach(
-            a -> {
-              a.forEach(
-                  e -> {
-                    Analysis x = e.isLeft() ? e.getLeft() : e.getRight();
-                    String config = x.configuration();
-                    if (config != null) {
-                      form.append("<H3>" + x.source() + "</H3>" + config + "<BR>\n");
-                    }
-                  });
-            });
+            a ->
+                a.forEach(
+                    e -> {
+                      Analysis x = e.isLeft() ? e.getLeft() : e.getRight();
+                      String config = x.configuration(rootPath.isPresent() ? rootPath.get() : null);
+                      if (config != null) {
+                        form.append("<H2>" + x.source() + "</H2>" + "<HR>" + config + "<HR>\n");
+                      }
+                    }));
     if (form.length() > 0) {
-      String hostname;
-      try {
-        InetAddress addr = InetAddress.getLocalHost();
-        hostname = addr.getHostAddress();
-      } catch (UnknownHostException e) {
-        hostname = "localhost";
-      }
+      HttpServer server = getHttpServer();
+      server.createContext(
+          "/config",
+          he -> {
+            URI uri = he.getRequestURI();
+            // String response = "configured";
+            // he.sendResponseHeaders(200, response.length());
+            // OutputStream os = he.getResponseBody();
+            // os.write(response.getBytes());
+            // os.close();
+            he.close();
+            List<NameValuePair> qparams = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
+            this.languageAnalyzes
+                .values()
+                .forEach(
+                    a ->
+                        a.forEach(
+                            e -> (e.isLeft() ? e.getLeft() : e.getRight()).configure(qparams)));
+            if (configGuard != null) {
+              configGuard = null;
 
-      InetSocketAddress socket =
-          new InetSocketAddress(hostname, SocketUtils.findAvailableTcpPort());
+              MessageParams mp = new MessageParams();
+              mp.setType(MessageType.Info);
+              mp.setMessage("Analyses configured");
+              client.showMessage(mp);
 
-      try {
-        HttpServer receiver = HttpServer.create(socket, 0);
-        receiver.createContext(
-            "/config",
-            he -> {
-              URI uri = he.getRequestURI();
-              // String response = "configured";
-              // he.sendResponseHeaders(200, response.length());
-              // OutputStream os = he.getResponseBody();
-              // os.write(response.getBytes());
-              // os.close();
-              he.close();
-              List<NameValuePair> qparams = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
-              this.languageAnalyzes
-                  .values()
-                  .forEach(
-                      a ->
-                          a.forEach(
-                              e -> (e.isLeft() ? e.getLeft() : e.getRight()).configure(qparams)));
-              if (configGuard != null) {
-                configGuard = null;
+              onConfig();
+            }
+          });
 
-                MessageParams mp = new MessageParams();
-                mp.setType(MessageType.Info);
-                mp.setMessage("Analyses configured");
-                client.showMessage(mp);
+      /*
+       * It might seem more natural if the form below had a submit button.  Indeed, it would
+       * be more natural; however, misguided notions of security in VSCode prevent it from
+       * submitting forms and making most other requests.  But it does permit ordinary
+       * <a href="..."> links, so the setit function below uses JavaScript to put the
+       * query parameters into the href property of an ordinary link.  The function returns
+       * true so that, after it executes, the link then fires with the altered href.
+       */
+      String html =
+          "<html><head><title>MagpieBridge Configuration</title>\n"
+              + "<script src=\"http://"
+              + getHostName()
+              + ":"
+              + server.getAddress().getPort()
+              + "/static/collapse.js\"></script>\n"
+              + "</head>\n"
+              + "<body><form id=\"config\" >\n"
+              + form
+              + "</form>\n<script>\nfunction setit() { "
+              + "  x=document.getElementById(\"lnk\");\n"
+              + "  f=document.getElementById(\"config\");\n"
+              + "  var first = true; \n"
+              + "  for(let p of f.elements) { \n"
+              + "    var v = ('checked' in p)? p.checked: p.value; \n"
+              + "    x.href = x.href + (first?\"?\":\"&\") + p.name + \"=\" + v; \n"
+              + "    first = false; \n"
+              + "  }\n"
+              + "  return true; }\n</script>\n"
+              + "<a id=\"lnk\" onclick=\"setit();\" href=\"http://"
+              + getHostName()
+              + ":"
+              + server.getAddress().getPort()
+              + "/config\">Set</a>\n"
+              + "<script>\nsetupCollapsibles(document);\n</script>\n"
+              + "</body></html>";
 
-                onConfig();
-              }
-            });
-        receiver.start();
-
-        /*
-         * It might seem more natural if the form below had a submit button.  Indeed, it would
-         * be more natural; however, misguided notions of security in VSCode prevent it from
-         * submitting forms and making most other requests.  But it does permit ordinary
-         * <a href="..."> links, so the setit function below uses JavaScript to put the
-         * query parameters into the href property of an ordinary link.  The function returns
-         * true so that, after it executes, the link then fires with the altered href.
-         */
-        String html =
-            "<html><head><title>MagpieBridge Configuration</title></head>\n"
-                + "<body><form id=\"config\" >\n"
-                + form
-                + "</form>\n<script>\nfunction setit() { "
-                + "  x=document.getElementById(\"lnk\");\n"
-                + "  f=document.getElementById(\"config\");\n"
-                + "  for(let p of f.elements) { x.href = x.href + \"?\" + p.name + \"=\" + p.value; }\n  return true; }\n</script>\n"
-                + "<a id=\"lnk\" onclick=\"setit();\" href=\"http://"
-                + hostname
-                + ":"
-                + socket.getPort()
-                + "/config\">Set</a>\n"
-                + "</body></html>";
-
-        if (clientSupportsShowHTML()) {
-          MessageParams mp = new MessageParams();
-          mp.setMessage(html);
-          mp.setType(MessageType.Info);
-          ((MagpieLanguageClient) client).showHTML(mp);
-        } else if (Desktop.isDesktopSupported()) {
+      if (clientSupportsShowHTML()) {
+        MessageParams mp = new MessageParams();
+        mp.setMessage(html);
+        mp.setType(MessageType.Info);
+        ((MagpieLanguageClient) client).showHTML(mp);
+      } else if (Desktop.isDesktopSupported())
+        try {
           File f = File.createTempFile("config", ".html");
           FileUtil.writeFile(f, html);
           f.deleteOnExit();
           Desktop.getDesktop().browse(f.toURI());
+        } catch (IOException e) {
+          assert false : e;
         }
-
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
     }
   }
 
@@ -540,7 +592,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
     for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
       Analysis a = analysis.isLeft() ? analysis.getLeft() : analysis.getRight();
-      if (a.configuration() != null && configGuard != null) {
+      if (a.configuration(rootPath.isPresent() ? rootPath.get() : null) != null
+          && configGuard != null) {
         awaitConfig.add(Pair.make(language, a));
         return;
       }

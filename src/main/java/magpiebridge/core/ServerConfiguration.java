@@ -10,12 +10,21 @@ public class ServerConfiguration {
   private boolean reportConfusion;
   private boolean doAnalysisByOpen;
   private boolean doAnalysisBySave;
+  private int serverPort = -1;
 
   public ServerConfiguration() {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.doAnalysisByOpen = true;
     this.doAnalysisBySave = true;
+  }
+
+  public int getServerPort() {
+    return serverPort;
+  }
+
+  public void setServerPort(int serverPort) {
+    this.serverPort = serverPort;
   }
 
   public boolean reportFalsePositive() {

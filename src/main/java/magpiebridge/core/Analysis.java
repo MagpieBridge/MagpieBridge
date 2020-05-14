@@ -1,6 +1,7 @@
 package magpiebridge.core;
 
 import com.ibm.wala.classLoader.Module;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import org.apache.http.NameValuePair;
@@ -10,7 +11,6 @@ import org.apache.http.NameValuePair;
  *
  * @author Julian Dolby and Linghui Luo
  */
-@SuppressWarnings("restriction")
 public interface Analysis {
   /**
    * The source of this analysis, usually the name of the analysis.
@@ -31,9 +31,10 @@ public interface Analysis {
   /**
    * If desired, HTML to gather needed configuration, suitable for inclusion in a form
    *
+   * @param rootPath the root of the workspace, if any, as supplied by the client
    * @return HTML text of form snippet or null
    */
-  public default String configuration() {
+  public default String configuration(Path rootPath) {
     return null;
   }
 
