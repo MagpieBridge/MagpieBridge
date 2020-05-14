@@ -12,7 +12,7 @@
       "profile": "https://linghuiluo.github.io/",
       "contributions": [
         "code",
-        "doc", 
+        "doc",
         "design"
       ]
     },
@@ -70,6 +70,15 @@
       "profile": "https://github.com/SvenEV",
       "contributions": [
         "bug"
+      ]
+    },
+    {
+      "login": "piskachev",
+      "name": "Goran Piskachev",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/10850220?v=4",
+      "profile": "https://piskachev.com/",
+      "contributions": [
+        "ideas"
       ]
     }
   ],
