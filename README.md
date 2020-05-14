@@ -81,6 +81,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://joaocpereira.me"><img src="https://avatars0.githubusercontent.com/u/6281876?v=4" width="100px;" alt=""/><br /><sub><b>João Pereira</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/issues?q=author%3Ajcp19" title="Bug reports">🐛</a></td>
     <td align="center"><a href="https://github.com/SvenEV"><img src="https://avatars3.githubusercontent.com/u/5737127?v=4" width="100px;" alt=""/><br /><sub><b>Sven Erik Vinkemeier</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/issues?q=author%3ASvenEV" title="Bug reports">🐛</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://piskachev.com/"><img src="https://avatars2.githubusercontent.com/u/10850220?v=4" width="100px;" alt=""/><br /><sub><b>Goran Piskachev</b></sub></a><br /><a href="#ideas-piskachev" title="Ideas, Planning, & Feedback">🤔</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-enable -->
