@@ -22,3 +22,4 @@ src/test/resources/MyApplication/app/build/outputs/apk/release/app-release-unsig
 src/test/resources/MyApplication/app/build/outputs/logs/manifest-merger-release-report\.txt
 
 src/test/resources/MyApplication/app/build/outputs/logs/manifest-merger-debug-report\.txt
+infer-out/
