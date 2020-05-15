@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import org.apache.commons.io.FileUtils;
@@ -35,7 +36,6 @@ public class SourceCodePositionFinder {
           int column = 0;
           line = line.split("//")[0];
           for (char c : line.toCharArray()) {
-
             if (c != ' ') {
               break;
             }
@@ -46,9 +46,11 @@ public class SourceCodePositionFinder {
               new Range(
                   new Position(lineNumber - 1, column),
                   new Position(lineNumber - 1, column + info.code.length()));
+          info.url = new URL("file://" + javaFile.getAbsolutePath());
           break;
         }
       }
+      reader.close();
       return info;
     } catch (IOException e) {
       throw new RuntimeException(e);

@@ -17,4 +17,6 @@ public interface IProjectService {
    * @param rootPath the new root path
    */
   public void setRootPath(Path rootPath);
+
+  public ProjectType getProjectType();
 }

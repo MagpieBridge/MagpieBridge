@@ -17,14 +17,21 @@ public class ServerConfiguration {
   private boolean reportConfusion;
   private boolean doAnalysisByOpen;
   private boolean doAnalysisBySave;
+  private boolean doAnalysisByIdle;
+  private boolean showConfigurationPage;
+  private long timeOut; // timeout in millisecond
+
   private MagpieMessageLogger logger;
   private PrintWriter traceWriter;
 
   public ServerConfiguration() {
-    this.reportFalsePositive = false;
-    this.reportConfusion = false;
     this.doAnalysisByOpen = true;
     this.doAnalysisBySave = true;
+    this.doAnalysisByIdle = false;
+    this.reportFalsePositive = false;
+    this.reportConfusion = false;
+    this.showConfigurationPage = false;
+    this.timeOut = 0;
     // default no-op logger
     this.logger =
         new MagpieMessageLogger() {
@@ -57,13 +64,50 @@ public class ServerConfiguration {
     return this;
   }
 
+  public ServerConfiguration setShowConfigurationPage(boolean showConfigurationPage) {
+    this.showConfigurationPage = showConfigurationPage;
+    return this;
+  }
+
+  /**
+   * Set up the server to run analysis whenever a source file is opened.
+   *
+   * @param doAnalysisByOpen true, if the server runs the analysis when the first time a source file
+   *     is opened at in an editor. The default value is true.
+   * @return the server configuration
+   */
   public ServerConfiguration setDoAnalysisByOpen(boolean doAnalysisByOpen) {
     this.doAnalysisByOpen = doAnalysisByOpen;
     return this;
   }
 
+  /**
+   * Set up the server to run analysis whenever a source file is saved.
+   *
+   * @param doAnalysisBySave true, if the server runs the analysis whenever a source file is saved.
+   *     The default value is true.
+   * @return the server configuration
+   */
   public ServerConfiguration setDoAnalysisBySave(boolean doAnalysisBySave) {
     this.doAnalysisBySave = doAnalysisBySave;
+    if (this.doAnalysisBySave) this.doAnalysisByIdle = false;
+    return this;
+  }
+
+  /**
+   * Set up the server to run analysis when the user has been idle(doing nothing in the editor) for
+   * the given time period; and all changed source files have been saved.
+   *
+   * @param doAnalysisByIdle true, if the server runs the analysis when the user is idle. The
+   *     default value is false. When this parameter is set to true, the doAnalysisBySave option
+   *     will be automatically set to false.
+   * @param timeOut the time to wait for idle
+   * @return the server configuration
+   */
+  public ServerConfiguration setDoAnalysisByIdle(boolean doAnalysisByIdle, long timeOut) {
+    this.doAnalysisByIdle = doAnalysisByIdle;
+    if (this.doAnalysisByIdle) this.doAnalysisBySave = false;
+    this.timeOut = timeOut;
     return this;
   }
 
@@ -103,7 +147,19 @@ public class ServerConfiguration {
     return this.doAnalysisBySave;
   }
 
+  public boolean doAnalysisByIdle() {
+    return this.doAnalysisByIdle;
+  }
+
+  public long timeOut() {
+    return timeOut;
+  }
+
   public PrintWriter traceWriter() {
     return this.traceWriter;
+  }
+
+  public boolean showConfigurationPage() {
+    return this.showConfigurationPage;
   }
 }

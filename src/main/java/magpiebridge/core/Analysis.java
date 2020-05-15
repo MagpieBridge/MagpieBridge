@@ -1,7 +1,11 @@
 package magpiebridge.core;
 
 import com.ibm.wala.classLoader.Module;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import magpiebridge.core.analysis.configuration.ConfigurationAction;
+import magpiebridge.core.analysis.configuration.ConfigurationOption;
 
 /**
  * Interface for any analysis should be ran by the MagpieServer.
@@ -24,4 +28,31 @@ public interface Analysis<T extends AnalysisConsumer> {
    * @param rerun tells if the analysis should be reran
    */
   public void analyze(Collection<? extends Module> files, T server, boolean rerun);
+
+  /**
+   * Define configuration options allowed by the analysis, override it if there are options
+   * supported.
+   *
+   * @return a list of configuration options
+   */
+  public default List<ConfigurationOption> getConfigurationOptions() {
+    return new ArrayList<>();
+  }
+
+  /**
+   * Define interactions allowed by the analysis with users, override it if there are actions
+   * supported.
+   *
+   * @return a list of configured actions
+   */
+  public default List<ConfigurationAction> getConfiguredActions() {
+    return new ArrayList<>();
+  }
+
+  /**
+   * Configure the analysis with the given configuration options.
+   *
+   * @param configuration
+   */
+  public void configure(List<ConfigurationOption> configuration);
 }
