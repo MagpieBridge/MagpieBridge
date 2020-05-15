@@ -19,8 +19,15 @@ import j2html.tags.EmptyTag;
 import j2html.tags.UnescapedText;
 import java.util.ArrayList;
 import java.util.List;
+import magpiebridge.core.Analysis;
 
-/** @author Linghui Luo */
+/**
+ * The class generates a HTML page based on the {@link ConfigurationOption}s and {@link
+ * ConfigurationAction}s defined in {@link Analysis#getConfigurationOptions()} and {@link
+ * Analysis#getConfiguredActions()} by an {@link Analysis} running on the server.
+ *
+ * @author Linghui Luo
+ */
 public class HtmlGenerator {
 
   public static String generateHTML(

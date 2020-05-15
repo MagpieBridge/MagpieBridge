@@ -14,10 +14,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.core.ServerConfiguration;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
-/** @author Linghui Luo */
+/**
+ * The class handles HTTP request from the configuration page. This is used when the server is
+ * configured to show the configuration page after initialization, namely {@link
+ * ServerConfiguration#showConfigurationPage()} returns true.
+ *
+ * @author Linghui Luo
+ */
 public class MagpieHttpHandler implements HttpHandler {
 
   private MagpieServer magpieServer;

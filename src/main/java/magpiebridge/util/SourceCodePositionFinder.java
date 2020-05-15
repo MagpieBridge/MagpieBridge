@@ -14,7 +14,11 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-/** The Class SourceCodePositionFinder. */
+/**
+ * The Class SourceCodePositionFinder.
+ *
+ * @author Linghui Luo
+ */
 public class SourceCodePositionFinder {
 
   /**

@@ -20,6 +20,8 @@ public class ServerConfiguration {
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
+  private FalsePositiveHandler falsePositiveHandler;
+  private ConfusionHandler confusionHandler;
   private long timeOut; // timeout in millisecond
 
   private MagpieMessageLogger logger;
@@ -32,6 +34,8 @@ public class ServerConfiguration {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
+    this.falsePositiveHandler = new DefaultFalsePositiveHandler();
+    this.confusionHandler = new DefaultConfusionHandler();
     this.timeOut = 0;
     // default no-op logger
     this.logger =
@@ -56,6 +60,13 @@ public class ServerConfiguration {
     return this;
   }
 
+  public ServerConfiguration setReportFalsePositive(
+      boolean reportFalsePositive, FalsePositiveHandler handler) {
+    this.reportFalsePositive = reportFalsePositive;
+    this.falsePositiveHandler = handler;
+    return this;
+  }
+
   public boolean reportConfusion() {
     return reportConfusion;
   }
@@ -65,6 +76,20 @@ public class ServerConfiguration {
     return this;
   }
 
+  public ServerConfiguration setConfusionHandler(
+      boolean reportConfusion, ConfusionHandler confusionHandler) {
+    this.confusionHandler = confusionHandler;
+    return this;
+  }
+
+  /**
+   * Set up the server to start a configuration page (HTML page in client or browser) after
+   * initialization.
+   *
+   * @param showConfigurationPage true, fi the server should start a configuration page. The default
+   *     value is false.
+   * @return the server configuration
+   */
   public ServerConfiguration setShowConfigurationPage(boolean showConfigurationPage) {
     this.showConfigurationPage = showConfigurationPage;
     return this;
@@ -162,5 +187,13 @@ public class ServerConfiguration {
 
   public boolean showConfigurationPage() {
     return this.showConfigurationPage;
+  }
+
+  public FalsePositiveHandler getFalsePositiveHandler() {
+    return this.falsePositiveHandler;
+  }
+
+  public ConfusionHandler getConfusionHanlder() {
+    return this.confusionHandler;
   }
 }

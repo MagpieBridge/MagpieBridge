@@ -2,8 +2,13 @@ package magpiebridge.core.analysis.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import magpiebridge.core.Analysis;
 
-/** @author Linghui Luo */
+/**
+ * This class defines a configuration option for a {@link Analysis} running at the server.
+ *
+ * @author Linghui Luo
+ */
 public class ConfigurationOption {
 
   private final String name;

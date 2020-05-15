@@ -1,7 +1,7 @@
 package magpiebridge.core;
 
 /**
- * The Interface for analysis which reports warnings in the client IDE.
+ * The Interface for analysis which is not a stand-alone tool.
  *
  * @author Julian Dolby and Linghui Luo
  */

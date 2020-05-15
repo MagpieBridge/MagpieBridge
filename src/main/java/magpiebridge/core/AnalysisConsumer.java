@@ -11,5 +11,11 @@ import java.util.Collection;
 @FunctionalInterface
 public interface AnalysisConsumer {
 
+  /**
+   * consume the analysis results by the server.
+   *
+   * @param results analysis results
+   * @param source where the results come from
+   */
   void consume(Collection<AnalysisResult> results, String source);
 }

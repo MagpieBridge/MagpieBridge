@@ -19,6 +19,7 @@ public class ReportConfusionCommand implements WorkspaceCommand {
 
   @Override
   public void execute(ExecuteCommandParams params, MagpieServer server, LanguageClient client) {
-    client.showMessage(new MessageParams(MessageType.Info, "Thank you for your feedback!"));
+    server.forwardMessageToClient(
+        new MessageParams(MessageType.Info, "Thank you for your feedback!"));
   }
 }

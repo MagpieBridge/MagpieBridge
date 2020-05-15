@@ -27,14 +27,14 @@ public class OpenURLCommand implements WorkspaceCommand {
   public void execute(ExecuteCommandParams params, MagpieServer server, LanguageClient client) {
     if (Desktop.isDesktopSupported()) {
       try {
-        String url;
+        String uri;
         Object uriJson = params.getArguments().get(0);
         if (uriJson instanceof JsonPrimitive) {
-          url = ((JsonPrimitive) uriJson).getAsString();
+          uri = ((JsonPrimitive) uriJson).getAsString();
         } else {
-          url = (String) uriJson;
+          uri = (String) uriJson;
         }
-        showHTMLinClientOrBroswer(server, client, url);
+        showHTMLinClientOrBroswer(server, client, uri);
       } catch (IOException | URISyntaxException e) {
         e.printStackTrace();
       }
@@ -47,9 +47,9 @@ public class OpenURLCommand implements WorkspaceCommand {
    *
    * @param server The MagpieServer
    * @param client The IDE/Editor
-   * @param uri The URI which should be opened.
-   * @throws IOException
-   * @throws URISyntaxException
+   * @param uri The URI which should be opened
+   * @throws IOException IO exception
+   * @throws URISyntaxException URI exception
    */
   public static void showHTMLinClientOrBroswer(
       MagpieServer server, LanguageClient client, String uri)
