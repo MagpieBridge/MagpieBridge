@@ -370,37 +370,43 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   protected void initAnalysisConfiguration() {
-    languageAnalyses
-        .values()
-        .forEach(
-            a ->
-                a.forEach(
-                    e -> {
-                      analysisConfiguration.addAll(
-                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions());
-                    }));
+    for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
+        languageAnalyses.entrySet()) {
+      String language = entry.getKey();
+      Collection<Either<ServerAnalysis, ToolAnalysis>> analyses = entry.getValue();
+      for (Either<ServerAnalysis, ToolAnalysis> e : analyses) {
+        String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
+        for (ConfigurationOption option :
+            (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions()) {
+          analysisConfiguration.add(option.setSource(source + ": " + language));
+        }
+      }
+    }
   }
 
   public List<ConfigurationAction> getConfigurationActions() {
     List<ConfigurationAction> actions = new ArrayList<>();
-    actions.add(
-        new ConfigurationAction(
-            "start",
-            () -> {
-              client.showMessage(
-                  new MessageParams(
-                      MessageType.Info, "The analyzer started re-analyzing the code."));
-              for (String language : languageAnalyses.keySet()) this.doAnalysis(language, true);
-            }));
-    languageAnalyses
-        .values()
-        .forEach(
-            a ->
-                a.forEach(
-                    e -> {
-                      actions.addAll(
-                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions());
-                    }));
+    for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
+        languageAnalyses.entrySet()) {
+      String language = entry.getKey();
+      Collection<Either<ServerAnalysis, ToolAnalysis>> analyses = entry.getValue();
+      for (Either<ServerAnalysis, ToolAnalysis> e : analyses) {
+        String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
+        actions.add(
+            new ConfigurationAction(
+                    "Run Analysis",
+                    () -> {
+                      String msg = "The analyzer " + source + " started re-analyzing the code.";
+                      client.showMessage(new MessageParams(MessageType.Info, msg));
+                      this.doSingleAnalysis(language, e, true);
+                    })
+                .setSource(source + ": " + language));
+        for (ConfigurationAction action :
+            (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions()) {
+          actions.add(action.setSource(source + ": " + language));
+        }
+      }
+    }
     return actions;
   }
 
@@ -537,6 +543,15 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
+  protected void doSingleAnalysis(
+      String language, Either<ServerAnalysis, ToolAnalysis> analysis, boolean rerun) {
+    SourceFileManager fileManager = getSourceFileManager(language);
+    if (analysis.isLeft()) {
+      analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+    } else {
+      analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+    }
+  }
   /**
    * Consume the analysis results.
    *
@@ -832,11 +847,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * Perform an action based on the user interaction in the configuration page. This is an advanced
    * feature and is only used when {@link ServerConfiguration#showConfigurationPage()} returns true.
    *
-   * @param nameValuePair information about the action chosen by the user.
+   * @param actionName name of the action chosen by the user.
+   * @param sourceName source (analysis name) of the action.
    */
-  public void performConfiguredAction(NameValuePair nameValuePair) {
+  public void performConfiguredAction(NameValuePair actionName, NameValuePair sourceName) {
     for (ConfigurationAction action : getConfigurationActions()) {
-      if (action.getName().equals(nameValuePair.getValue())) submittNewTask(action.getAction());
+      if (action.getName().equals(actionName.getValue())
+          && action.getSource().equals(sourceName.getValue())) submittNewTask(action.getAction());
     }
   }
 

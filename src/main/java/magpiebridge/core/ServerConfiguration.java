@@ -121,7 +121,7 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up the server to run analysis when the user has been idle(doing nothing in the editor) for
+   * Set up the server to run analysis when the user has been idle (doing nothing in the editor) for
    * the given time period; and all changed source files have been saved.
    *
    * @param doAnalysisByIdle true, if the server runs the analysis when the user is idle. The

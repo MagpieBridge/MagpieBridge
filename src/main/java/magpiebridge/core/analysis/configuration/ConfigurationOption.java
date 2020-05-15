@@ -15,6 +15,7 @@ public class ConfigurationOption {
   private final OptionType type;
   private List<ConfigurationOption> children;
   private String value;
+  private String source;
 
   public ConfigurationOption(String name, OptionType type) {
     this.name = name;
@@ -58,5 +59,14 @@ public class ConfigurationOption {
 
   public boolean getValueAsBoolean() {
     return "on".equals(value);
+  }
+
+  public String getSource() {
+    return source;
+  }
+
+  public ConfigurationOption setSource(String source) {
+    this.source = source;
+    return this;
   }
 }

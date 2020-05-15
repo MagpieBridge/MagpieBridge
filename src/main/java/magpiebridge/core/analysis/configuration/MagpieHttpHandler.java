@@ -42,8 +42,8 @@ public class MagpieHttpHandler implements HttpHandler {
           HtmlGenerator.generateHTML(
               magpieServer.getAnalysisConfiguration(), magpieServer.getConfigurationActions());
       List<NameValuePair> params = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
-      if (!params.isEmpty()) {
-        magpieServer.performConfiguredAction(params.get(0));
+      if (!params.isEmpty() && params.size() == 2) {
+        magpieServer.performConfiguredAction(params.get(0), params.get(1));
         exchange.getResponseHeaders().add("Location", "/config");
         exchange.sendResponseHeaders(307, -1);
       } else {

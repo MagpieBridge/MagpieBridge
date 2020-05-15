@@ -7,6 +7,7 @@ import static j2html.TagCreator.div;
 import static j2html.TagCreator.form;
 import static j2html.TagCreator.h1;
 import static j2html.TagCreator.h2;
+import static j2html.TagCreator.h3;
 import static j2html.TagCreator.head;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.input;
@@ -29,6 +30,9 @@ import magpiebridge.core.Analysis;
  * @author Linghui Luo
  */
 public class HtmlGenerator {
+
+  private static String sourceOption;
+  private static String sourceAction;
 
   public static String generateHTML(
       List<ConfigurationOption> configration, List<ConfigurationAction> actions) {
@@ -71,7 +75,11 @@ public class HtmlGenerator {
   private static ContainerTag generateActions(List<ConfigurationAction> actions) {
     ContainerTag ret = div();
     for (ConfigurationAction action : actions) {
-      ret.with(generateButton(action.getName()));
+      if (!action.getSource().equals(sourceAction)) {
+        ret.with(h3(action.getSource()));
+        sourceAction = action.getSource();
+      }
+      ret.with(generateButton(action.getName(), action.getSource()), br());
     }
     return ret;
   }
@@ -90,6 +98,10 @@ public class HtmlGenerator {
   private static ContainerTag generateTag(ConfigurationOption o, int i) {
     i++;
     ContainerTag ret = div();
+    if (!o.getSource().equals(sourceOption)) {
+      ret.with(h3(o.getSource()));
+      sourceOption = o.getSource();
+    }
     String name = o.getName();
     if (o.getType().equals(OptionType.checkbox)) {
       ret.with(generateCheckbox(o), generateLabel(name));
@@ -109,12 +121,12 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static ContainerTag generateButton(String name) {
+  private static ContainerTag generateButton(String name, String source) {
     return a().withClasses("btn", "btn-default")
         .withRole("button")
         .withName(name)
         .withId(name)
-        .withHref("?action=" + name)
+        .withHref("?action=" + name + "&" + "source=" + source)
         .with(text(name));
   }
 

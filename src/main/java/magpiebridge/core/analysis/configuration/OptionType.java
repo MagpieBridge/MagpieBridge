@@ -1,7 +1,7 @@
 package magpiebridge.core.analysis.configuration;
 
 /**
- * Type of {@link ConfigurationOption}
+ * Type of {@link ConfigurationOption}.
  *
  * @author Linghui Luo
  */
