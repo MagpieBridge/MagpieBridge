@@ -1,21 +1,21 @@
 package magpiebridge.core.analysis.configuration;
 
-import static j2html.TagCreator.*;
 import static j2html.TagCreator.a;
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.br;
 import static j2html.TagCreator.div;
 import static j2html.TagCreator.form;
 import static j2html.TagCreator.h1;
+import static j2html.TagCreator.h2;
 import static j2html.TagCreator.head;
 import static j2html.TagCreator.html;
 import static j2html.TagCreator.input;
 import static j2html.TagCreator.label;
 import static j2html.TagCreator.text;
+import static j2html.TagCreator.title;
 
 import j2html.tags.ContainerTag;
 import j2html.tags.EmptyTag;
-import j2html.tags.Tag;
 import j2html.tags.UnescapedText;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +70,7 @@ public class HtmlGenerator {
 
   private static ContainerTag generateForm(List<ConfigurationOption> configration) {
     ContainerTag ret = form().withMethod("post").withAction("/config");
-    List<Tag> tags = new ArrayList<Tag>();
+    List<ContainerTag> tags = new ArrayList<ContainerTag>();
     for (ConfigurationOption o : configration) {
       tags.add(generateTag(o, 0));
     }
@@ -90,9 +90,9 @@ public class HtmlGenerator {
     }
     ret.with(br());
     if (o.hasChildren()) {
-      List<Tag> tags = new ArrayList<Tag>();
+      List<ContainerTag> tags = new ArrayList<ContainerTag>();
       for (ConfigurationOption child : o.getChildren()) {
-        Tag tag = generateTag(child, i);
+        ContainerTag tag = generateTag(child, i);
         tag.withStyle("margin-left: " + (i * 50) + "px");
         tags.add(tag);
       }
@@ -101,7 +101,7 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static Tag generateButton(String name) {
+  private static ContainerTag generateButton(String name) {
     return a().withClasses("btn", "btn-default")
         .withRole("button")
         .withName(name)
@@ -110,7 +110,7 @@ public class HtmlGenerator {
         .with(text(name));
   }
 
-  private static Tag generateCheckbox(ConfigurationOption o) {
+  private static EmptyTag generateCheckbox(ConfigurationOption o) {
     EmptyTag checkBox = input().withType("checkbox").withName(o.getName()).withId(o.getName());
     if (o.getValueAsBoolean()) {
       checkBox.attr("checked");
@@ -118,14 +118,14 @@ public class HtmlGenerator {
     return checkBox;
   }
 
-  private static Tag generateSubmit() {
+  private static EmptyTag generateSubmit() {
     return input()
         .withClasses("btn", "btn-default")
         .withType("submit")
         .withValue("Submit Configuration");
   }
 
-  private static Tag generateTextfield(ConfigurationOption o) {
+  private static EmptyTag generateTextfield(ConfigurationOption o) {
     return input()
         .withType("text")
         .withName(o.getName())
@@ -133,7 +133,7 @@ public class HtmlGenerator {
         .withValue(o.getValue());
   }
 
-  private static Tag generateLabel(String name) {
+  private static ContainerTag generateLabel(String name) {
     return label(name);
   }
 }

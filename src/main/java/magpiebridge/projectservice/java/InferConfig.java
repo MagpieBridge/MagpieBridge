@@ -323,47 +323,6 @@ public class InferConfig {
     }
   }
 
-  /** Find source .jar files in local repository. */
-  private Set<Path> buildDocPath() {
-    // externalDependencies
-    if (!externalDependencies.isEmpty()) {
-      Set<Path> result = new HashSet<Path>();
-      for (String id : externalDependencies) {
-        Artifact a = Artifact.parse(id);
-        Optional<Path> found = findAnyJar(a, true);
-        if (found.isPresent()) {
-          result.add(found.get());
-        } else {
-          logger.warn(
-              String.format("Couldn't find doc jar for %s in %s or %s", a, mavenHome, gradleHome));
-        }
-      }
-      return result;
-    }
-
-    // Maven
-    if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
-      Set<Path> result = new HashSet<>();
-      for (Artifact a : mvnDependencies()) {
-        findMavenJar(a, true).ifPresent(result::add);
-      }
-      return result;
-    }
-
-    // Gradle
-    if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-      return InferConfigGradle.gradleDependencies(workspaceRoot).stream()
-          .map(dep -> InferConfigGradle.findGradleJar(gradleHome, dep, true, workspaceRoot))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .collect(Collectors.toSet());
-    }
-
-    // TODO Bazel
-
-    return Collections.emptySet();
-  }
-
   private Optional<Path> findAnyJar(Artifact artifact, boolean source) {
     Optional<Path> maven = findMavenJar(artifact, source);
     if (maven.isPresent()) {

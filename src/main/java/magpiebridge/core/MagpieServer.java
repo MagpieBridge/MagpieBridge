@@ -51,7 +51,7 @@ import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MagpieMessageLogger;
-import magpiebridge.util.SourceCodePositionConverter;
+import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.NameValuePair;
@@ -695,14 +695,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         result -> {
           Diagnostic d = new Diagnostic();
           d.setMessage(result.toString(false));
-          d.setRange(SourceCodePositionConverter.getLocationFrom(result.position()).getRange());
+          d.setRange(SourceCodePositionUtils.getLocationFrom(result.position()).getRange());
           d.setSource(source);
           d.setCode(result.code());
           List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
           if (result.related() != null)
             for (Pair<Position, String> related : result.related()) {
               DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-              di.setLocation(SourceCodePositionConverter.getLocationFrom(related.fst));
+              di.setLocation(SourceCodePositionUtils.getLocationFrom(related.fst));
               di.setMessage(related.snd);
               relatedList.add(di);
             }
@@ -720,7 +720,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               Position fixPos = result.repair().fst;
               if (fixPos != null) {
                 String replace = result.repair().snd;
-                Range range = SourceCodePositionConverter.getLocationFrom(fixPos).getRange();
+                Range range = SourceCodePositionUtils.getLocationFrom(fixPos).getRange();
                 CodeAction fix =
                     CodeActionGenerator.replace(
                         "Fix: replace it with " + replace, range, replace, clientUri, d);
@@ -798,7 +798,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               }
             }
             hover.setContents(contents);
-            hover.setRange(SourceCodePositionConverter.getLocationFrom(pos).getRange());
+            hover.setRange(SourceCodePositionUtils.getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
             if (this.hovers.containsKey(clientURL)) {
               hoverMap = this.hovers.get(clientURL);
@@ -828,7 +828,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             URL clientURL = new URL(clientUri);
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
-              Location loc = SourceCodePositionConverter.getLocationFrom(result.repair().fst);
+              Location loc = SourceCodePositionUtils.getLocationFrom(result.repair().fst);
               codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
               codeLens
                   .getCommand()
@@ -837,7 +837,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               codeLens.setCommand(result.command().iterator().next());
             }
             codeLens.setRange(
-                SourceCodePositionConverter.getLocationFrom(result.position()).getRange());
+                SourceCodePositionUtils.getLocationFrom(result.position()).getRange());
             List<CodeLens> list = new ArrayList<>();
             if (this.codeLenses.containsKey(clientURL)) {
               list = this.codeLenses.get(clientURL);
@@ -1021,20 +1021,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       }
     }
     return hover;
-  }
-
-  /**
-   * Check if two source code positions are near to each other.
-   *
-   * @param pos1 the pos 1
-   * @param pos2 the pos 2
-   * @param diff the diff
-   * @return true, if successful
-   */
-  private boolean areNearPositions(Position pos1, Position pos2, int diff) {
-    if (pos1.getFirstLine() == pos2.getFirstLine()
-        && Math.abs(pos1.getFirstCol() - pos2.getFirstCol()) <= diff) return true;
-    return false;
   }
 
   /**

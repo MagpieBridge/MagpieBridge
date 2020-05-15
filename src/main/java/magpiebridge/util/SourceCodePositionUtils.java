@@ -11,7 +11,7 @@ import java.net.URL;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
-public class SourceCodePositionConverter {
+public class SourceCodePositionUtils {
 
   /**
    * Gets the location from given position.
@@ -131,5 +131,19 @@ public class SourceCodePositionConverter {
         }
       };
     }
+  }
+
+  /**
+   * Check if two source code positions are near to each other.
+   *
+   * @param pos1 the pos 1
+   * @param pos2 the pos 2
+   * @param diff the diff
+   * @return true, if successful
+   */
+  public static boolean areNearPositions(Position pos1, Position pos2, int diff) {
+    if (pos1.getFirstLine() == pos2.getFirstLine()
+        && Math.abs(pos1.getFirstCol() - pos2.getFirstCol()) <= diff) return true;
+    return false;
   }
 }

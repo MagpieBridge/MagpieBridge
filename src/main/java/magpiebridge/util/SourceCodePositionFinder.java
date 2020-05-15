@@ -65,8 +65,8 @@ public class SourceCodePositionFinder {
    * @return the file
    */
   public static File find(File dir, String className) {
-    Collection files = FileUtils.listFiles(dir, null, true);
-    for (Iterator iterator = files.iterator(); iterator.hasNext(); ) {
+    Collection<File> files = FileUtils.listFiles(dir, null, true);
+    for (Iterator<File> iterator = files.iterator(); iterator.hasNext(); ) {
       File file = (File) iterator.next();
       String fileName = file.getName();
       if (fileName.endsWith(".java") && file.getName().equals(className + ".java")) return file;
