@@ -1,6 +1,7 @@
 package magpiebridge.core;
 
 import java.nio.file.Path;
+import magpiebridge.projectservice.java.JavaProjectType;
 
 /**
  * The Interface IProjectService defines service which resolves project scope. An implementation of
@@ -19,10 +20,10 @@ public interface IProjectService {
   public void setRootPath(Path rootPath);
 
   /**
-   * Return the {@link ProjectType} of the project in the root path which is resolved by this
+   * Return the {@link JavaProjectType} of the project in the root path which is resolved by this
    * service.
    *
    * @return project type in the root path
    */
-  public ProjectType getProjectType();
+  public String getProjectType();
 }

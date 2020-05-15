@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import magpiebridge.core.ProjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -55,7 +54,7 @@ public class InferConfig {
 
   private Set<Path> cachedBuildClassPath;
 
-  private ProjectType projectType;
+  private JavaProjectType projectType;
 
   InferConfig(
       Path workspaceRoot,
@@ -117,7 +116,7 @@ public class InferConfig {
 
     // Maven
     if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
-      this.projectType = ProjectType.Maven;
+      this.projectType = JavaProjectType.Maven;
       try {
         return Files.walk(workspaceRoot)
             .flatMap(this::mavenOutputDirectory)
@@ -132,21 +131,21 @@ public class InferConfig {
       Path bazelBin = workspaceRoot.resolve("bazel-bin");
 
       if (Files.exists(bazelBin) && Files.isSymbolicLink(bazelBin)) {
-        this.projectType = ProjectType.Bazel;
+        this.projectType = JavaProjectType.Bazel;
         return bazelOutputDirectories(bazelBin);
       }
     }
 
     // Gradle
     if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-      this.projectType = ProjectType.Gradle;
+      this.projectType = JavaProjectType.Gradle;
       return InferConfigGradle.workspaceClassPath(workspaceRoot);
     }
 
     // Eclipse Java Project
     Path classPath = workspaceRoot.resolve(workspaceRoot.resolve(".classpath"));
     if (Files.exists(classPath)) {
-      this.projectType = ProjectType.EclipseJava;
+      this.projectType = JavaProjectType.EclipseJava;
       return parseClassPathFile(classPath);
     }
 
@@ -411,7 +410,7 @@ public class InferConfig {
     return null;
   }
 
-  public ProjectType getProjectType() {
+  public JavaProjectType getProjectType() {
     if (this.projectType == null) classPath();
     return this.projectType;
   }
