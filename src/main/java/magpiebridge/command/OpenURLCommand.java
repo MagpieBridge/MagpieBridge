@@ -41,18 +41,28 @@ public class OpenURLCommand implements WorkspaceCommand {
     }
   }
 
+  /**
+   * Show A HTML page with the given URI in the client, or in a browser if the client doesn't
+   * support this.
+   *
+   * @param server The MagpieServer
+   * @param client The IDE/Editor
+   * @param uri The URI which should be opened.
+   * @throws IOException
+   * @throws URISyntaxException
+   */
   public static void showHTMLinClientOrBroswer(
-      MagpieServer server, LanguageClient client, String url)
+      MagpieServer server, LanguageClient client, String uri)
       throws IOException, URISyntaxException {
     if (server.clientSupportShowHTML()) {
       if (client instanceof MagpieClient) {
         MessageParams mp = new MessageParams();
         mp.setType(MessageType.Info);
-        mp.setMessage(new String(FileUtil.readBytes(new URL(url).openStream())));
+        mp.setMessage(new String(FileUtil.readBytes(new URL(uri).openStream())));
         ((MagpieClient) client).showHTML(mp);
       }
     } else {
-      if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(url));
+      if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(uri));
     }
   }
 }

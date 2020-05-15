@@ -8,7 +8,8 @@ import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
 
 /**
- * Configuration class for {@link MagpieServer}. This class uses a Builder pattern.
+ * Configuration class for {@link MagpieServer}. This class uses a Builder pattern to set up each
+ * option.
  *
  * @author Linghui Luo
  */

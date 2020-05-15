@@ -5,12 +5,14 @@ import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 import com.ibm.wala.cast.tree.impl.LineNumberPosition;
 import com.ibm.wala.cast.util.SourceBuffer;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
+/** @author Linghui Luo */
 public class SourceCodePositionUtils {
 
   /**
@@ -145,5 +147,64 @@ public class SourceCodePositionUtils {
     if (pos1.getFirstLine() == pos2.getFirstLine()
         && Math.abs(pos1.getFirstCol() - pos2.getFirstCol()) <= diff) return true;
     return false;
+  }
+
+  /**
+   * Lookup pos.
+   *
+   * @param pos the pos
+   * @param url the url
+   * @return the position
+   */
+  public static Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
+    return new AbstractSourcePosition() {
+
+      @Override
+      public int getFirstLine() {
+        // LSP is 0-based, but parsers mostly 1-based
+        return pos.getLine() + 1;
+      }
+
+      @Override
+      public int getLastLine() {
+        // LSP is 0-based, but parsers mostly 1-based
+        return pos.getLine() + 1;
+      }
+
+      @Override
+      public int getFirstCol() {
+        return pos.getCharacter();
+      }
+
+      @Override
+      public int getLastCol() {
+        return pos.getCharacter();
+      }
+
+      @Override
+      public int getFirstOffset() {
+        return -1;
+      }
+
+      @Override
+      public int getLastOffset() {
+        return -1;
+      }
+
+      @Override
+      public URL getURL() {
+        return url;
+      }
+
+      @Override
+      public Reader getReader() throws IOException {
+        return new InputStreamReader(url.openConnection().getInputStream());
+      }
+
+      @Override
+      public String toString() {
+        return url + ":" + getFirstLine() + "," + getFirstCol();
+      }
+    };
   }
 }

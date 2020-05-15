@@ -103,7 +103,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The client. */
   protected LanguageClient client;
 
-  /** Client config */
+  /** The client config */
   protected ClientCapabilities clientConfig;
 
   /** The text document service. */
@@ -115,6 +115,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The language analyzes. language mapped to a set of analyzes. */
   protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyses;
 
+  /** The user-defined configuration of each analysis running on the server. */
   protected List<ConfigurationOption> analysisConfiguration;
   /**
    * The language source file managers. language mapped to its corresponding source file manager.
@@ -935,71 +936,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Lookup pos.
-   *
-   * @param pos the pos
-   * @param url the url
-   * @return the position
-   */
-  protected Position lookupPos(org.eclipse.lsp4j.Position pos, URL url) {
-    return new AbstractSourcePosition() {
-
-      @Override
-      public int getFirstLine() {
-        // LSP is 0-based, but parsers mostly 1-based
-        return pos.getLine() + 1;
-      }
-
-      @Override
-      public int getLastLine() {
-        // LSP is 0-based, but parsers mostly 1-based
-        return pos.getLine() + 1;
-      }
-
-      @Override
-      public int getFirstCol() {
-        return pos.getCharacter();
-      }
-
-      @Override
-      public int getLastCol() {
-        return pos.getCharacter();
-      }
-
-      @Override
-      public int getFirstOffset() {
-        return -1;
-      }
-
-      @Override
-      public int getLastOffset() {
-        return -1;
-      }
-
-      @Override
-      public URL getURL() {
-        return url;
-      }
-
-      @Override
-      public Reader getReader() throws IOException {
-        return new InputStreamReader(url.openConnection().getInputStream());
-      }
-
-      @Override
-      public String toString() {
-        return url + ":" + getFirstLine() + "," + getFirstCol();
-      }
-    };
-  }
-
-  /**
    * Find hover for the given lookup position.
    *
    * @param lookupPos the lookup pos
    * @return the hover
    */
-  public Hover findHover(Position lookupPos) {
+  protected Hover findHover(Position lookupPos) {
     int size = Integer.MAX_VALUE;
     Hover hover = null;
     if (this.hovers.containsKey(lookupPos.getURL())) {
@@ -1029,7 +971,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param uri the uri
    * @return the list of code lenses for the given uri.
    */
-  public List<CodeLens> findCodeLenses(URI uri) {
+  protected List<CodeLens> findCodeLenses(URI uri) {
     try {
       if (this.codeLenses.containsKey(uri.toURL())) {
         return this.codeLenses.get(uri.toURL());
@@ -1047,7 +989,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param params the code action params
    * @return the list of code actions for the given code action params.
    */
-  public List<CodeAction> findCodeActions(URI uri, CodeActionParams params) {
+  protected List<CodeAction> findCodeActions(URI uri, CodeActionParams params) {
     List<Diagnostic> diagnostics = params.getContext().getDiagnostics();
     try {
       URL url = uri.toURL();

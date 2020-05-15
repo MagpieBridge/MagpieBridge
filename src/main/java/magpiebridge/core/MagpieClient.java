@@ -5,7 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 /**
- * Cutomized Language Client interface which extends LSP with new notifications.
+ * Customized Language Client interface which extends LSP with new notifications.
  *
  * @author Linghui Luo
  * @author Julian Dolby

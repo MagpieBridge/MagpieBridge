@@ -20,8 +20,9 @@ import j2html.tags.UnescapedText;
 import java.util.ArrayList;
 import java.util.List;
 
+/** @author Linghui Luo */
 public class HtmlGenerator {
-  /** @author Linghui Luo */
+
   public static String generateHTML(
       List<ConfigurationOption> configration, List<ConfigurationAction> actions) {
     return html(generateHeader(), generateBody(configration, actions)).renderFormatted();

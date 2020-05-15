@@ -18,5 +18,11 @@ public interface IProjectService {
    */
   public void setRootPath(Path rootPath);
 
+  /**
+   * Return the {@link ProjectType} of the project in the root path which is resolved by this
+   * service.
+   *
+   * @return project type in the root path
+   */
   public ProjectType getProjectType();
 }

@@ -17,6 +17,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
+import magpiebridge.util.SourceCodePositionUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -171,7 +172,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
             String uri = position.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
             URL url = new URI(decodedUri).toURL();
-            Position lookupPos = server.lookupPos(position.getPosition(), url);
+            Position lookupPos = SourceCodePositionUtils.lookupPos(position.getPosition(), url);
             hover = server.findHover(lookupPos);
           } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
