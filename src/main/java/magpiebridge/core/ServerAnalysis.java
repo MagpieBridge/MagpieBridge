@@ -5,4 +5,4 @@ package magpiebridge.core;
  *
  * @author Julian Dolby and Linghui Luo
  */
-public interface ServerAnalysis extends Analysis<MagpieServer> {}
+public interface ServerAnalysis extends Analysis<AnalysisConsumer> {}

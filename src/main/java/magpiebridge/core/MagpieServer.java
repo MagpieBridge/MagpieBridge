@@ -3,10 +3,9 @@
  */
 package magpiebridge.core;
 
+import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
-import com.ibm.wala.cast.tree.impl.LineNumberPosition;
-import com.ibm.wala.cast.util.SourceBuffer;
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Pair;
 import java.io.File;
@@ -45,9 +44,17 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import magpiebridge.command.CodeActionCommand;
+import magpiebridge.command.CodeActionGenerator;
+import magpiebridge.command.OpenURLCommand;
+import magpiebridge.core.analysis.configuration.ConfigurationAction;
+import magpiebridge.core.analysis.configuration.ConfigurationOption;
+import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MagpieMessageLogger;
+import magpiebridge.util.SourceCodePositionConverter;
+import magpiebridge.util.URIUtils;
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.http.NameValuePair;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -91,10 +98,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   private static ServerSocket serverSocket;
 
   /** The server configuration. */
-  protected final ServerConfiguration config;
+  protected ServerConfiguration config;
 
   /** The client. */
   protected LanguageClient client;
+
+  /** Client config */
+  protected ClientCapabilities clientConfig;
 
   /** The text document service. */
   protected TextDocumentService textDocumentService;
@@ -103,8 +113,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected MagpieWorkspaceService workspaceService;
 
   /** The language analyzes. language mapped to a set of analyzes. */
-  protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyzes;
+  protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyses;
 
+  protected List<ConfigurationOption> analysisConfiguration;
   /**
    * The language source file managers. language mapped to its corresponding source file manager.
    */
@@ -137,10 +148,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The logger. */
   protected MagpieMessageLogger logger;
 
-  /** Client config */
-  private ClientCapabilities clientConfig;
-
-  final Map<String, Consumer<Command>> commands = HashMapFactory.make();
+  protected Map<String, Consumer<Command>> commands = HashMapFactory.make();
 
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
@@ -152,7 +160,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.config = config;
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
-    this.languageAnalyzes = new HashMap<>();
+    this.languageAnalyses = new HashMap<>();
+    this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
     this.languageProjectServices = new HashMap<String, IProjectService>();
     this.diagnostics = new HashMap<>();
@@ -345,7 +354,63 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * InitializedParams)
    */
   @Override
-  public void initialized(InitializedParams params) {}
+  public void initialized(InitializedParams params) {
+    if (config.showConfigurationPage()) {
+      try {
+        initAnalysisConfiguration();
+        URI uri = MagpieHttpServer.createAndStartLocalHttpServer(this);
+        OpenURLCommand.showHTMLinClientOrBroswer(this, client, uri.toString());
+      } catch (MalformedURLException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (URISyntaxException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public List<ConfigurationOption> getAnalysisConfiguration() {
+    return analysisConfiguration;
+  }
+
+  protected void initAnalysisConfiguration() {
+    languageAnalyses
+        .values()
+        .forEach(
+            a ->
+                a.forEach(
+                    e -> {
+                      analysisConfiguration.addAll(
+                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions());
+                    }));
+  }
+
+  public List<ConfigurationAction> getConfigurationActions() {
+    List<ConfigurationAction> actions = new ArrayList<>();
+    actions.add(
+        new ConfigurationAction(
+            "start",
+            () -> {
+              client.showMessage(
+                  new MessageParams(
+                      MessageType.Info, "The analyzer started re-analyzing the code."));
+              for (String language : languageAnalyses.keySet()) this.doAnalysis(language, true);
+            }));
+    languageAnalyses
+        .values()
+        .forEach(
+            a ->
+                a.forEach(
+                    e -> {
+                      actions.addAll(
+                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions());
+                    }));
+    return actions;
+  }
 
   /*
    * (non-Javadoc)
@@ -354,6 +419,22 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public CompletableFuture<Object> shutdown() {
+    this.client = null;
+    this.clientConfig = null;
+    this.codeActions = null;
+    this.codeLenses = null;
+    this.commands = null;
+    this.config = null;
+    this.diagnostics = null;
+    this.falsePositives = null;
+    this.hovers = null;
+    this.languageAnalyses = null;
+    this.languageProjectServices = null;
+    this.languageSourceFileManagers = null;
+    this.rootPath = null;
+    this.serverClientUri = null;
+    this.textDocumentService = null;
+    this.workspaceService = null;
     return CompletableFuture.completedFuture(new Object());
   }
 
@@ -436,10 +517,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void addAnalysis(Either<ServerAnalysis, ToolAnalysis> analysis, String... languages) {
     for (String language : languages) {
-      if (!languageAnalyzes.containsKey(language)) {
-        languageAnalyzes.put(language, new HashSet<>());
+      if (!languageAnalyses.containsKey(language)) {
+        languageAnalyses.put(language, new HashSet<>());
       }
-      languageAnalyzes.get(language).add(analysis);
+      languageAnalyses.get(language).add(analysis);
     }
   }
 
@@ -451,10 +532,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void doAnalysis(String language, boolean rerun) {
     SourceFileManager fileManager = getSourceFileManager(language);
-    if (!languageAnalyzes.containsKey(language)) {
-      languageAnalyzes.put(language, Collections.emptyList());
+    if (!languageAnalyses.containsKey(language)) {
+      languageAnalyses.put(language, Collections.emptyList());
     }
-    for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyzes.get(language)) {
+    for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyses.get(language)) {
       if (analysis.isLeft()) {
         analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
       } else {
@@ -469,6 +550,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param results the results
    * @param source the source
    */
+  @Override
   public void consume(Collection<AnalysisResult> results, String source) {
     Map<String, List<Diagnostic>> publishDiags = new HashMap<>();
     for (AnalysisResult result : results) {
@@ -613,14 +695,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         result -> {
           Diagnostic d = new Diagnostic();
           d.setMessage(result.toString(false));
-          d.setRange(getLocationFrom(result.position()).getRange());
+          d.setRange(SourceCodePositionConverter.getLocationFrom(result.position()).getRange());
           d.setSource(source);
           d.setCode(result.code());
           List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
           if (result.related() != null)
             for (Pair<Position, String> related : result.related()) {
               DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-              di.setLocation(getLocationFrom(related.fst));
+              di.setLocation(SourceCodePositionConverter.getLocationFrom(related.fst));
               di.setMessage(related.snd);
               relatedList.add(di);
             }
@@ -638,7 +720,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               Position fixPos = result.repair().fst;
               if (fixPos != null) {
                 String replace = result.repair().snd;
-                Range range = getLocationFrom(fixPos).getRange();
+                Range range = SourceCodePositionConverter.getLocationFrom(fixPos).getRange();
                 CodeAction fix =
                     CodeActionGenerator.replace(
                         "Fix: replace it with " + replace, range, replace, clientUri, d);
@@ -716,7 +798,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               }
             }
             hover.setContents(contents);
-            hover.setRange(getLocationFrom(pos).getRange());
+            hover.setRange(SourceCodePositionConverter.getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
             if (this.hovers.containsKey(clientURL)) {
               hoverMap = this.hovers.get(clientURL);
@@ -746,7 +828,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             URL clientURL = new URL(clientUri);
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
-              Location loc = this.getLocationFrom(result.repair().fst);
+              Location loc = SourceCodePositionConverter.getLocationFrom(result.repair().fst);
               codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
               codeLens
                   .getCommand()
@@ -754,7 +836,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             } else {
               codeLens.setCommand(result.command().iterator().next());
             }
-            codeLens.setRange(getLocationFrom(result.position()).getRange());
+            codeLens.setRange(
+                SourceCodePositionConverter.getLocationFrom(result.position()).getRange());
             List<CodeLens> list = new ArrayList<>();
             if (this.codeLenses.containsKey(clientURL)) {
               list = this.codeLenses.get(clientURL);
@@ -769,42 +852,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Check if URI is in the right format in windows.
-   *
-   * @param uri the uri
-   * @return the string
-   */
-  protected String checkURI(String uri) {
-    if (uri.startsWith("file")) {
-      if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-        // take care of uri in windows
-        if (!uri.startsWith("file:///")) {
-          uri = uri.replace("file://", "file:///");
-        }
-        if (!uri.startsWith("file:///")) uri = uri.replace("file:/", "file:///");
-      } else {
-        if (!uri.startsWith("file://")) {
-          String[] splits = uri.split(":");
-          if (splits.length == 2) {
-            String path = splits[1];
-            if (path.matches("^(/[^/ ]*)+/?$")) {
-              uri = "file://" + path;
-            }
-          }
-        }
-      }
-    }
-    return uri;
-  }
-
-  /**
    * Gets the client uri.
    *
    * @param serverUri the server uri
    * @return the client uri
    */
   public String getClientUri(String serverUri) {
-    serverUri = checkURI(serverUri);
+    serverUri = URIUtils.checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {
       // the file was at least opened once in the editor
@@ -821,126 +875,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       }
     }
     return clientUri;
-  }
-
-  private Position getPositionWithColumns(Position p) {
-    if (p.getFirstCol() >= 0) {
-      return p;
-    } else {
-      Position firstLineP = new LineNumberPosition(p.getURL(), p.getURL(), p.getFirstLine());
-      SourceBuffer firstLine = null;
-      try {
-        firstLine = new SourceBuffer(firstLineP);
-      } catch (IOException e) {
-        assert false : e;
-      }
-      String firstLineText = firstLine.toString();
-
-      String pText = null;
-      try {
-        pText = new SourceBuffer(p).toString();
-      } catch (IOException e) {
-        assert false : e;
-      }
-
-      int lines = pText.split("\n").length;
-
-      String pFirst = pText;
-      if (pText.contains("\n")) {
-        pFirst = pText.substring(0, pText.indexOf("\n"));
-      }
-
-      int endCol;
-      int startCol = firstLineText.indexOf(pFirst);
-
-      if (!pText.contains("\n")) {
-        endCol = startCol + pText.length();
-      } else {
-        String lastLineText = pText.substring(pText.lastIndexOf("\n"), pText.length());
-        endCol = lastLineText.length();
-      }
-
-      return new AbstractSourcePosition() {
-        @Override
-        public Reader getReader() throws IOException {
-          return p.getReader();
-        }
-
-        @Override
-        public URL getURL() {
-          return p.getURL();
-        }
-
-        @Override
-        public int getFirstCol() {
-          return startCol;
-        }
-
-        @Override
-        public int getFirstLine() {
-          return p.getFirstLine();
-        }
-
-        @Override
-        public int getFirstOffset() {
-          return p.getFirstOffset();
-        }
-
-        @Override
-        public int getLastCol() {
-          return endCol;
-        }
-
-        @Override
-        public int getLastLine() {
-          if (p.getLastLine() >= 0) {
-            return p.getLastLine();
-          } else {
-            return p.getFirstLine() + lines - 1;
-          }
-        }
-
-        @Override
-        public int getLastOffset() {
-          return p.getLastOffset();
-        }
-      };
-    }
-  }
-
-  /**
-   * Gets the location from given position.
-   *
-   * @param pos the pos
-   * @return the location from
-   */
-  protected Location getLocationFrom(Position pos) {
-    Location codeLocation = new Location();
-    try {
-      codeLocation.setUri(checkURI(pos.getURL().toURI().toString()));
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-    }
-    Range codeRange = new Range();
-    Position detail = getPositionWithColumns(pos);
-    codeRange.setEnd(getPositionFrom(detail.getLastLine(), detail.getLastCol()));
-    codeRange.setStart(getPositionFrom(detail.getFirstLine(), detail.getFirstCol()));
-    codeLocation.setRange(codeRange);
-    return codeLocation;
-  }
-
-  /**
-   * Gets the position from given line and column numbers.
-   *
-   * @param line the line
-   * @param column the column
-   * @return the position from
-   */
-  protected org.eclipse.lsp4j.Position getPositionFrom(int line, int column) {
-    org.eclipse.lsp4j.Position codeStart = new org.eclipse.lsp4j.Position();
-    codeStart.setLine(line - 1);
-    codeStart.setCharacter(column);
-    return codeStart;
   }
 
   /**
@@ -1189,5 +1123,44 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void submittNewTask(Runnable task) {
     THREAD_POOL.submit(task);
+  }
+
+  /** @return true if the client supports showing HTML page. */
+  public boolean clientSupportShowHTML() {
+    return clientConfig != null
+        && clientConfig.getExperimental() instanceof JsonObject
+        && ((JsonObject) clientConfig.getExperimental()).has("supportsShowHTML")
+        && ((JsonObject) clientConfig.getExperimental()).get("supportsShowHTML").getAsBoolean();
+  }
+
+  public List<ConfigurationOption> setConfigurationOptions(Map<String, String> requestOptions) {
+    List<ConfigurationOption> configuration = getAnalysisConfiguration();
+    setConfigurationOptions(configuration, requestOptions);
+    languageAnalyses
+        .values()
+        .forEach(
+            a ->
+                a.forEach(
+                    e -> {
+                      (e.isLeft() ? e.getLeft() : e.getRight()).configure(configuration);
+                    }));
+    return configuration;
+  }
+
+  protected void setConfigurationOptions(
+      List<? extends ConfigurationOption> configuration, Map<String, String> requestOptions) {
+    for (ConfigurationOption option : configuration) {
+      String value = requestOptions.get(option.getName());
+      ((ConfigurationOption) option).setValue(value);
+      if (option.hasChildren()) {
+        setConfigurationOptions(option.getChildren(), requestOptions);
+      }
+    }
+  }
+
+  public void performConfiguredAction(NameValuePair nameValuePair) {
+    for (ConfigurationAction action : getConfigurationActions()) {
+      if (action.getName().equals(nameValuePair.getValue())) submittNewTask(action.getAction());
+    }
   }
 }

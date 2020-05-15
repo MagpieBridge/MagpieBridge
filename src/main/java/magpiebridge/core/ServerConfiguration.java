@@ -18,17 +18,19 @@ public class ServerConfiguration {
   private boolean doAnalysisByOpen;
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
+  private boolean showConfigurationPage;
   private long timeOut; // timeout in millisecond
 
   private MagpieMessageLogger logger;
   private PrintWriter traceWriter;
 
   public ServerConfiguration() {
-    this.reportFalsePositive = false;
-    this.reportConfusion = false;
     this.doAnalysisByOpen = true;
     this.doAnalysisBySave = true;
     this.doAnalysisByIdle = false;
+    this.reportFalsePositive = false;
+    this.reportConfusion = false;
+    this.showConfigurationPage = false;
     this.timeOut = 0;
     // default no-op logger
     this.logger =
@@ -59,6 +61,11 @@ public class ServerConfiguration {
 
   public ServerConfiguration setReportConfusion(boolean reportConfusion) {
     this.reportConfusion = reportConfusion;
+    return this;
+  }
+
+  public ServerConfiguration setShowConfigurationPage(boolean showConfigurationPage) {
+    this.showConfigurationPage = showConfigurationPage;
     return this;
   }
 
@@ -150,5 +157,9 @@ public class ServerConfiguration {
 
   public PrintWriter traceWriter() {
     return this.traceWriter;
+  }
+
+  public boolean showConfigurationPage() {
+    return this.showConfigurationPage;
   }
 }

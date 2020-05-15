@@ -42,7 +42,6 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.eclipse.lsp4j</groupId>
 			<artifactId>org.eclipse.lsp4j.websocket</artifactId>
@@ -53,7 +52,6 @@
 			<artifactId>org.eclipse.lsp4j</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
 			<artifactId>com.ibm.wala.core</artifactId>
@@ -84,6 +82,21 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.9</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sun.net.httpserver</groupId>
+			<artifactId>http</artifactId>
+			<version>20070405</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.j2html</groupId>
+			<artifactId>j2html</artifactId>
+			<version>1.4.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -101,6 +114,7 @@
 				<version>2.8</version>
 				<executions>
 					<execution>
+						<phase>package</phase>
 						<goals>
 							<goal>format</goal>
 						</goals>
@@ -138,7 +152,6 @@
 		<developerConnection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</developerConnection>
 		<url>https://github.com/MagpieBridge/MagpieBridge/tree/develop</url>
 	</scm>
-
 	<distributionManagement>
 		<repository>
 			<id>github</id>
@@ -146,22 +159,24 @@
 			<url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url>
 		</repository>
 	</distributionManagement>
-<profiles><profile>
-      <id>infer-capture</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.8.0</version>
-            <configuration>
-              <compilerId>javac</compilerId>
-              <forceJavacCompilerUse>true</forceJavacCompilerUse>
-              <fork>true</fork>
-              <executable>/usr/local/Cellar/infer/0.17.0/lib/infer/infer/bin/infer</executable>
-              
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile></profiles></project>
+	<profiles>
+		<profile>
+			<id>infer-capture</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>3.8.0</version>
+						<configuration>
+							<compilerId>javac</compilerId>
+							<forceJavacCompilerUse>true</forceJavacCompilerUse>
+							<fork>true</fork>
+							<executable>/usr/local/Cellar/infer/0.17.0/lib/infer/infer/bin/infer</executable>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+</project>
