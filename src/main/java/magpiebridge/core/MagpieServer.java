@@ -398,6 +398,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     () -> {
                       String msg = "The analyzer " + source + " started re-analyzing the code.";
                       client.showMessage(new MessageParams(MessageType.Info, msg));
+                      this.cleanUp();
                       this.doSingleAnalysis(language, e, true);
                     })
                 .setSource(source + ": " + language));
@@ -552,6 +553,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
     }
   }
+
   /**
    * Consume the analysis results.
    *
