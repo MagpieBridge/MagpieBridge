@@ -34,4 +34,9 @@ public class ConfigurationAction {
     this.source = source;
     return this;
   }
+
+  @Override
+  public String toString() {
+    return "ConfigurationAction [name=" + name + ", action=" + action + ", source=" + source + "]";
+  }
 }

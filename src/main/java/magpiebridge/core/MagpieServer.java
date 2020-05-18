@@ -392,16 +392,18 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       Collection<Either<ServerAnalysis, ToolAnalysis>> analyses = entry.getValue();
       for (Either<ServerAnalysis, ToolAnalysis> e : analyses) {
         String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
-        actions.add(
-            new ConfigurationAction(
-                    "Run Analysis",
-                    () -> {
-                      String msg = "The analyzer " + source + " started re-analyzing the code.";
-                      client.showMessage(new MessageParams(MessageType.Info, msg));
-                      this.cleanUp();
-                      this.doSingleAnalysis(language, e, true);
-                    })
-                .setSource(source + ": " + language));
+        if (config.addDefaultActions()) {
+          actions.add(
+              new ConfigurationAction(
+                      "Run Analysis",
+                      () -> {
+                        String msg = "The analyzer " + source + " started re-analyzing the code.";
+                        client.showMessage(new MessageParams(MessageType.Info, msg));
+                        this.cleanUp();
+                        this.doSingleAnalysis(language, e, true);
+                      })
+                  .setSource(source + ": " + language));
+        }
         for (ConfigurationAction action :
             (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions()) {
           actions.add(action.setSource(source + ": " + language));

@@ -35,8 +35,10 @@ public class HtmlGenerator {
   private static String sourceAction;
 
   public static String generateHTML(
-      List<ConfigurationOption> configration, List<ConfigurationAction> actions) {
-    return html(generateHeader(), generateBody(configration, actions)).renderFormatted();
+      List<ConfigurationOption> configuration, List<ConfigurationAction> actions) {
+    sourceOption = null;
+    sourceAction = null;
+    return html(generateHeader(), generateBody(configuration, actions)).renderFormatted();
   }
 
   private static ContainerTag generateHeader() {

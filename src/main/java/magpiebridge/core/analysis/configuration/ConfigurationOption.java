@@ -58,7 +58,7 @@ public class ConfigurationOption {
   }
 
   public boolean getValueAsBoolean() {
-    return "on".equals(value);
+    return "on".equals(value) || "true".equals(value);
   }
 
   public String getSource() {
@@ -67,6 +67,22 @@ public class ConfigurationOption {
 
   public ConfigurationOption setSource(String source) {
     this.source = source;
+    if (children != null) for (ConfigurationOption o : children) o = o.setSource(source);
     return this;
+  }
+
+  @Override
+  public String toString() {
+    return "ConfigurationOption [name="
+        + name
+        + ", type="
+        + type
+        + ", children="
+        + children
+        + ", value="
+        + value
+        + ", source="
+        + source
+        + "]";
   }
 }
