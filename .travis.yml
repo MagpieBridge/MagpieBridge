@@ -1,6 +1,6 @@
 language: java
 jdk: 
-  - oraclejdk8
+  - openjdk8
 install:
   # Download and unzip the Android SDK tools (if not already there thanks to the cache mechanism)
   # Latest version available here: https://developer.android.com/studio/#command-tools
@@ -25,5 +25,5 @@ env:
   - ANDROID_HOME=$HOME/android-sdk
 
 script:
-  - mvn install 
+  - mvn install
 
