@@ -1,1 +1,3 @@
 image: adoptopenjdk/openjdk8
+tasks:
+- command: brew install infer
