@@ -26,6 +26,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Integrated Static Analyses using MagpieBridge
+- [MagpieBridge-based Facebook Infer](https://github.com/MagpieBridge/InferIDE)
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
