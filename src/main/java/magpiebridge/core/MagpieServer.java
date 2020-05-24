@@ -397,7 +397,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               new ConfigurationAction(
                       "Run Analysis",
                       () -> {
-                        String msg = "The analyzer " + source + " started re-analyzing the code.";
+                        String msg = "The analyzer " + source + " started analyzing the code.";
                         client.showMessage(new MessageParams(MessageType.Info, msg));
                         this.cleanUp();
                         this.doSingleAnalysis(language, e, true);
