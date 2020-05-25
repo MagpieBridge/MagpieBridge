@@ -415,22 +415,28 @@ public class InferConfig {
       // Maven
       if (Files.exists(workspaceRoot.resolve("pom.xml"))) {
         this.projectType = JavaProjectType.Maven;
+        return this.projectType;
       }
+
+      // Gradle
+      if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
+        this.projectType = JavaProjectType.Gradle;
+        return this.projectType;
+      }
+
       // Bazel
       if (Files.exists(workspaceRoot.resolve("WORKSPACE"))) {
         Path bazelBin = workspaceRoot.resolve("bazel-bin");
         if (Files.exists(bazelBin) && Files.isSymbolicLink(bazelBin)) {
           this.projectType = JavaProjectType.Bazel;
+          return this.projectType;
         }
-      }
-      // Gradle
-      if (InferConfigGradle.hasGradleProject(workspaceRoot)) {
-        this.projectType = JavaProjectType.Gradle;
       }
       // Eclipse Java Project
       Path classPath = workspaceRoot.resolve(workspaceRoot.resolve(".classpath"));
       if (Files.exists(classPath)) {
         this.projectType = JavaProjectType.EclipseJava;
+        return this.projectType;
       }
     }
     return this.projectType;

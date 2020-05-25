@@ -347,6 +347,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public void initialized(InitializedParams params) {
+    for (String language : languageProjectServices.keySet()) {
+      if (this.rootPath.isPresent()) {
+        if (this.getProjectService(language).isPresent()) {
+          this.getProjectService(language).get().setRootPath(this.rootPath.get());
+        }
+      }
+    }
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
