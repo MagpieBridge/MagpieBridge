@@ -1,2 +1,2 @@
-image: adoptopenjdk/openjdk8
+image: jonasmanuel/inferdocker
 
