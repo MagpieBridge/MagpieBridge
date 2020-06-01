@@ -1,6 +1,3 @@
-/*
- * @author Linghui Luo
- */
 package magpiebridge.util;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -24,7 +21,6 @@ public class SourceCodeReader {
    * @param p the position where to get the code
    * @return the lines
    */
-  @SuppressWarnings("resource")
   public static List<String> getLines(Position p) {
     List<String> lines = new ArrayList<>();
 
@@ -40,7 +36,6 @@ public class SourceCodeReader {
       if (file.exists() && file.isFile()) {
         try (FileReader freader = new FileReader(file);
             BufferedReader reader = new BufferedReader(freader)) {
-
           String currentLine = null;
           int line = 0;
           do {

@@ -12,7 +12,11 @@ import java.net.URL;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
 
-/** @author Linghui Luo */
+/**
+ * Utility class for processing code locations: searching, handling, converting etc.
+ *
+ * @author Linghui Luo
+ */
 public class SourceCodePositionUtils {
 
   /**

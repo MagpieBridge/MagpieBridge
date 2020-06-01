@@ -1,6 +1,3 @@
-/*
- * @author Linghui Luo
- */
 package magpiebridge.command;
 
 /**

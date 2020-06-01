@@ -20,6 +20,9 @@ public class ServerConfiguration {
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
+  private boolean addDefaultActions;
+  private FalsePositiveHandler falsePositiveHandler;
+  private ConfusionHandler confusionHandler;
   private long timeOut; // timeout in millisecond
 
   private MagpieMessageLogger logger;
@@ -32,6 +35,9 @@ public class ServerConfiguration {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
+    this.addDefaultActions = false;
+    this.falsePositiveHandler = new DefaultFalsePositiveHandler();
+    this.confusionHandler = new DefaultConfusionHandler();
     this.timeOut = 0;
     // default no-op logger
     this.logger =
@@ -51,8 +57,29 @@ public class ServerConfiguration {
     return reportFalsePositive;
   }
 
+  /**
+   * Set up {@link DefaultFalsePositiveHandler} for handling false-positive diagnostics reported by
+   * user.
+   *
+   * @param reportFalsePositive true, if reporting false-positive diagnostics is enabled
+   * @return the server configuration
+   */
   public ServerConfiguration setReportFalsePositive(boolean reportFalsePositive) {
     this.reportFalsePositive = reportFalsePositive;
+    return this;
+  }
+
+  /**
+   * Set up handler for false-positive diagnostics reported by user.
+   *
+   * @param reportFalsePositive true, if reporting false-positive diagnostics is enabled
+   * @param handler the handler for false-positive diagnostics
+   * @return the server configuration
+   */
+  public ServerConfiguration setReportFalsePositive(
+      boolean reportFalsePositive, FalsePositiveHandler handler) {
+    this.reportFalsePositive = reportFalsePositive;
+    this.falsePositiveHandler = handler;
     return this;
   }
 
@@ -60,13 +87,43 @@ public class ServerConfiguration {
     return reportConfusion;
   }
 
+  /**
+   * Set up {@link DefaultConfusionHandler} for handling confusing diagnostics reported by user.
+   *
+   * @param reportConfusion true, if reporting confusing diagnostics is enabled
+   * @return the server configuration
+   */
   public ServerConfiguration setReportConfusion(boolean reportConfusion) {
     this.reportConfusion = reportConfusion;
     return this;
   }
+  /**
+   * Set up handler for confusing diagnostics reported by user.
+   *
+   * @param reportConfusion true, if reporting confusing diagnostics is enable
+   * @param confusionHandler the handler for confusing diagnostics
+   * @return the server configuration
+   */
+  public ServerConfiguration setConfusionHandler(
+      boolean reportConfusion, ConfusionHandler confusionHandler) {
+    this.confusionHandler = confusionHandler;
+    return this;
+  }
 
-  public ServerConfiguration setShowConfigurationPage(boolean showConfigurationPage) {
+  /**
+   * Set up the server to start a configuration page (HTML page in client or browser) after
+   * initialization.
+   *
+   * @param showConfigurationPage true, if the server should start a configuration page. The default
+   *     value is false.
+   * @param addDefaultActions true, if the server should add default action button <code>
+   *     Run Analysis</code> to the configuration page.
+   * @return the server configuration
+   */
+  public ServerConfiguration setShowConfigurationPage(
+      boolean showConfigurationPage, boolean addDefaultActions) {
     this.showConfigurationPage = showConfigurationPage;
+    this.addDefaultActions = addDefaultActions;
     return this;
   }
 
@@ -96,7 +153,7 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up the server to run analysis when the user has been idle(doing nothing in the editor) for
+   * Set up the server to run analysis when the user has been idle (doing nothing in the editor) for
    * the given time period; and all changed source files have been saved.
    *
    * @param doAnalysisByIdle true, if the server runs the analysis when the user is idle. The
@@ -162,5 +219,17 @@ public class ServerConfiguration {
 
   public boolean showConfigurationPage() {
     return this.showConfigurationPage;
+  }
+
+  public FalsePositiveHandler getFalsePositiveHandler() {
+    return this.falsePositiveHandler;
+  }
+
+  public ConfusionHandler getConfusionHanlder() {
+    return this.confusionHandler;
+  }
+
+  public boolean addDefaultActions() {
+    return this.addDefaultActions;
   }
 }

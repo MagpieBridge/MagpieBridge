@@ -1,10 +1,17 @@
 package magpiebridge.core.analysis.configuration;
 
-/** @author Linghui Luo */
+import magpiebridge.core.Analysis;
+
+/**
+ * This class defines an action allowed by a {@link Analysis} running at the server.
+ *
+ * @author Linghui Luo
+ */
 public class ConfigurationAction {
 
   private String name;
   private Runnable action;
+  private String source;
 
   public ConfigurationAction(String name, Runnable action) {
     this.name = name;
@@ -19,7 +26,17 @@ public class ConfigurationAction {
     return action;
   }
 
-  public OptionType getType() {
-    return OptionType.action;
+  public String getSource() {
+    return source;
+  }
+
+  public ConfigurationAction setSource(String source) {
+    this.source = source;
+    return this;
+  }
+
+  @Override
+  public String toString() {
+    return "ConfigurationAction [name=" + name + ", action=" + action + ", source=" + source + "]";
   }
 }

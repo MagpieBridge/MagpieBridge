@@ -8,8 +8,16 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.core.ServerConfiguration;
 
-/** @author Linghui Luo */
+/**
+ * The class creates a HTTP Server running in the same process as the {@link MagpieServer} to handle
+ * from requests (user interactions) from the configuration page. This is used when the server is
+ * configured to show the configuration page after initialization, namely {@link
+ * ServerConfiguration#showConfigurationPage()} returns true.
+ *
+ * @author Linghui Luo
+ */
 public class MagpieHttpServer {
 
   public static URI createAndStartLocalHttpServer(MagpieServer magpieServer) {

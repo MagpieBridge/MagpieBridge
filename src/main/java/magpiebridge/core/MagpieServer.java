@@ -5,27 +5,20 @@ package magpiebridge.core;
 
 import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.cast.tree.impl.AbstractSourcePosition;
 import com.ibm.wala.util.collections.HashMapFactory;
-import com.ibm.wala.util.collections.Pair;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,25 +28,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import magpiebridge.command.CodeActionCommand;
-import magpiebridge.command.CodeActionGenerator;
 import magpiebridge.command.OpenURLCommand;
 import magpiebridge.core.analysis.configuration.ConfigurationAction;
 import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.MagpieMessageLogger;
-import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.NameValuePair;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeAction;
@@ -62,14 +49,11 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
-import org.eclipse.lsp4j.Location;
-import org.eclipse.lsp4j.MarkedString;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -93,9 +77,9 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  */
 public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
 
-  private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
+  protected static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
-  private static ServerSocket serverSocket;
+  protected static ServerSocket serverSocket;
 
   /** The server configuration. */
   protected ServerConfiguration config;
@@ -111,6 +95,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /** The workspace service. */
   protected MagpieWorkspaceService workspaceService;
+
+  protected AnalysisResultConsumerFactory resultsConsumerFactory;
+
+  protected FalsePositiveHandler falsePositiveHandler;
+
+  protected ConfusionHandler confusionHandler;
 
   /** The language analyzes. language mapped to a set of analyzes. */
   protected Map<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> languageAnalyses;
@@ -137,9 +127,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The code actions. */
   protected Map<URL, Map<Range, List<CodeAction>>> codeActions;
 
-  /** The false positives reported by users. */
-  protected Map<String, Set<Triple<Integer, String, String>>> falsePositives;
-
   /** The root path. */
   protected Optional<Path> rootPath;
 
@@ -161,6 +148,11 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.config = config;
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
+    this.resultsConsumerFactory = new AnalysisResultConsumerFactory(this);
+    this.falsePositiveHandler = config.getFalsePositiveHandler();
+    this.falsePositiveHandler.registerAt(this);
+    this.confusionHandler = config.getConfusionHanlder();
+    this.confusionHandler.registerAt(this);
     this.languageAnalyses = new HashMap<>();
     this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
@@ -170,7 +162,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    this.falsePositives = new HashMap<>();
     logger = config.getMagpieMessageLogger();
   }
 
@@ -356,6 +347,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public void initialized(InitializedParams params) {
+    for (String language : languageProjectServices.keySet()) {
+      if (this.rootPath.isPresent()) {
+        if (this.getProjectService(language).isPresent()) {
+          this.getProjectService(language).get().setRootPath(this.rootPath.get());
+        }
+      }
+    }
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
@@ -379,37 +377,46 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   protected void initAnalysisConfiguration() {
-    languageAnalyses
-        .values()
-        .forEach(
-            a ->
-                a.forEach(
-                    e -> {
-                      analysisConfiguration.addAll(
-                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions());
-                    }));
+    for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
+        languageAnalyses.entrySet()) {
+      String language = entry.getKey();
+      Collection<Either<ServerAnalysis, ToolAnalysis>> analyses = entry.getValue();
+      for (Either<ServerAnalysis, ToolAnalysis> e : analyses) {
+        String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
+        for (ConfigurationOption option :
+            (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions()) {
+          analysisConfiguration.add(option.setSource(source + ": " + language));
+        }
+      }
+    }
   }
 
   public List<ConfigurationAction> getConfigurationActions() {
     List<ConfigurationAction> actions = new ArrayList<>();
-    actions.add(
-        new ConfigurationAction(
-            "start",
-            () -> {
-              client.showMessage(
-                  new MessageParams(
-                      MessageType.Info, "The analyzer started re-analyzing the code."));
-              for (String language : languageAnalyses.keySet()) this.doAnalysis(language, true);
-            }));
-    languageAnalyses
-        .values()
-        .forEach(
-            a ->
-                a.forEach(
-                    e -> {
-                      actions.addAll(
-                          (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions());
-                    }));
+    for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
+        languageAnalyses.entrySet()) {
+      String language = entry.getKey();
+      Collection<Either<ServerAnalysis, ToolAnalysis>> analyses = entry.getValue();
+      for (Either<ServerAnalysis, ToolAnalysis> e : analyses) {
+        String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
+        if (config.addDefaultActions()) {
+          actions.add(
+              new ConfigurationAction(
+                      "Run Analysis",
+                      () -> {
+                        String msg = "The analyzer " + source + " started analyzing the code.";
+                        client.showMessage(new MessageParams(MessageType.Info, msg));
+                        this.cleanUp();
+                        this.doSingleAnalysis(language, e, true);
+                      })
+                  .setSource(source + ": " + language));
+        }
+        for (ConfigurationAction action :
+            (e.isLeft() ? e.getLeft() : e.getRight()).getConfiguredActions()) {
+          actions.add(action.setSource(source + ": " + language));
+        }
+      }
+    }
     return actions;
   }
 
@@ -427,7 +434,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.commands = null;
     this.config = null;
     this.diagnostics = null;
-    this.falsePositives = null;
     this.hovers = null;
     this.languageAnalyses = null;
     this.languageProjectServices = null;
@@ -436,6 +442,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.serverClientUri = null;
     this.textDocumentService = null;
     this.workspaceService = null;
+    this.falsePositiveHandler = null;
+    this.confusionHandler = null;
     return CompletableFuture.completedFuture(new Object());
   }
 
@@ -545,6 +553,16 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
+  protected void doSingleAnalysis(
+      String language, Either<ServerAnalysis, ToolAnalysis> analysis, boolean rerun) {
+    SourceFileManager fileManager = getSourceFileManager(language);
+    if (analysis.isLeft()) {
+      analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+    } else {
+      analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+    }
+  }
+
   /**
    * Consume the analysis results.
    *
@@ -567,15 +585,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               diagList = new ArrayList<>();
               this.diagnostics.put(clientURL, diagList);
             }
-            if (!isFalsePositive(result)) {
-              createDiagnosticConsumer(publishDiags, diagList, source).accept(result);
+            if (!falsePositiveHandler.isFalsePositive(result)) {
+              resultsConsumerFactory
+                  .createDiagnosticConsumer(publishDiags, diagList, source)
+                  .accept(result);
             }
             break;
           case Hover:
-            createHoverConsumer().accept(result);
+            resultsConsumerFactory.createHoverConsumer().accept(result);
             break;
           case CodeLens:
-            createCodeLensConsumer().accept(result);
+            resultsConsumerFactory.createCodeLensConsumer().accept(result);
             break;
           default:
             break;
@@ -615,6 +635,16 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     return this.workspaceService;
   }
 
+  /** @return the {@link FalsePositiveHandler} configured for Server. */
+  public FalsePositiveHandler getFalsePositiveHandler() {
+    return this.falsePositiveHandler;
+  }
+
+  /** @return the {@link ConfusionHandler} configured for Server. */
+  public ConfusionHandler getConfusionHandler() {
+    return this.confusionHandler;
+  }
+
   public boolean clientSupportsMarkdown() {
     return clientConfig != null
         && clientConfig.getTextDocument() != null
@@ -638,31 +668,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Checks if the result was reported as false positive by comparing code and message.
-   *
-   * @param result the result
-   * @return true, if the result was reported as false positive
-   */
-  protected boolean isFalsePositive(AnalysisResult result) {
-    String serverUri = result.position().getURL().toString();
-    String clientUri = getClientUri(serverUri);
-    for (String uri : falsePositives.keySet()) {
-      if (uri.equals(clientUri)) {
-        for (Triple<Integer, String, String> fp : falsePositives.get(clientUri)) {
-          int diff = Math.abs((result.position().getFirstLine() + 1) - fp.getLeft());
-          int threshold = 5;
-          if (diff < threshold
-              && result.code().equals(fp.getMiddle())
-              && result.toString(false).equals(fp.getRight())) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
    * Adds the given code action for the given url and range.
    *
    * @param url the url which the code action belongs to.
@@ -683,182 +688,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Creates the diagnostic consumer.
-   *
-   * @param publishDiags map URI to the list of diagnostics to be published for the client.
-   * @param diagList the list of diagnostics stored on the server
-   * @param source the source
-   * @return the consumer
-   */
-  protected Consumer<AnalysisResult> createDiagnosticConsumer(
-      Map<String, List<Diagnostic>> publishDiags, List<Diagnostic> diagList, String source) {
-    Consumer<AnalysisResult> consumer =
-        result -> {
-          Diagnostic d = new Diagnostic();
-          d.setMessage(result.toString(false));
-          d.setRange(SourceCodePositionUtils.getLocationFrom(result.position()).getRange());
-          d.setSource(source);
-          d.setCode(result.code());
-          List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
-          if (result.related() != null)
-            for (Pair<Position, String> related : result.related()) {
-              DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-              di.setLocation(SourceCodePositionUtils.getLocationFrom(related.fst));
-              di.setMessage(related.snd);
-              relatedList.add(di);
-            }
-          d.setRelatedInformation(relatedList);
-          d.setSeverity(result.severity());
-          if (!diagList.contains(d)) {
-            diagList.add(d);
-          }
-          String serverUri = result.position().getURL().toString();
-          String clientUri = getClientUri(serverUri);
-          try {
-            URL url = new URL(URLDecoder.decode(clientUri, "UTF-8"));
-            if (result.repair() != null) {
-              // add code action (quickfix) related to analysis result
-              Position fixPos = result.repair().fst;
-              if (fixPos != null) {
-                String replace = result.repair().snd;
-                Range range = SourceCodePositionUtils.getLocationFrom(fixPos).getRange();
-                CodeAction fix =
-                    CodeActionGenerator.replace(
-                        "Fix: replace it with " + replace, range, replace, clientUri, d);
-                addCodeAction(url, d.getRange(), fix);
-              }
-            } else if (result.command() != null) {
-              result
-                  .command()
-                  .forEach(
-                      (cmd) -> {
-                        CodeAction act = new CodeAction();
-                        act.setCommand(cmd);
-                        act.setTitle(cmd.getTitle());
-                        act.setDiagnostics(Collections.singletonList(d));
-                        act.setKind("info");
-                        addCodeAction(url, d.getRange(), act);
-                      });
-            }
-            if (config.reportFalsePositive()) {
-              // report false positive
-              String title = String.format("Report it as false alarm (%s).", d.getMessage());
-              CodeAction reportFalsePositive =
-                  CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportFP.name());
-              addCodeAction(url, d.getRange(), reportFalsePositive);
-            }
-            if (config.reportConfusion()) {
-              // report confusion about the warning message
-              String title =
-                  String.format("I don't understand this warning message (%s).", d.getMessage());
-              CodeAction reportConfusion =
-                  CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportConfusion.name());
-              addCodeAction(url, d.getRange(), reportConfusion);
-            }
-          } catch (MalformedURLException | UnsupportedEncodingException e) {
-            e.printStackTrace();
-          }
-          if (clientUri != null) {
-            publishDiags.put(clientUri, diagList);
-          }
-        };
-    return consumer;
-  }
-
-  /**
-   * Creates the hover consumer.
-   *
-   * @return the consumer
-   */
-  protected Consumer<AnalysisResult> createHoverConsumer() {
-    Consumer<AnalysisResult> consumer =
-        result -> {
-          try {
-            String serverUri = result.position().getURL().toURI().toString();
-            String clientUri = getClientUri(serverUri);
-            URL clientURL = new URL(clientUri);
-            Position pos = replaceURL(result.position(), clientURL);
-            Hover hover = new Hover();
-
-            List<Either<String, MarkedString>> contents = new ArrayList<>();
-            if (clientConfig != null
-                && clientConfig.getTextDocument().getHover().getContentFormat() != null
-                && clientConfig
-                    .getTextDocument()
-                    .getHover()
-                    .getContentFormat()
-                    .contains(MarkupKind.MARKDOWN)) {
-              contents.add(
-                  Either.forRight(new MarkedString(MarkupKind.MARKDOWN, result.toString(true))));
-            } else {
-              for (String str : result.toString(false).split("\n")) {
-                Either<String, MarkedString> content = Either.forLeft(str);
-                contents.add(content);
-              }
-            }
-            hover.setContents(contents);
-            hover.setRange(SourceCodePositionUtils.getLocationFrom(pos).getRange());
-            NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
-            if (this.hovers.containsKey(clientURL)) {
-              hoverMap = this.hovers.get(clientURL);
-            }
-            hoverMap.put(pos, hover);
-            this.hovers.put(clientURL, hoverMap);
-          } catch (MalformedURLException e) {
-            e.printStackTrace();
-          } catch (URISyntaxException e1) {
-            e1.printStackTrace();
-          }
-        };
-    return consumer;
-  }
-
-  /**
-   * Creates the code lens consumer.
-   *
-   * @return the consumer
-   */
-  protected Consumer<AnalysisResult> createCodeLensConsumer() {
-    Consumer<AnalysisResult> consumer =
-        result -> {
-          try {
-            String serverUri = result.position().getURL().toString();
-            String clientUri = getClientUri(serverUri);
-            URL clientURL = new URL(clientUri);
-            CodeLens codeLens = new CodeLens();
-            if (result.repair() != null) {
-              Location loc = SourceCodePositionUtils.getLocationFrom(result.repair().fst);
-              codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
-              codeLens
-                  .getCommand()
-                  .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));
-            } else {
-              codeLens.setCommand(result.command().iterator().next());
-            }
-            codeLens.setRange(
-                SourceCodePositionUtils.getLocationFrom(result.position()).getRange());
-            List<CodeLens> list = new ArrayList<>();
-            if (this.codeLenses.containsKey(clientURL)) {
-              list = this.codeLenses.get(clientURL);
-            }
-            list.add(codeLens);
-            this.codeLenses.put(clientURL, list);
-          } catch (MalformedURLException e) {
-            e.printStackTrace();
-          }
-        };
-    return consumer;
-  }
-
-  /**
    * Gets the client uri.
    *
    * @param serverUri the server uri
    * @return the client uri
    */
-  public String getClientUri(String serverUri) {
+  protected String getClientUri(String serverUri) {
     serverUri = URIUtils.checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {
@@ -876,63 +711,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       }
     }
     return clientUri;
-  }
-
-  /**
-   * Replace URL.
-   *
-   * @param pos the pos
-   * @param url the url
-   * @return the position
-   */
-  protected Position replaceURL(Position pos, URL url) {
-    return new AbstractSourcePosition() {
-
-      @Override
-      public int getLastOffset() {
-        return pos.getLastOffset();
-      }
-
-      @Override
-      public int getLastLine() {
-        return pos.getLastLine();
-      }
-
-      @Override
-      public int getLastCol() {
-        return pos.getLastCol();
-      }
-
-      @Override
-      public int getFirstOffset() {
-        return pos.getFirstOffset();
-      }
-
-      @Override
-      public int getFirstLine() {
-        return pos.getFirstLine();
-      }
-
-      @Override
-      public int getFirstCol() {
-        return pos.getFirstCol();
-      }
-
-      @Override
-      public URL getURL() {
-        return url;
-      }
-
-      @Override
-      public Reader getReader() throws IOException {
-        return new InputStreamReader(url.openConnection().getInputStream());
-      }
-
-      @Override
-      public String toString() {
-        return url + ":" + getFirstLine() + "," + getFirstCol();
-      }
-    };
   }
 
   /**
@@ -1027,24 +805,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Record false positive reported by users.
-   *
-   * @param uri the uri
-   * @param diag the code and message in the reported diagnostic
-   */
-  /*
-   *
-   */
-  public void recordFalsePositive(String uri, Triple<Integer, String, String> diag) {
-    if (!falsePositives.containsKey(uri)) {
-      this.falsePositives.put(uri, new HashSet<Triple<Integer, String, String>>());
-    }
-    Set<Triple<Integer, String, String>> dias = this.falsePositives.get(uri);
-    dias.add(diag);
-    this.falsePositives.put(uri, dias);
-  }
-
-  /**
    * This method allows to submit new runnable task to the thread pool of the server.
    *
    * @param task the runnable task which should be ran by the server.
@@ -1061,9 +821,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         && ((JsonObject) clientConfig.getExperimental()).get("supportsShowHTML").getAsBoolean();
   }
 
+  /**
+   * Set up the analyses based on the configuration options chosen by the users in the configuration
+   * page. This is an advanced feature and is only used when {@link
+   * ServerConfiguration#showConfigurationPage()} returns true.
+   *
+   * @param requestOptions configuration options chosen by the user
+   * @return new configuration which is set up based on the given options.
+   */
   public List<ConfigurationOption> setConfigurationOptions(Map<String, String> requestOptions) {
     List<ConfigurationOption> configuration = getAnalysisConfiguration();
-    setConfigurationOptions(configuration, requestOptions);
+    setConfigurationOptionsRecursively(configuration, requestOptions);
     languageAnalyses
         .values()
         .forEach(
@@ -1075,20 +843,37 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     return configuration;
   }
 
-  protected void setConfigurationOptions(
+  protected void setConfigurationOptionsRecursively(
       List<? extends ConfigurationOption> configuration, Map<String, String> requestOptions) {
     for (ConfigurationOption option : configuration) {
       String value = requestOptions.get(option.getName());
       ((ConfigurationOption) option).setValue(value);
       if (option.hasChildren()) {
-        setConfigurationOptions(option.getChildren(), requestOptions);
+        setConfigurationOptionsRecursively(option.getChildren(), requestOptions);
       }
     }
   }
 
-  public void performConfiguredAction(NameValuePair nameValuePair) {
+  /**
+   * Perform an action based on the user interaction in the configuration page. This is an advanced
+   * feature and is only used when {@link ServerConfiguration#showConfigurationPage()} returns true.
+   *
+   * @param actionName name of the action chosen by the user.
+   * @param sourceName source (analysis name) of the action.
+   */
+  public void performConfiguredAction(NameValuePair actionName, NameValuePair sourceName) {
     for (ConfigurationAction action : getConfigurationActions()) {
-      if (action.getName().equals(nameValuePair.getValue())) submittNewTask(action.getAction());
+      if (action.getName().equals(actionName.getValue())
+          && action.getSource().equals(sourceName.getValue())) submittNewTask(action.getAction());
     }
+  }
+
+  /**
+   * Forward a message which should be shown in the client.
+   *
+   * @param message the message to be forwarded
+   */
+  public void forwardMessageToClient(MessageParams message) {
+    if (client != null) client.showMessage(message);
   }
 }

@@ -50,9 +50,10 @@ public interface Analysis<T extends AnalysisConsumer> {
   }
 
   /**
-   * Configure the analysis with the given configuration options.
+   * Configure the analysis with the given configuration options. The default implement doesn't do
+   * anything.
    *
-   * @param configuration
+   * @param configuration the configuration used to configure the analysis.
    */
-  public void configure(List<ConfigurationOption> configuration);
+  public default void configure(List<ConfigurationOption> configuration) {}
 }

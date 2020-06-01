@@ -11,7 +11,9 @@ MapgieBridge is a framework for integrating Static Analyses into IDEs and Editor
 [MagpieBridge: A General Approach to Integrating Static Analyses into IDEs and Editors](https://drops.dagstuhl.de/opus/volltexte/2019/10813/pdf/LIPIcs-ECOOP-2019-21.pdf) (ECOOP 2019).
 A [Poster](https://linghuiluo.github.io/ECOOP19MagpieBridgePoster.pdf) is also available. You can find the IRConverter under  [https://github.com/MagpieBridge/IRConverter](https://github.com/MagpieBridge/IRConverter) for converting WALA IR to Soot IR, if you want to analyze Java source code with Soot. 
 
-<img src="https://github.com/MagpieBridge/MagpieBridge/blob/master/doc/goal.PNG"  width="800">
+<p align="center">
+<img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/goal.PNG"  width="800">
+</p> 
 
 ## Cite the research paper
 For scientific usage, please **cite the paper** [[BibTex](https://drops.dagstuhl.de/opus/volltexte/2019/10813/)].
@@ -26,6 +28,7 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Integrated Static Analyses using MagpieBridge
+- [MagpieBridge-based Facebook Infer](https://github.com/MagpieBridge/InferIDE)
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
@@ -37,7 +40,7 @@ You can either
   <dependency>
     <groupId>magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
   </dependency>
 </dependencies>
 

@@ -1,6 +1,3 @@
-/*
- * @author Linghui Luo
- */
 package magpiebridge.command;
 
 import com.google.gson.JsonObject;

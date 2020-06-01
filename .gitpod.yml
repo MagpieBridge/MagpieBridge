@@ -1,1 +1,5 @@
-image: adoptopenjdk/openjdk8
+image: jonasmanuel/inferdocker
+
+vscode:
+  extensions:
+    - LinghuiLuo.inferide@0.0.1:reNHu3/GfefVx26yvbo/sg==
