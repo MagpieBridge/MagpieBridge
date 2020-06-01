@@ -6,6 +6,7 @@ import java.util.Optional;
 
 /**
  * The Class NpmPackage.
+ * @author Jonas
  */
 public class NpmPackage {
 

@@ -14,10 +14,15 @@ import java.util.logging.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * The NpmProjectServiceTest.
+ * @author Jonas
+ */
 public class NpmProjectServiceTest {
 
   private static final Path rootPath =
       Paths.get("src", "test", "resources", "DemoProjectNpm").toAbsolutePath();
+  
   private static String npmCommand = "npm";
 
   @BeforeClass

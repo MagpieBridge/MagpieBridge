@@ -18,6 +18,7 @@ import magpiebridge.core.IProjectService;
 
 /**
  * The Class NpmProjectService.
+ * @author Jonas
  */
 public class NpmProjectService implements IProjectService {
 
