@@ -49,7 +49,10 @@ public class NpmProjectServiceTest {
     npmProjectService.setRootPath(rootPath);
     assertEquals("npm", npmProjectService.getProjectType());
     assertTrue(npmProjectService.getDependencyPath().isPresent());
+    assertTrue(npmProjectService.getPackageJson().isPresent());
+    assertTrue(npmProjectService.getProjectPackage().isPresent());
     assertEquals(rootPath.resolve("node_modules"), npmProjectService.getDependencyPath().get());
+    assertEquals(1, npmProjectService.getDirectDependencies().get().size());
     assertEquals(1, npmProjectService.getDependencies().size());
     assertTrue(npmProjectService.getDependency("lodash").isPresent());
     NpmPackage npmPackage = npmProjectService.getDependency("lodash").get();
