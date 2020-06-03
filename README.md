@@ -11,7 +11,9 @@ MapgieBridge is a framework for integrating Static Analyses into IDEs and Editor
 [MagpieBridge: A General Approach to Integrating Static Analyses into IDEs and Editors](https://drops.dagstuhl.de/opus/volltexte/2019/10813/pdf/LIPIcs-ECOOP-2019-21.pdf) (ECOOP 2019).
 A [Poster](https://linghuiluo.github.io/ECOOP19MagpieBridgePoster.pdf) is also available. You can find the IRConverter under  [https://github.com/MagpieBridge/IRConverter](https://github.com/MagpieBridge/IRConverter) for converting WALA IR to Soot IR, if you want to analyze Java source code with Soot. 
 
+<p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/goal.PNG"  width="800">
+</p> 
 
 ## Cite the research paper
 For scientific usage, please **cite the paper** [[BibTex](https://drops.dagstuhl.de/opus/volltexte/2019/10813/)].
