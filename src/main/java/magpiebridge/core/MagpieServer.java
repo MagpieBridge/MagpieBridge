@@ -360,7 +360,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         URI uri = MagpieHttpServer.createAndStartLocalHttpServer(this);
         OpenURLCommand.showHTMLinClientOrBroswer(this, client, uri.toString());
       } catch (MalformedURLException e) {
-        // TODO Auto-generated catch block
+
         e.printStackTrace();
       } catch (IOException e) {
         // TODO Auto-generated catch block

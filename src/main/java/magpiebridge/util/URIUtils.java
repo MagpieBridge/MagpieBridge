@@ -39,6 +39,7 @@ public class URIUtils {
         }
       }
     }
+    uri = uri.replace(" ", "%20");
     return uri;
   }
 

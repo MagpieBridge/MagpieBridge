@@ -7,7 +7,6 @@ import com.ibm.wala.cast.util.SourceBuffer;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URISyntaxException;
 import java.net.URL;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Range;
@@ -27,11 +26,7 @@ public class SourceCodePositionUtils {
    */
   public static Location getLocationFrom(Position pos) {
     Location codeLocation = new Location();
-    try {
-      codeLocation.setUri(URIUtils.checkURI(pos.getURL().toURI().toString()));
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-    }
+    codeLocation.setUri(URIUtils.checkURI(pos.getURL().toString()));
     Range codeRange = new Range();
     Position detail = getPositionWithColumns(pos);
     codeRange.setEnd(getPositionFrom(detail.getLastLine(), detail.getLastCol()));

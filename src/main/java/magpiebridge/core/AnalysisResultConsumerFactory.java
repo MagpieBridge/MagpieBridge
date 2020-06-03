@@ -4,7 +4,6 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -138,7 +137,7 @@ public class AnalysisResultConsumerFactory {
     Consumer<AnalysisResult> consumer =
         result -> {
           try {
-            String serverUri = result.position().getURL().toURI().toString();
+            String serverUri = result.position().getURL().toString();
             String clientUri = server.getClientUri(serverUri);
             URL clientURL = new URL(clientUri);
             Position pos = URIUtils.replaceURL(result.position(), clientURL);
@@ -171,8 +170,6 @@ public class AnalysisResultConsumerFactory {
             server.hovers.put(clientURL, hoverMap);
           } catch (MalformedURLException e) {
             e.printStackTrace();
-          } catch (URISyntaxException e1) {
-            e1.printStackTrace();
           }
         };
     return consumer;

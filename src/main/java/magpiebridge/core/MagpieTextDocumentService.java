@@ -18,6 +18,7 @@ import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.SourceCodePositionUtils;
+import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -170,7 +171,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
           try {
             String uri = position.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
-            URL url = new URI(decodedUri).toURL();
+            URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
             Position lookupPos = SourceCodePositionUtils.lookupPos(position.getPosition(), url);
             hover = server.findHover(lookupPos);
           } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
@@ -188,7 +189,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
           try {
             String uri = params.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
-            codeLenses = server.findCodeLenses(new URI(decodedUri));
+            codeLenses = server.findCodeLenses(new URI(URIUtils.checkURI(decodedUri)));
           } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
           }
@@ -204,7 +205,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
           try {
             String uri = params.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
-            List<CodeAction> matchedActions = server.findCodeActions(new URI(decodedUri), params);
+            List<CodeAction> matchedActions =
+                server.findCodeActions(new URI(URIUtils.checkURI(decodedUri)), params);
             for (CodeAction action : matchedActions) {
               actions.add(Either.forLeft(action.getCommand()));
             }

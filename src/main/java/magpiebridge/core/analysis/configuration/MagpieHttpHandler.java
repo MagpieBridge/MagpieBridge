@@ -56,6 +56,7 @@ public class MagpieHttpHandler implements HttpHandler {
     } else if ("POST".equals(exchange.getRequestMethod().toUpperCase())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody()));
       String body = URLDecoder.decode(reader.lines().collect(Collectors.joining()), "UTF-8");
+      reader.close();
       Map<String, String> requestOptions = new HashMap<>();
       String[] options = body.split("&");
       for (String option : options) {
