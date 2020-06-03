@@ -30,6 +30,7 @@ public class MagpieHttpServer {
       server.start();
       return new URI("http", server.getAddress().toString() + "/config", null);
     } catch (IOException | URISyntaxException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
     return null;

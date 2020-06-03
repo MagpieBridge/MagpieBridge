@@ -1,5 +1,8 @@
 package magpiebridge.projectservice.npm;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,13 +14,11 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import magpiebridge.core.IProjectService;
 
 /**
  * The Class NpmProjectService.
+ *
  * @author Jonas
  */
 public class NpmProjectService implements IProjectService {
@@ -27,19 +28,18 @@ public class NpmProjectService implements IProjectService {
 
   /** The root path. */
   private Optional<Path> rootPath = Optional.empty();
-  
+
   /** The dependency path. Usually node_modules. */
   private Optional<Path> dependencyPath = Optional.empty();
-  
+
   /** The path to the package.json. */
   private Optional<Path> packageJson = Optional.empty();
-  
+
   /** The project package parsed from the package.json. */
   private Optional<NpmPackage> projectPackage = Optional.empty();
-  
+
   /** All project dependencies. */
   private Map<String, NpmPackage> projectDependencies = new HashMap<>();
-
 
   /**
    * Sets the root path.
@@ -50,18 +50,19 @@ public class NpmProjectService implements IProjectService {
   public void setRootPath(Path rootPath) {
     projectDependencies.clear();
     this.rootPath = Optional.ofNullable(rootPath);
-    this.rootPath.ifPresent(path -> {
-      if (Files.exists(path) && Files.isDirectory(path)) {
-        Path packageJsonPath = path.resolve("package.json");
-        if (Files.exists(packageJsonPath)) {
-          this.packageJson = Optional.of(packageJsonPath);
-        }
-        Path node_modules = path.resolve("node_modules");
-        if (Files.exists(node_modules)) {
-          dependencyPath = Optional.of(node_modules);
-        }
-      }
-    });
+    this.rootPath.ifPresent(
+        path -> {
+          if (Files.exists(path) && Files.isDirectory(path)) {
+            Path packageJsonPath = path.resolve("package.json");
+            if (Files.exists(packageJsonPath)) {
+              this.packageJson = Optional.of(packageJsonPath);
+            }
+            Path node_modules = path.resolve("node_modules");
+            if (Files.exists(node_modules)) {
+              dependencyPath = Optional.of(node_modules);
+            }
+          }
+        });
   }
 
   /**
@@ -73,8 +74,9 @@ public class NpmProjectService implements IProjectService {
    */
   private void exploreDependencies(NpmPackage parentPackage, Path packageJsonPath, int depth) {
     try {
-      JsonObject packageJson = new Gson()
-          .fromJson(String.join("\n", Files.readAllLines(packageJsonPath)), JsonObject.class);
+      JsonObject packageJson =
+          new Gson()
+              .fromJson(String.join("\n", Files.readAllLines(packageJsonPath)), JsonObject.class);
       if (packageJson.has("name")) {
         parentPackage.setName(packageJson.get("name").getAsString());
       }
@@ -92,26 +94,32 @@ public class NpmProjectService implements IProjectService {
         logger.fine(depthPrefix + parentPackage.getName() + "@" + parentPackage.getVersion());
       }
       if (packageJson.has("dependencies")) {
-        List<NpmPackage> dependencies = packageJson.get("dependencies").getAsJsonObject().entrySet()
-            .stream().map(dependency -> {
-              if (!projectDependencies.containsKey(dependency.getKey())) {
-                String name = dependency.getKey();
-                String version = dependency.getValue().getAsString();
-                NpmPackage dependencyPackage = new NpmPackage(name, version);
-                projectDependencies.put(name, dependencyPackage);
-                dependencyPath.ifPresent(node_modules -> {
-                  Path packagePath = node_modules.resolve(name);
-                  if (Files.exists(packagePath)) {
-                    dependencyPackage.setPath(packagePath);
-                    Path dependencyPackageJsonPath = packagePath.resolve("package.json");
-                    if (Files.exists(dependencyPackageJsonPath)) {
-                      exploreDependencies(dependencyPackage, dependencyPackageJsonPath, depth + 1);
-                    }
-                  }
-                });
-              }
-              return projectDependencies.get(dependency.getKey());
-            }).collect(Collectors.toList());
+        List<NpmPackage> dependencies =
+            packageJson.get("dependencies").getAsJsonObject().entrySet().stream()
+                .map(
+                    dependency -> {
+                      if (!projectDependencies.containsKey(dependency.getKey())) {
+                        String name = dependency.getKey();
+                        String version = dependency.getValue().getAsString();
+                        NpmPackage dependencyPackage = new NpmPackage(name, version);
+                        projectDependencies.put(name, dependencyPackage);
+                        dependencyPath.ifPresent(
+                            node_modules -> {
+                              Path packagePath = node_modules.resolve(name);
+                              if (Files.exists(packagePath)) {
+                                dependencyPackage.setPath(packagePath);
+                                Path dependencyPackageJsonPath =
+                                    packagePath.resolve("package.json");
+                                if (Files.exists(dependencyPackageJsonPath)) {
+                                  exploreDependencies(
+                                      dependencyPackage, dependencyPackageJsonPath, depth + 1);
+                                }
+                              }
+                            });
+                      }
+                      return projectDependencies.get(dependency.getKey());
+                    })
+                .collect(Collectors.toList());
         parentPackage.setDependencies(dependencies);
       }
       if (logger.isLoggable(Level.FINE)) {
@@ -152,7 +160,7 @@ public class NpmProjectService implements IProjectService {
   public Optional<Path> getPackageJson() {
     return packageJson;
   }
-  
+
   /**
    * Gets the project package. Will be empty if the package.json does not exist
    *
@@ -164,19 +172,19 @@ public class NpmProjectService implements IProjectService {
     }
     return projectPackage;
   }
-  
+
   /**
    * Gets the direct dependencies.
    *
    * @return the direct dependencies
    */
-  public Optional<List<NpmPackage>> getDirectDependencies(){
+  public Optional<List<NpmPackage>> getDirectDependencies() {
     if (projectPackage.isPresent()) {
       return projectPackage.get().getDependencies();
     }
     return Optional.empty();
   }
-  
+
   /**
    * Gets the list of all dependencies (includes transient dependencies).
    *
@@ -188,24 +196,21 @@ public class NpmProjectService implements IProjectService {
     }
     return new ArrayList<>(projectDependencies.values());
   }
-  
-  /**
-   * Recompute dependencies.
-   */
+
+  /** Recompute dependencies. */
   public void recomputeDependencies() {
-    //recompute all paths and the set of dependencies assuming the root path has not changed
+    // recompute all paths and the set of dependencies assuming the root path has not changed
     rootPath.ifPresent(this::setRootPath);
     initDependencies();
   }
 
-  /**
-   * Initializes the dependencies.
-   */
+  /** Initializes the dependencies. */
   private void initDependencies() {
-    this.packageJson.ifPresent(packageJsonPath -> {
+    this.packageJson.ifPresent(
+        packageJsonPath -> {
           projectPackage = Optional.of(new NpmPackage());
           exploreDependencies(projectPackage.get(), packageJsonPath, 0);
-    });
+        });
   }
 
   /**

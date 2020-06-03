@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import magpiebridge.core.MagpieServer;
 
 /**
  * Infer the source path from a given project root path. Instead using the Parser from Java JDK
@@ -34,12 +35,12 @@ public class InferSourcePath {
 
   protected static Stream<Path> allJavaFiles(Path dir) {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.java");
-
     try {
       return Files.walk(dir).filter(java -> match.matches(java.getFileName()));
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
+    return null;
   }
 
   public Set<Path> sourcePath(Path workspaceRoot) {
@@ -65,6 +66,7 @@ public class InferSourcePath {
         try {
           result = javaParser.parse(java).getResult();
         } catch (IOException e) {
+          MagpieServer.ExceptionLogger.log(e);
           e.printStackTrace();
         }
         String packageName = "";
@@ -117,7 +119,8 @@ public class InferSourcePath {
       }
     }
     SourcePaths checker = new SourcePaths();
-    allJavaFiles(workspaceRoot).forEach(checker);
+    Stream<Path> javaFiles = allJavaFiles(workspaceRoot);
+    if (javaFiles != null) javaFiles.forEach(checker);
     return checker.sourceRoots.keySet();
   }
 

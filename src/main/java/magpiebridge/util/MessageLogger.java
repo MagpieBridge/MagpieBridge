@@ -7,13 +7,14 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.function.Function;
+import magpiebridge.core.MagpieServer;
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
 import org.eclipse.lsp4j.jsonrpc.validation.ReflectiveMessageValidator;
 import org.slf4j.LoggerFactory;
 
 /**
- * MessageLogger logs the incoming and outgoing message with time stamp. The logs are stored in the
- * temporary directory used by the JVM.
+ * MessageLogger logs the incoming and outgoing message with time stamp. The logs (named with
+ * magpie_trace_*.log) are stored in the temporary directory used by the JVM.
  *
  * @author Linghui Luo
  */
@@ -36,6 +37,7 @@ public final class MessageLogger implements MagpieMessageLogger {
       logStream = new FileOutputStream(log);
       writer = new PrintWriter(logStream);
     } catch (FileNotFoundException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
   }
@@ -66,7 +68,7 @@ public final class MessageLogger implements MagpieMessageLogger {
     try {
       if (logStream != null) logStream.close();
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      e.printStackTrace();
     }
     if (writer != null) writer.close();
   }

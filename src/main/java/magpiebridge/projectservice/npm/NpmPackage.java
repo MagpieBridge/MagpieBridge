@@ -6,25 +6,24 @@ import java.util.Optional;
 
 /**
  * The Class NpmPackage.
+ *
  * @author Jonas
  */
 public class NpmPackage {
 
   /** The name. */
   private String name;
-  
+
   /** The version. */
   private String version;
-  
+
   /** The path. */
   private Optional<Path> path = Optional.empty();
-  
+
   /** The dependencies. */
   private Optional<List<NpmPackage>> dependencies = Optional.empty();
 
-  /**
-   * Instantiates a new npm package.
-   */
+  /** Instantiates a new npm package. */
   public NpmPackage() {}
 
   /**

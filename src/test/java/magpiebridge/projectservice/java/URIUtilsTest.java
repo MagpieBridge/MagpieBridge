@@ -8,7 +8,7 @@ import org.junit.Test;
 public class URIUtilsTest {
 
   @Test
-  public void test() {
+  public void testReplaceWhiteSpace() {
     String uriWithSpace =
         "file:///d:/Dropbox/UserStudy/tb-viewer/Running Example/src/main/java/Logger.java";
     String uriReplaced = URIUtils.checkURI(uriWithSpace);

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import magpiebridge.core.MagpieServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -86,7 +87,6 @@ public class InferConfig {
         && Files.exists(Paths.get(gradleUserHome))) {
       return Paths.get(gradleUserHome);
     }
-
     return Paths.get(System.getProperty("user.home")).resolve(".gradle");
   }
 
@@ -122,7 +122,9 @@ public class InferConfig {
             .flatMap(this::mavenOutputDirectory)
             .collect(Collectors.toSet());
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        MagpieServer.ExceptionLogger.log(
+            "Couldn't infer Maven project configuration, because Maven is not installed. Install Maven, or add its location to the system PATH variable.");
+        MagpieServer.ExceptionLogger.log(e);
       }
     }
 
@@ -181,7 +183,7 @@ public class InferConfig {
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
     return path;
   }
@@ -218,12 +220,14 @@ public class InferConfig {
       Set<Path> result = new HashSet<Path>();
       for (String id : externalDependencies) {
         Artifact a = Artifact.parse(id);
-        Optional<Path> found = findAnyJar(a, false);
-        if (found.isPresent()) {
-          result.add(found.get());
-        } else {
-          logger.warn(
-              String.format("Couldn't find jar for %s in %s or %s", a, mavenHome, gradleHome));
+        if (a != null) {
+          Optional<Path> found = findAnyJar(a, false);
+          if (found.isPresent()) {
+            result.add(found.get());
+          } else {
+            logger.warn(
+                String.format("Couldn't find jar for %s in %s or %s", a, mavenHome, gradleHome));
+          }
         }
       }
       cachedBuildClassPath = result;
@@ -279,7 +283,7 @@ public class InferConfig {
             .filter(Files::isDirectory)
             .forEach(acc::add);
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        MagpieServer.ExceptionLogger.log(e);
       }
     }
     // Recurse into all directories that mirror the structure of the workspace
@@ -305,8 +309,9 @@ public class InferConfig {
       findBazelJavac(bazelBinTarget.toFile(), workspaceRoot.toFile(), dirs);
       return dirs;
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
+    return Collections.emptySet();
   }
 
   /** Search bazel-genfiles for jars */
@@ -318,8 +323,9 @@ public class InferConfig {
           .filter(file -> file.getFileName().toString().endsWith(".jar"))
           .collect(Collectors.toSet());
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
+    return Collections.emptySet();
   }
 
   private Optional<Path> findAnyJar(Artifact artifact, boolean source) {
@@ -383,7 +389,8 @@ public class InferConfig {
         return dependencies;
       }
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(
+          "Couldn't infer Maven project configuration while trying to run Maven. Either install Maven or add its location to the system PATH variable.");
     }
     return Collections.emptyList();
   }

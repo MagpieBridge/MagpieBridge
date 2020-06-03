@@ -119,6 +119,7 @@ public class AnalysisResultConsumerFactory {
               server.addCodeAction(url, d.getRange(), reportConfusion);
             }
           } catch (MalformedURLException | UnsupportedEncodingException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
           if (clientUri != null) {
@@ -169,6 +170,7 @@ public class AnalysisResultConsumerFactory {
             hoverMap.put(pos, hover);
             server.hovers.put(clientURL, hoverMap);
           } catch (MalformedURLException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
         };
@@ -206,6 +208,7 @@ public class AnalysisResultConsumerFactory {
             list.add(codeLens);
             server.codeLenses.put(clientURL, list);
           } catch (MalformedURLException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
         };

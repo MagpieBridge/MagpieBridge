@@ -10,6 +10,7 @@ import java.net.URL;
 import magpiebridge.core.MagpieClient;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.core.WorkspaceCommand;
+import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
@@ -36,6 +37,7 @@ public class OpenURLCommand implements WorkspaceCommand {
         }
         showHTMLinClientOrBroswer(server, client, uri);
       } catch (IOException | URISyntaxException e) {
+        MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
       }
     }
@@ -58,11 +60,12 @@ public class OpenURLCommand implements WorkspaceCommand {
       if (client instanceof MagpieClient) {
         MessageParams mp = new MessageParams();
         mp.setType(MessageType.Info);
-        mp.setMessage(new String(FileUtil.readBytes(new URL(uri).openStream())));
+        mp.setMessage(new String(FileUtil.readBytes(new URL(URIUtils.checkURI(uri)).openStream())));
         ((MagpieClient) client).showHTML(mp);
       }
     } else {
-      if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(uri));
+      if (Desktop.isDesktopSupported())
+        Desktop.getDesktop().browse(new URI(URIUtils.checkURI(uri)));
     }
   }
 }

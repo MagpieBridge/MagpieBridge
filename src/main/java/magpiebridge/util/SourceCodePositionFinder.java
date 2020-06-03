@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
+import magpiebridge.core.MagpieServer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -57,8 +58,9 @@ public class SourceCodePositionFinder {
       reader.close();
       return info;
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
+    return null;
   }
 
   /**
@@ -75,6 +77,8 @@ public class SourceCodePositionFinder {
       String fileName = file.getName();
       if (fileName.endsWith(".java") && file.getName().equals(className + ".java")) return file;
     }
+    MagpieServer.ExceptionLogger.log(
+        "Couldn't find " + className + " in directory " + dir.toString());
     return null;
   }
 }

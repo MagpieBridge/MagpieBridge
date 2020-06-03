@@ -37,8 +37,9 @@ public class SourceFileManagerTest {
       String old =
           "file:///e%3A/Git/Github/magpie/crypto-lsp-demo/src/test/resources/DemoAllErrors/src/Demo.java";
       String url = URLDecoder.decode(old, "UTF-8");
-      System.out.println(old);
-      System.out.println(url);
+      assertEquals(
+          url,
+          "file:///e:/Git/Github/magpie/crypto-lsp-demo/src/test/resources/DemoAllErrors/src/Demo.java");
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }

@@ -32,6 +32,7 @@ public class ReportFalsePositiveCommand implements WorkspaceCommand {
       String decodedUri = URLDecoder.decode(uri.getAsString(), "UTF-8");
       server.getFalsePositiveHandler().recordFalsePositive(decodedUri, jdiag);
     } catch (UnsupportedEncodingException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
   }

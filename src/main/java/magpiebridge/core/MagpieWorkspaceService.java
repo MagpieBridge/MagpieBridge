@@ -92,6 +92,7 @@ public class MagpieWorkspaceService implements WorkspaceService {
               String decodedUri = URLDecoder.decode(uri.getAsString(), "UTF-8");
               server.getFalsePositiveHandler().recordFalsePositive(decodedUri, jdiag);
             } catch (UnsupportedEncodingException e) {
+              MagpieServer.ExceptionLogger.log(e);
               e.printStackTrace();
             }
           } else if (command.equals(CodeActionCommand.reportConfusion.name())) {

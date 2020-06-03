@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import magpiebridge.core.MagpieServer;
 
 @VisibleForTesting
 public class InferConfigGradle {
@@ -75,6 +77,7 @@ public class InferConfigGradle {
           sdkDirFromLocalProperties = Paths.get(path);
         }
       } catch (IOException e) {
+        MagpieServer.ExceptionLogger.log(e);
         sdkDirFromLocalProperties = null;
       }
     } else {
@@ -90,21 +93,22 @@ public class InferConfigGradle {
     String envAndroidHomePathStr = System.getenv("ANDROID_HOME");
     Path envAndroidHomePath =
         Strings.isNullOrEmpty(envAndroidHomePathStr) ? null : Paths.get(envAndroidHomePathStr);
-
-    return Stream.of(
-            sdkDirFromLocalProperties,
-            envAndroidSdkPath,
-            envAndroidHomePath,
-            userHome
-                .resolve("AppData")
-                .resolve("Local")
-                .resolve("Android")
-                .resolve("Sdk"), // Windows
-            userHome.resolve("Library").resolve("Android").resolve("sdk"), // Mac
-            userHome.resolve("Android").resolve("Sdk")) // Linux
-        .filter(Objects::nonNull)
-        .filter(Files::exists)
-        .findFirst();
+    if (sdkDirFromLocalProperties != null)
+      return Stream.of(
+              sdkDirFromLocalProperties,
+              envAndroidSdkPath,
+              envAndroidHomePath,
+              userHome
+                  .resolve("AppData")
+                  .resolve("Local")
+                  .resolve("Android")
+                  .resolve("Sdk"), // Windows
+              userHome.resolve("Library").resolve("Android").resolve("sdk"), // Mac
+              userHome.resolve("Android").resolve("Sdk")) // Linux
+          .filter(Objects::nonNull)
+          .filter(Files::exists)
+          .findFirst();
+    else return Optional.empty();
   }
 
   static Optional<Path> findGradleJar(
@@ -132,7 +136,7 @@ public class InferConfigGradle {
         return gradleCacheMatch;
       }
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
 
     // Try Android SDK paths
@@ -157,7 +161,7 @@ public class InferConfigGradle {
           return Files.walk(extrasPath).filter(androidSdkMatch::matches).findFirst();
         }
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        MagpieServer.ExceptionLogger.log(e);
       }
     }
 
@@ -165,68 +169,79 @@ public class InferConfigGradle {
   }
 
   static Collection<Artifact> gradleDependencies(Path workspaceRoot) {
-    String gradleBinary = getGradleBinary(workspaceRoot).toString();
+    Path gradle = getGradleBinary(workspaceRoot);
+    if (gradle != null) {
+      String gradleBinary = gradle.toString();
+      try {
+        Set<String> subProjects = gradleSubprojects(workspaceRoot);
+        LOG.info("Gradle subprojects: " + subProjects);
 
-    try {
-      Set<String> subProjects = gradleSubprojects(workspaceRoot);
-      LOG.info("Gradle subprojects: " + subProjects);
-
-      // For each subproject, collect dependencies
-      Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*?)(?:$| )");
-      Set<Artifact> dependencies = new LinkedHashSet<>();
-      for (String subProject : subProjects) {
-        LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
-        Process dependencyListing =
-            newProcessBuilderWithEnv(workspaceRoot)
-                .directory(workspaceRoot.toFile())
-                .command(gradleBinary, subProject + ":dependencies")
-                .start();
-        try (BufferedReader reader =
-            new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
-          reader
-              .lines()
-              .map(dependencyPattern::matcher)
-              .filter(Matcher::find)
-              .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(3)))
-              .forEach(dependencies::add);
+        // For each subproject, collect dependencies
+        Pattern dependencyPattern = Pattern.compile("--- (.*):(.*):(.*?)(?:$| )");
+        Set<Artifact> dependencies = new LinkedHashSet<>();
+        for (String subProject : subProjects) {
+          LOG.info("Running " + gradleBinary + " " + subProject + ":dependencies");
+          Process dependencyListing =
+              newProcessBuilderWithEnv(workspaceRoot)
+                  .directory(workspaceRoot.toFile())
+                  .command(gradleBinary, subProject + ":dependencies")
+                  .start();
+          try (BufferedReader reader =
+              new BufferedReader(new InputStreamReader(dependencyListing.getInputStream()))) {
+            reader
+                .lines()
+                .map(dependencyPattern::matcher)
+                .filter(Matcher::find)
+                .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(3)))
+                .forEach(dependencies::add);
+          }
         }
-      }
-      LOG.info("Gradle dependencies: " + dependencies);
+        LOG.info("Gradle dependencies: " + dependencies);
 
-      return dependencies;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+        return dependencies;
+      } catch (IOException e) {
+        MagpieServer.ExceptionLogger.log(
+            "Couldn't infer Gradle project configuration while trying to run Gradle. Either install Gradle or add its location to the system PATH variable.");
+        MagpieServer.ExceptionLogger.log(e);
+      }
     }
+    return Collections.emptySet();
   }
 
   private static Set<String> gradleSubprojects(Path workspaceRoot) {
-    String gradleBinary = getGradleBinary(workspaceRoot).toString();
-    Pattern projectPattern = Pattern.compile("[pP]roject '(.*)'$");
-    LOG.info("Running " + gradleBinary + " projects");
-    try {
-      Process projectsListing =
-          newProcessBuilderWithEnv(workspaceRoot)
-              .directory(workspaceRoot.toFile())
-              .command(gradleBinary, "projects")
-              .start();
-      Set<String> subProjects;
-      try (BufferedReader reader =
-          new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
-        subProjects =
-            reader
-                .lines()
-                .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
-                .map(projectPattern::matcher)
-                .filter(Matcher::find)
-                .map(matcher -> matcher.group(1))
-                .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures
-        // mutability
-        subProjects.add(""); // Add root project
+    Path gradle = getGradleBinary(workspaceRoot);
+    if (gradle != null) {
+      String gradleBinary = gradle.toString();
+      Pattern projectPattern = Pattern.compile("[pP]roject '(.*)'$");
+      LOG.info("Running " + gradleBinary + " projects");
+      try {
+        Process projectsListing =
+            newProcessBuilderWithEnv(workspaceRoot)
+                .directory(workspaceRoot.toFile())
+                .command(gradleBinary, "projects")
+                .start();
+        Set<String> subProjects;
+        try (BufferedReader reader =
+            new BufferedReader(new InputStreamReader(projectsListing.getInputStream()))) {
+          subProjects =
+              reader
+                  .lines()
+                  .filter(line -> !line.isEmpty() && !line.startsWith("Root project"))
+                  .map(projectPattern::matcher)
+                  .filter(Matcher::find)
+                  .map(matcher -> matcher.group(1))
+                  .collect(Collectors.toCollection(LinkedHashSet::new)); // Ensures
+          // mutability
+          subProjects.add(""); // Add root project
+        }
+        return subProjects;
+      } catch (IOException e) {
+        MagpieServer.ExceptionLogger.log(
+            "Couldn't infer Gradle project configuration while trying to run Gradle. Either install Gradle or add its location to the system PATH variable.");
+        MagpieServer.ExceptionLogger.log(e);
       }
-      return subProjects;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
+    return Collections.emptySet();
   }
 
   private static Path getGradleBinary(Path workspaceRoot) {
@@ -250,8 +265,9 @@ public class InferConfigGradle {
     if (gradlePath != null && Files.exists(Paths.get(gradlePath))) {
       return Paths.get(gradlePath);
     }
-
-    throw new RuntimeException("Could not find gradle binary.");
+    MagpieServer.ExceptionLogger.log(
+        "Could not find gradlew or gradle. Either install Gradle or add its location to the system PATH variable.");
+    return null;
   }
 
   static boolean hasGradleProject(Path workspaceRoot) {

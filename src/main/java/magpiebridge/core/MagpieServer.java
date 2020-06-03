@@ -39,6 +39,7 @@ import magpiebridge.core.analysis.configuration.ConfigurationAction;
 import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.file.SourceFileManager;
+import magpiebridge.util.ExceptionLogger;
 import magpiebridge.util.MagpieMessageLogger;
 import magpiebridge.util.URIUtils;
 import org.apache.http.NameValuePair;
@@ -76,6 +77,8 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  * @author Julian Dolby and Linghui Luo
  */
 public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
+
+  public static ExceptionLogger ExceptionLogger;
 
   protected static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
@@ -145,6 +148,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param config the config
    */
   public MagpieServer(ServerConfiguration config) {
+    ExceptionLogger = new ExceptionLogger(this);
     this.config = config;
     this.textDocumentService = new MagpieTextDocumentService(this);
     this.workspaceService = new MagpieWorkspaceService(this);
@@ -162,7 +166,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    logger = config.getMagpieMessageLogger();
+    this.logger = config.getMagpieMessageLogger();
   }
 
   public LanguageClient getClient() {
@@ -229,6 +233,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       connect(launcher.getRemoteProxy());
       launcher.startListening();
     } catch (IOException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
   }
@@ -278,6 +283,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     // wait for future to return, signaling connection was closed
                     launcher.startListening().get();
                   } catch (InterruptedException | ExecutionException e) {
+                    MagpieServer.ExceptionLogger.log(e);
                     e.printStackTrace();
                   }
                 },
@@ -359,14 +365,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         initAnalysisConfiguration();
         URI uri = MagpieHttpServer.createAndStartLocalHttpServer(this);
         OpenURLCommand.showHTMLinClientOrBroswer(this, client, uri.toString());
-      } catch (MalformedURLException e) {
-
-        e.printStackTrace();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      } catch (URISyntaxException e) {
-        // TODO Auto-generated catch block
+      } catch (IOException | URISyntaxException e) {
+        MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
       }
     }
@@ -455,11 +455,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   @Override
   public void exit() {
     logger.cleanUp();
+    MagpieServer.ExceptionLogger.cleanUp();
     try {
       if (serverSocket != null) {
         serverSocket.close();
       }
     } catch (IOException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
     System.exit(0);
@@ -601,6 +603,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             break;
         }
       } catch (MalformedURLException e) {
+        MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
       }
     }
@@ -707,6 +710,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           clientUri = serverUri;
         }
       } catch (URISyntaxException e) {
+        MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
       }
     }
@@ -755,6 +759,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         return this.codeLenses.get(uri.toURL());
       }
     } catch (MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
     return Collections.emptyList();
@@ -787,6 +792,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         }
       }
     } catch (MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
     return new ArrayList<>();

@@ -11,6 +11,7 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import magpiebridge.core.MagpieServer;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
@@ -92,9 +93,11 @@ public class SourceFileManager {
           newText = replaceText(newText, change);
         }
       }
-      VersionedSourceFile newFile = new VersionedSourceFile(newText, newVersion);
-      this.versionedFiles.put(clientUri, newFile);
-      generateSourceFileModule(clientUri, newFile);
+      if (newText != null) {
+        VersionedSourceFile newFile = new VersionedSourceFile(newText, newVersion);
+        this.versionedFiles.put(clientUri, newFile);
+        generateSourceFileModule(clientUri, newFile);
+      }
     }
   }
 
@@ -144,8 +147,9 @@ public class SourceFileManager {
       }
       return writer.toString();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      MagpieServer.ExceptionLogger.log(e);
     }
+    return null;
   }
 
   /**
@@ -173,6 +177,7 @@ public class SourceFileManager {
             "file:/" + serverUri.toString().substring(8), clientUri.toString());
       }
     } catch (IOException e) {
+      MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
     }
   }
@@ -189,8 +194,11 @@ public class SourceFileManager {
       return ".py";
     } else if (language.equals("javascript") || language.equals("js")) {
       return ".js";
-    } else {
-      throw new UnsupportedOperationException("unsupportd language " + language);
+    } else if (language.equals("c")) return ".c";
+    else if (language.equals("typescript") || language.equals("ts")) return ".ts";
+    else {
+      MagpieServer.ExceptionLogger.log("Unsupported language: " + language);
+      return "unknown";
     }
   }
 

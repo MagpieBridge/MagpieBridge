@@ -144,7 +144,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
     server.cleanUp();
     server.forwardMessageToClient(
         new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
-
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language, true);
@@ -175,6 +174,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
             Position lookupPos = SourceCodePositionUtils.lookupPos(position.getPosition(), url);
             hover = server.findHover(lookupPos);
           } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
           return hover;
@@ -191,6 +191,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
             codeLenses = server.findCodeLenses(new URI(URIUtils.checkURI(decodedUri)));
           } catch (URISyntaxException | UnsupportedEncodingException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
           return codeLenses;
@@ -211,6 +212,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
               actions.add(Either.forLeft(action.getCommand()));
             }
           } catch (URISyntaxException | UnsupportedEncodingException e) {
+            MagpieServer.ExceptionLogger.log(e);
             e.printStackTrace();
           }
           return actions;
@@ -223,15 +225,22 @@ public class MagpieTextDocumentService implements TextDocumentService {
    * @param uri the uri
    * @return the string
    */
-  private String inferLanguage(String uri) {
+  protected String inferLanguage(String uri) {
     if (uri.endsWith(".java")) {
       return "java";
     } else if (uri.endsWith(".py")) {
       return "python";
     } else if (uri.endsWith(".js")) {
       return "javascript";
+    } else if (uri.endsWith(".ts")) {
+      return "typescript";
+    } else if (uri.endsWith(".cpp") || uri.endsWith(".h")) {
+      return "c++";
+    } else if (uri.endsWith(".c")) {
+      return "c";
     } else {
-      throw new UnsupportedOperationException();
+      MagpieServer.ExceptionLogger.log("Couldn't infer the language of the source code in " + uri);
+      return "unknown";
     }
   }
 }

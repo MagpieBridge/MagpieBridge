@@ -1,6 +1,7 @@
 package magpiebridge.projectservice.java;
 
 import java.util.Objects;
+import magpiebridge.core.MagpieServer;
 
 /**
  * Code adapted from https://github.com/georgewfraser/java-language-server.git
@@ -24,7 +25,9 @@ public class Artifact {
     } else if (parts.length == 5) {
       return new Artifact(parts[0], parts[1], parts[3]);
     } else {
-      throw new IllegalArgumentException(id + " is not properly formatted artifact");
+      MagpieServer.ExceptionLogger.log(
+          new IllegalArgumentException(id + " is not properly formatted artifact"));
+      return null;
     }
   }
 

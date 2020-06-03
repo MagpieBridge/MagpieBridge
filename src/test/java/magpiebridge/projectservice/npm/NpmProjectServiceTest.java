@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,13 +17,14 @@ import org.junit.Test;
 
 /**
  * The NpmProjectServiceTest.
+ *
  * @author Jonas
  */
 public class NpmProjectServiceTest {
 
   private static final Path rootPath =
       Paths.get("src", "test", "resources", "DemoProjectNpm").toAbsolutePath();
-  
+
   private static String npmCommand = "npm";
 
   @BeforeClass
@@ -33,8 +35,12 @@ public class NpmProjectServiceTest {
       if (System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).contains("win")) {
         npmCommand = "npm.cmd";
       }
-      int exitCode = new ProcessBuilder(npmCommand, "--version").directory(rootPath.toFile())
-          .inheritIO().start().waitFor();
+      int exitCode =
+          new ProcessBuilder(npmCommand, "--version")
+              .directory(rootPath.toFile())
+              .inheritIO()
+              .start()
+              .waitFor();
       npmExists = exitCode == 0;
     } catch (IOException e) {
       npmExists = false;
@@ -42,8 +48,12 @@ public class NpmProjectServiceTest {
     assumeTrue("Npm is not installed", npmExists);
 
     // install the project to download packages to system
-    int exitCode = new ProcessBuilder(npmCommand, "install").directory(rootPath.toFile())
-        .inheritIO().start().waitFor();
+    int exitCode =
+        new ProcessBuilder(npmCommand, "install")
+            .directory(rootPath.toFile())
+            .inheritIO()
+            .start()
+            .waitFor();
     assertEquals(0, exitCode);
   }
 
