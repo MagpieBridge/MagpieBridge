@@ -76,6 +76,7 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.launch.LSPLauncher.Builder;
@@ -762,14 +763,16 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           d.setRange(getLocationFrom(result.position()).getRange());
           d.setSource(source);
           d.setCode(result.code());
-          List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
-          for (Pair<Position, String> related : result.related()) {
-            DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
-            di.setLocation(getLocationFrom(related.fst));
-            di.setMessage(related.snd);
-            relatedList.add(di);
+          if (supportsRelatedInformation()) {
+            List<DiagnosticRelatedInformation> relatedList = new ArrayList<>();
+            for (Pair<Position, String> related : result.related()) {
+              DiagnosticRelatedInformation di = new DiagnosticRelatedInformation();
+              di.setLocation(getLocationFrom(related.fst));
+              di.setMessage(related.snd);
+              relatedList.add(di);
+            }
+            d.setRelatedInformation(relatedList);
           }
-          d.setRelatedInformation(relatedList);
           d.setSeverity(result.severity());
           if (!diagList.contains(d)) {
             diagList.add(d);
@@ -779,14 +782,23 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           try {
             URL url = new URL(clientUri);
             if (result.repair() != null) {
-              // add code action (quickfix) related to analysis result
-              Position fixPos = result.repair().fst;
-              if (fixPos != null) {
-                String replace = result.repair().snd;
-                Range range = getLocationFrom(fixPos).getRange();
-                CodeAction fix =
-                    CodeActionGenerator.replace(
-                        "Fix: replace it with " + replace, range, replace, clientUri, d);
+              if (result.repair().isLeft()) {
+                // add code action (quickfix) related to analysis result
+                Position fixPos = result.repair().getLeft().fst;
+                if (fixPos != null) {
+                  String replace = result.repair().getLeft().snd;
+                  Range range = getLocationFrom(fixPos).getRange();
+                  CodeAction fix =
+                      CodeActionGenerator.replace(
+                          "Fix: replace it with " + replace, range, replace, clientUri, d);
+                  addCodeAction(url, d.getRange(), fix);
+                }
+              } else {
+                CodeAction fix = new CodeAction("Edit text");
+                WorkspaceEdit edit =
+                    new WorkspaceEdit(
+                        Collections.singletonMap(clientUri, result.repair().getRight()));
+                fix.setEdit(edit);
                 addCodeAction(url, d.getRange(), fix);
               }
             } else if (result.command() != null) {
@@ -827,6 +839,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
           }
         };
     return consumer;
+  }
+
+  boolean supportsRelatedInformation() {
+    return clientConfig.getTextDocument() != null
+        && clientConfig.getTextDocument().getPublishDiagnostics() != null
+        && clientConfig.getTextDocument().getPublishDiagnostics().getRelatedInformation();
   }
 
   /**
@@ -890,12 +908,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             String clientUri = getClientUri(serverUri);
             URL clientURL = new URL(clientUri);
             CodeLens codeLens = new CodeLens();
-            if (result.repair() != null) {
-              Location loc = this.getLocationFrom(result.repair().fst);
+            if (result.repair() != null && result.repair().isLeft()) {
+              Location loc = this.getLocationFrom(result.repair().getLeft().fst);
               codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
               codeLens
                   .getCommand()
-                  .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));
+                  .setArguments(
+                      Arrays.asList(clientUri, loc.getRange(), result.repair().getLeft().snd));
             } else {
               codeLens.setCommand(result.command().iterator().next());
             }

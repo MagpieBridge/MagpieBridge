@@ -167,6 +167,8 @@ public class SourceFileManager {
       return ".py";
     } else if (language.equals("javascript") || language.equals("js")) {
       return ".js";
+    } else if (language.equals("html")) {
+      return ".html";
     } else {
       throw new UnsupportedOperationException("unsupportd language " + language);
     }

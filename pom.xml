@@ -31,7 +31,7 @@
 	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	  <soot.version>3.3.0</soot.version>
           <futuresoot.version>4.0.0.3</futuresoot.version>
-          <wala.version>1.5.5-SNAPSHOT</wala.version>
+          <wala.version>1.5.6-SNAPSHOT</wala.version>
    	  <lsp4j.version>0.8.1</lsp4j.version>
 	  <javaparser.version>3.13.0</javaparser.version>
 	  <commonio.version>2.6</commonio.version>
@@ -55,18 +55,6 @@
 			<artifactId>org.eclipse.lsp4j</artifactId>
 			<version>${lsp4j.version}</version>
 		</dependency>
-              <!-- soot -->
-               <dependency>
-                       <groupId>ca.mcgill.sable</groupId>
-                       <artifactId>soot</artifactId>
-                       <version>${soot.version}</version>
-               </dependency>
-               <!-- futureSoot -->
-               <dependency>
-                       <groupId>de.upb</groupId>
-                       <artifactId>Soot</artifactId>
-                       <version>${futuresoot.version}</version>
-               </dependency>
 		<!-- wala -->
 		<dependency>
 			<groupId>com.ibm.wala</groupId>
@@ -90,6 +78,23 @@
 			<artifactId>com.ibm.wala.util</artifactId>
 			<version>${wala.version}</version>
 		</dependency>
+            <!-- soot -->
+               <dependency>
+                       <groupId>ca.mcgill.sable</groupId>
+                       <artifactId>soot</artifactId>
+                       <version>${soot.version}</version>
+               </dependency>
+               <!-- futureSoot -->
+               <dependency>
+                       <groupId>de.upb</groupId>
+                       <artifactId>Soot</artifactId>
+                       <version>${futuresoot.version}</version>
+		       <exclusions>
+			 <exclusion>
+			   <groupId>com.ibm.wala</groupId>
+			 </exclusion>
+		       </exclusions>	       
+	       </dependency>
 		<!-- https://github.com/javaparser/javaparser -->
 		<dependency>
 			<groupId>com.github.javaparser</groupId>

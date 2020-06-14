@@ -2,8 +2,12 @@ package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.DiagnosticSeverity;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 /**
  * The Interface AnalysisResult.
@@ -53,7 +57,8 @@ public interface AnalysisResult {
    *
    * @return a pair of source code position and the new code.
    */
-  public Pair<Position, String> repair();
+  @Nullable
+  public Either<Pair<Position, String>, List<TextEdit>> repair();
 
   /**
    * The code which this result refers to.

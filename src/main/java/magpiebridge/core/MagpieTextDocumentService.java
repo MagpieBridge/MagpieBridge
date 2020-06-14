@@ -162,7 +162,11 @@ public class MagpieTextDocumentService implements TextDocumentService {
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
             List<CodeAction> matchedActions = server.findCodeActions(new URI(decodedUri), params);
             for (CodeAction action : matchedActions) {
-              actions.add(Either.forLeft(action.getCommand()));
+              if (action.getEdit() != null) {
+                actions.add(Either.forRight(action));
+              } else {
+                actions.add(Either.forLeft(action.getCommand()));
+              }
             }
           } catch (URISyntaxException | UnsupportedEncodingException e) {
             e.printStackTrace();
