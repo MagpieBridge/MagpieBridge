@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 [![Gitter](https://badges.gitter.im/MagpieBridgeHelp/community.svg)](https://gitter.im/MagpieBridgeHelp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <p align="center">
-<img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logshort.png" width="400">
+<img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/logo.png" width="400">
 </p> 
 
 ## What is MagpieBridge?
