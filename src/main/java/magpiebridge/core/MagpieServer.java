@@ -846,7 +846,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     e -> {
                       (e.isLeft() ? e.getLeft() : e.getRight()).configure(configuration);
                     }));
-    return configuration;
+
+    analysisConfiguration.clear();
+    initAnalysisConfiguration();
+    return getAnalysisConfiguration();
   }
 
   protected void setConfigurationOptionsRecursively(
