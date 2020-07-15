@@ -91,6 +91,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://piskachev.com/"><img src="https://avatars2.githubusercontent.com/u/10850220?v=4" width="100px;" alt=""/><br /><sub><b>Goran Piskachev</b></sub></a><br /><a href="#ideas-piskachev" title="Ideas, Planning, & Feedback">🤔</a></td>
+    <td align="center"><a href="https://github.com/ranjithmasthikatte"><img src="https://avatars2.githubusercontent.com/u/19502082?v=4" width="100px;" alt=""/><br /><sub><b>Ranjith K</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=ranjithmasthikatte" title="Code">💻</a> <a href="#ideas-ranjithmasthikatte" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
