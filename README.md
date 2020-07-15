@@ -7,7 +7,7 @@
 </p> 
 
 ## What is MagpieBridge?
-MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). MagpieBridge is a bridge between program analyses and developer tools. MagpieBridge offers an extensible implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles common LSP requests; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis; and resuable [Project Services](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-10.-ProjectService-Explained) that resolve project scope (source code path, library code path, class path etc.) which can be consumed by whole program analyses. Find more information in the following:
+MagpieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). MagpieBridge is a bridge between program analyses and developer tools. MagpieBridge offers an extensible implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles common LSP requests; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis; and resuable [Project Services](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-10.-ProjectService-Explained) that resolve project scope (source code path, library code path, class path etc.) which can be consumed by whole program analyses. Find more information in the following:
 
 - There is a [talk](https://youtu.be/6MLlOEsPW1k) at SOAP 2020 about MagpieBridge, the slides of the talk can be found [here](https://github.com/linghuiluo/linghuiluo.github.io/blob/master/soap-talk.pdf).
 - Tutorials on our [wiki](https://github.com/MagpieBridge/MagpieBridge/wiki) page. 
@@ -29,7 +29,7 @@ on opposite sides of the Milky Way. However, on the seventh day of the seventh l
 thousands of magpies form a bridge, called 鹊桥 in Chinese and Queqiao in pinyin, allowing the lovers
 to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary static analysis to arbitrary IDE.
 
-## How to use MapgieBridge?
+## How to use MagpieBridge?
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Integrated Static Analyses using MagpieBridge
