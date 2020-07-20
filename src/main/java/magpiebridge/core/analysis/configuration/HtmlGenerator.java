@@ -1,19 +1,6 @@
 package magpiebridge.core.analysis.configuration;
 
-import static j2html.TagCreator.a;
-import static j2html.TagCreator.body;
-import static j2html.TagCreator.br;
-import static j2html.TagCreator.div;
-import static j2html.TagCreator.form;
-import static j2html.TagCreator.h1;
-import static j2html.TagCreator.h2;
-import static j2html.TagCreator.h3;
-import static j2html.TagCreator.head;
-import static j2html.TagCreator.html;
-import static j2html.TagCreator.input;
-import static j2html.TagCreator.label;
-import static j2html.TagCreator.text;
-import static j2html.TagCreator.title;
+import static j2html.TagCreator.*;
 
 import j2html.tags.ContainerTag;
 import j2html.tags.EmptyTag;
@@ -21,6 +8,7 @@ import j2html.tags.UnescapedText;
 import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.Analysis;
+import magpiebridge.core.analysis.configuration.htmlElement.CheckBox;
 
 /**
  * The class generates a HTML page based on the {@link ConfigurationOption}s and {@link
@@ -65,13 +53,31 @@ public class HtmlGenerator {
         div(div(div(
                         generetaH1Title(),
                         div(
-                                div(h2("Configuration"), generateForm(configration))
+                                div(
+                                        h2("Configuration"),
+                                        generateForm(configration),
+                                        generateScript())
                                     .withClass("col-md-6"),
                                 div(h2("Actions"), generateActions(actions).withClass("col-md-6")))
                             .withClass("row"))
                     .withClass("center-block"))
                 .withClass("row"))
             .withClass("container"));
+  }
+
+  private static ContainerTag generateScript() {
+    return script(
+        rawHtml(
+            "function checkboxSelection(className, parentID) {"
+                + "var clist = document.getElementsByClassName(className);"
+                + "var parentStatus = document.getElementById(parentID).checked;"
+                + "for(var i = 0; i < clist.length; ++i) {"
+                + "clist[i].checked = parentStatus;"
+                + "}}"));
+  }
+
+  private static String cleanClassName(String className) {
+    return className.replaceAll("[^A-Za-z0-9]", "");
   }
 
   private static ContainerTag generateActions(List<ConfigurationAction> actions) {
@@ -90,14 +96,14 @@ public class HtmlGenerator {
     ContainerTag ret = form().withMethod("post").withAction("/config");
     List<ContainerTag> tags = new ArrayList<ContainerTag>();
     for (ConfigurationOption o : configration) {
-      tags.add(generateTag(o, 0));
+      tags.add(generateTag(o, 0, cleanClassName(o.getName())));
     }
     ret.with(tags);
     ret.with(generateSubmit());
     return ret;
   }
 
-  private static ContainerTag generateTag(ConfigurationOption o, int i) {
+  private static ContainerTag generateTag(ConfigurationOption o, int i, String className) {
     i++;
     ContainerTag ret = div();
     if (!o.getSource().equals(sourceOption)) {
@@ -106,7 +112,7 @@ public class HtmlGenerator {
     }
     String name = o.getName();
     if (o.getType().equals(OptionType.checkbox)) {
-      ret.with(generateCheckbox(o), generateLabel(name));
+      ret.with(generateCheckbox(o, className), generateLabel(name));
     } else if (o.getType().equals(OptionType.text)) {
       ret.with(generateLabel(name), generateTextfield(o));
     }
@@ -114,7 +120,7 @@ public class HtmlGenerator {
     if (o.hasChildren()) {
       List<ContainerTag> tags = new ArrayList<ContainerTag>();
       for (ConfigurationOption child : o.getChildren()) {
-        ContainerTag tag = generateTag(child, i);
+        ContainerTag tag = generateTag(child, i, cleanClassName(o.getName() + "child"));
         tag.withStyle("margin-left: " + (i * 50) + "px");
         tags.add(tag);
       }
@@ -132,8 +138,21 @@ public class HtmlGenerator {
         .with(text(name));
   }
 
-  private static EmptyTag generateCheckbox(ConfigurationOption o) {
-    EmptyTag checkBox = input().withType("checkbox").withName(o.getName()).withId(o.getName());
+  private static EmptyTag generateCheckbox(ConfigurationOption o, String className) {
+    EmptyTag checkBox =
+        input().withType("checkbox").withName(o.getName()).withId(o.getName()).withClass(className);
+
+    if (o instanceof CheckBox) {
+      CheckBox tempCheckBox = (CheckBox) o;
+
+      if (tempCheckBox.isChildSelectable()) {
+        String childClassName = cleanClassName(o.getName() + "child");
+        checkBox.attr(
+            "onclick",
+            "checkboxSelection('" + cleanClassName(childClassName) + "', '" + o.getName() + "')");
+      }
+    }
+
     if (o.getValueAsBoolean()) {
       checkBox.attr("checked");
     }
