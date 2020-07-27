@@ -115,6 +115,10 @@ public class HtmlGenerator {
       ret.with(generateCheckbox(o, className), generateLabel(name));
     } else if (o.getType().equals(OptionType.text)) {
       ret.with(generateLabel(name), generateTextfield(o));
+    } else if (o.getType().equals(OptionType.alert)) {
+      ret = script(rawHtml("alert(\"" + o.getName() + "\");"));
+
+      return ret;
     }
     ret.with(br());
     if (o.hasChildren()) {
