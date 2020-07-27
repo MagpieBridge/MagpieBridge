@@ -1,5 +1,5 @@
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/MagpieBridge/MagpieBridge)
-[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
 [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)
 [![Gitter](https://badges.gitter.im/MagpieBridgeHelp/community.svg)](https://gitter.im/MagpieBridgeHelp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <p align="center">
@@ -7,7 +7,7 @@
 </p> 
 
 ## What is MagpieBridge?
-MapgieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). MagpieBridge is a bridge between program analyses and developer tools. MagpieBridge offers an extensible implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles common LSP requests; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis; and resuable [Project Services](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-10.-ProjectService-Explained) that resolve project scope (source code path, library code path, class path etc.) which can be consumed by whole program analyses. Find more information in the following:
+MagpieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). MagpieBridge is a bridge between program analyses and developer tools. MagpieBridge offers an extensible implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles common LSP requests; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis; and resuable [Project Services](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-10.-ProjectService-Explained) that resolve project scope (source code path, library code path, class path etc.) which can be consumed by whole program analyses. Find more information in the following:
 
 - There is a [talk](https://youtu.be/6MLlOEsPW1k) at SOAP 2020 about MagpieBridge, the slides of the talk can be found [here](https://github.com/linghuiluo/linghuiluo.github.io/blob/master/soap-talk.pdf).
 - Tutorials on our [wiki](https://github.com/MagpieBridge/MagpieBridge/wiki) page. 
@@ -29,7 +29,7 @@ on opposite sides of the Milky Way. However, on the seventh day of the seventh l
 thousands of magpies form a bridge, called 鹊桥 in Chinese and Queqiao in pinyin, allowing the lovers
 to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary static analysis to arbitrary IDE.
 
-## How to use MapgieBridge?
+## How to use MagpieBridge?
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Integrated Static Analyses using MagpieBridge
@@ -81,7 +81,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Documentation">📖</a> <a href="#design-linghuiluo" title="Design">🎨</a></td>
+    <td align="center"><a href="https://linghuiluo.github.io/"><img src="https://avatars3.githubusercontent.com/u/18470909?v=4" width="100px;" alt=""/><br /><sub><b>Linghui Luo</b></sub></a><br /> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Maintenance">🚧</a><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Code">💻</a> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=linghuiluo" title="Documentation">📖</a> <a href="#design-linghuiluo" title="Design">🎨</a></td>
     <td align="center"><a href="http://researcher.watson.ibm.com/researcher/view.php?person=us-dolby"><img src="https://avatars0.githubusercontent.com/u/1652606?v=4" width="100px;" alt=""/><br /><sub><b>Julian Dolby</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=juliandolby" title="Code">💻</a> <a href="#design-juliandolby" title="Design">🎨</a></td>
     <td align="center"><a href="https://cbruegg.com"><img src="https://avatars0.githubusercontent.com/u/175421?v=4" width="100px;" alt=""/><br /><sub><b>Christian Brüggemann</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=cbruegg" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/jonasmanuel"><img src="https://avatars1.githubusercontent.com/u/8150255?v=4" width="100px;" alt=""/><br /><sub><b>Jonas Manuel</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=jonasmanuel" title="Code">💻</a> <a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=jonasmanuel" title="Documentation">📖</a></td>
@@ -91,6 +91,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   </tr>
   <tr>
     <td align="center"><a href="https://piskachev.com/"><img src="https://avatars2.githubusercontent.com/u/10850220?v=4" width="100px;" alt=""/><br /><sub><b>Goran Piskachev</b></sub></a><br /><a href="#ideas-piskachev" title="Ideas, Planning, & Feedback">🤔</a></td>
+    <td align="center"><a href="https://github.com/ranjithmasthikatte"><img src="https://avatars2.githubusercontent.com/u/19502082?v=4" width="100px;" alt=""/><br /><sub><b>Ranjith K</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=ranjithmasthikatte" title="Code">💻</a> <a href="#ideas-ranjithmasthikatte" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
