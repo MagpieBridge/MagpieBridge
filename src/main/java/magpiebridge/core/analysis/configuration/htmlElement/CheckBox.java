@@ -4,7 +4,8 @@ import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.OptionType;
 
 /**
- * This class represents the Checkbox with additional features.
+ * This class represents the Checkbox with the below additional features.
+ * 1. isChildSelectable - if true, then by selecting the parent checkbox, all its children also will be selected.
  *
  * @author Ranjith Krishnamurthy
  */
