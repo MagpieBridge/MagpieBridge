@@ -846,7 +846,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     e -> {
                       (e.isLeft() ? e.getLeft() : e.getRight()).configure(configuration);
                     }));
-
+    // Reset the available configuration options and read them from analyses.
+    // This is useful when configuration options change
     analysisConfiguration.clear();
     initAnalysisConfiguration();
     return getAnalysisConfiguration();
