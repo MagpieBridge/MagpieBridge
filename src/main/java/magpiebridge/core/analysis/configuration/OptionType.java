@@ -7,5 +7,6 @@ package magpiebridge.core.analysis.configuration;
  */
 public enum OptionType {
   checkbox, // a configuration option displays as a check box
-  text // a configuration needs a text input
+  text, // a configuration needs a text input
+  alert // a alert box with a message
 }
