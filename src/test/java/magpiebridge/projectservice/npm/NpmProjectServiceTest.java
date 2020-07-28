@@ -74,6 +74,6 @@ public class NpmProjectServiceTest {
     assertFalse(npmPackage.getDependencies().isPresent());
     assertTrue(npmPackage.getPath().isPresent());
     assertEquals(rootPath.resolve("node_modules").resolve("lodash"), npmPackage.getPath().get());
-    assertEquals("4.17.15", npmPackage.getVersion());
+    assertEquals("4.17.19", npmPackage.getVersion());
   }
 }
