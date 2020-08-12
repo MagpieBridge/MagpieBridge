@@ -104,18 +104,16 @@ public class InferSourcePath {
           return;
         }
 
-        if (!alreadyKnown(java)) {
-          infer(java)
-              .ifPresent(
-                  root -> {
-                    int count = sourceRoots.getOrDefault(root, 0);
-                    if (!root.startsWith(
-                        workspaceRoot
-                            + File.separator
-                            + "target")) // filter generated java files of maven projects.
-                    sourceRoots.put(root, count + 1);
-                  });
-        }
+        infer(java)
+            .ifPresent(
+                root -> {
+                  int count = sourceRoots.getOrDefault(root, 0);
+                  if (!root.startsWith(
+                      workspaceRoot
+                          + File.separator
+                          + "target")) // filter generated java files of maven projects.
+                  sourceRoots.put(root, count + 1);
+                });
       }
     }
     SourcePaths checker = new SourcePaths();
