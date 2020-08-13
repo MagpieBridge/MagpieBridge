@@ -48,17 +48,7 @@ public class InferSourcePath {
     packageNames = new HashSet<String>();
     classFullQualifiedNames = new HashSet<String>();
     class SourcePaths implements Consumer<Path> {
-      int certaintyThreshold = 10;
       Map<Path, Integer> sourceRoots = new HashMap<>();
-
-      boolean alreadyKnown(Path java) {
-        for (Path root : sourceRoots.keySet()) {
-          if (java.startsWith(root) && sourceRoots.get(root) > certaintyThreshold) {
-            return true;
-          }
-        }
-        return false;
-      }
 
       Optional<Path> infer(Path java) {
         JavaParser javaParser = new JavaParser();
