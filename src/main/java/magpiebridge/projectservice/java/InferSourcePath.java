@@ -48,17 +48,7 @@ public class InferSourcePath {
     packageNames = new HashSet<String>();
     classFullQualifiedNames = new HashSet<String>();
     class SourcePaths implements Consumer<Path> {
-      int certaintyThreshold = 10;
       Map<Path, Integer> sourceRoots = new HashMap<>();
-
-      boolean alreadyKnown(Path java) {
-        for (Path root : sourceRoots.keySet()) {
-          if (java.startsWith(root) && sourceRoots.get(root) > certaintyThreshold) {
-            return true;
-          }
-        }
-        return false;
-      }
 
       Optional<Path> infer(Path java) {
         JavaParser javaParser = new JavaParser();
@@ -104,18 +94,16 @@ public class InferSourcePath {
           return;
         }
 
-        if (!alreadyKnown(java)) {
-          infer(java)
-              .ifPresent(
-                  root -> {
-                    int count = sourceRoots.getOrDefault(root, 0);
-                    if (!root.startsWith(
-                        workspaceRoot
-                            + File.separator
-                            + "target")) // filter generated java files of maven projects.
-                    sourceRoots.put(root, count + 1);
-                  });
-        }
+        infer(java)
+            .ifPresent(
+                root -> {
+                  int count = sourceRoots.getOrDefault(root, 0);
+                  if (!root.startsWith(
+                      workspaceRoot
+                          + File.separator
+                          + "target")) // filter generated java files of maven projects.
+                  sourceRoots.put(root, count + 1);
+                });
       }
     }
     SourcePaths checker = new SourcePaths();

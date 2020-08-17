@@ -23,11 +23,21 @@ public class JavaProjectServiceTest {
     assertEquals(8, ps.getLibraryPath().size());
     assertEquals(2, ps.getClassPath().size() - ps.getLibraryPath().size());
     Set<String> classNames = ps.getSourceClassFullQualifiedNames();
+
+    // There are 12 classes in this project
+    assertEquals(12, classNames.size());
+
     assertTrue(classNames.contains("demo.SignatureExample"));
     assertTrue(classNames.contains("demo.FileOutputExample"));
     assertTrue(classNames.contains("demo.SecUtils"));
     assertTrue(classNames.contains("server.ServerMain"));
     assertTrue(classNames.contains("server.Server"));
+    assertTrue(classNames.contains("demo.dummy.Dummy1"));
+    assertTrue(classNames.contains("demo.dummy.Dummy2"));
+    assertTrue(classNames.contains("demo.dummy.Dummy6"));
+    assertTrue(classNames.contains("demo.dummy.dummySubFolder.Dummy3"));
+    assertTrue(classNames.contains("demo.dummy.dummySubFolder.Dummy4"));
+    assertTrue(classNames.contains("demo.dummy.dummySubFolder.Dummy5"));
   }
 
   @Ignore // This test failed on CI, but passed locally
