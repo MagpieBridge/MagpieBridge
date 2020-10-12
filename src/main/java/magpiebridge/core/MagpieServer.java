@@ -64,7 +64,6 @@ import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.launch.LSPLauncher.Builder;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageClientAware;
@@ -88,7 +87,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected ServerConfiguration config;
 
   /** The client. */
-  protected LanguageClient client;
+  protected MagpieClient client;
 
   /** The client config */
   protected ClientCapabilities clientConfig;
@@ -117,6 +116,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /** The language project services. language mapped to its project service. */
   protected Map<String, IProjectService> languageProjectServices;
+
+  /** The version control service used by the project */
+  protected Optional<VersionControlService> versionControlService;
 
   /** The diagnostics. */
   protected Map<URL, List<Diagnostic>> diagnostics;
@@ -161,6 +163,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
     this.languageProjectServices = new HashMap<String, IProjectService>();
+    this.versionControlService = Optional.empty();
     this.diagnostics = new HashMap<>();
     this.hovers = new HashMap<>();
     this.codeLenses = new HashMap<>();
@@ -203,8 +206,16 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param out the out
    */
   public void launchOnStream(InputStream in, OutputStream out) {
-    Launcher<LanguageClient> launcher;
-    launcher = LSPLauncher.createServerLauncher(this, in, out, THREAD_POOL, logger.getWrapper());
+    Launcher<MagpieClient> launcher;
+    launcher =
+        new Builder<MagpieClient>()
+            .setLocalService(this)
+            .setRemoteInterface(MagpieClient.class)
+            .setInput(in)
+            .setOutput(out)
+            .setExecutorService(THREAD_POOL)
+            .wrapMessages(logger.getWrapper())
+            .create();
     connect(launcher.getRemoteProxy());
     launcher.startListening();
   }
@@ -220,10 +231,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     try {
       serverSocket = new ServerSocket(port);
       Socket connectionSocket = serverSocket.accept();
-      Launcher<LanguageClient> launcher =
-          new Builder<LanguageClient>()
+      Launcher<MagpieClient> launcher =
+          new Builder<MagpieClient>()
               .setLocalService(this)
-              .setRemoteInterface(LanguageClient.class)
+              .setRemoteInterface(MagpieClient.class)
               .setInput(connectionSocket.getInputStream())
               .setOutput(connectionSocket.getOutputStream())
               .setExecutorService(Executors.newCachedThreadPool())
@@ -266,10 +277,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       while (!serverSocket.isClosed()) {
         MagpieServer server = createServer.get();
         Socket connectionSocket = serverSocket.accept();
-        Launcher<LanguageClient> launcher =
-            new Builder<LanguageClient>()
+        Launcher<MagpieClient> launcher =
+            new Builder<MagpieClient>()
                 .setLocalService(server)
-                .setRemoteInterface(LanguageClient.class)
+                .setRemoteInterface(MagpieClient.class)
                 .setInput(connectionSocket.getInputStream())
                 .setOutput(connectionSocket.getOutputStream())
                 .setExecutorService(THREAD_POOL)
@@ -303,9 +314,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public void connect(LanguageClient client) {
-    this.client = client;
+    this.client = (MagpieClient) client;
   }
-
   /*
    * (non-Javadoc)
    *
@@ -319,7 +329,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       this.rootPath = Optional.empty();
     }
     clientConfig = params.getCapabilities();
-
     final ServerCapabilities caps = new ServerCapabilities();
     caps.setTypeDefinitionProvider(false);
     caps.setImplementationProvider(false);
@@ -353,13 +362,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public void initialized(InitializedParams params) {
-    for (String language : languageProjectServices.keySet()) {
-      if (this.rootPath.isPresent()) {
+    if (this.rootPath.isPresent()) {
+      for (String language : languageProjectServices.keySet()) {
+
         if (this.getProjectService(language).isPresent()) {
           this.getProjectService(language).get().setRootPath(this.rootPath.get());
         }
       }
+      if (this.versionControlService.isPresent())
+        this.versionControlService.get().setRootPath(this.rootPath.get());
     }
+
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
@@ -427,6 +440,15 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public CompletableFuture<Object> shutdown() {
+    for (String lang : languageAnalyses.keySet()) {
+      for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyses.get(lang)) {
+        if (analysis.isLeft()) {
+          analysis.getLeft().cleanUp();
+        } else {
+          analysis.getRight().cleanUp();
+        }
+      }
+    }
     this.client = null;
     this.clientConfig = null;
     this.codeActions = null;
@@ -504,6 +526,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
+  public void addVersionControlService(VersionControlService versionControlService) {
+    this.versionControlService = Optional.of(versionControlService);
+  }
+
   public void addCommand(String commandName, WorkspaceCommand processor) {
     getWorkspaceService().commands.put(commandName, processor);
   }
@@ -547,21 +573,25 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       languageAnalyses.put(language, Collections.emptyList());
     }
     for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyses.get(language)) {
-      if (analysis.isLeft()) {
-        analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
-      } else {
-        analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
-      }
+      doSingleAnalysis(language, analysis, rerun);
     }
   }
 
   protected void doSingleAnalysis(
       String language, Either<ServerAnalysis, ToolAnalysis> analysis, boolean rerun) {
     SourceFileManager fileManager = getSourceFileManager(language);
+    Analysis<AnalysisConsumer> a = null;
     if (analysis.isLeft()) {
-      analysis.getLeft().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+      a = analysis.getLeft();
     } else {
-      analysis.getRight().analyze(fileManager.getSourceFileModules().values(), this, rerun);
+      a = analysis.getRight();
+    }
+    if (a != null) {
+      this.forwardMessageToClient(
+          new MessageParams(MessageType.Info, a.source() + " started analyzing the code."));
+      a.analyze(fileManager.getSourceFileModules().values(), this, rerun);
+      this.forwardMessageToClient(
+          new MessageParams(MessageType.Info, a.source() + " finished analyzing the code."));
     }
   }
 
@@ -614,8 +644,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       pdp.setUri(entry.getKey());
       client.publishDiagnostics(pdp);
     }
-    client.showMessage(
-        new MessageParams(MessageType.Info, "The analyzer finished analyzing the code."));
   }
 
   /*
@@ -670,6 +698,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     return Optional.ofNullable(languageProjectServices.get(language));
   }
 
+  public Optional<VersionControlService> getVersionControlService() {
+    return this.versionControlService;
+  }
   /**
    * Adds the given code action for the given url and range.
    *

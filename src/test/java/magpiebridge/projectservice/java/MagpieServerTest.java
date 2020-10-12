@@ -23,6 +23,7 @@ public class MagpieServerTest {
     param.setRootUri(
         Paths.get("src/test/resources/CogniCryptDemoExample/").toAbsolutePath().toUri().toString());
     server.initialize(param);
+    server.initialized(null);
     DidOpenTextDocumentParams p = new DidOpenTextDocumentParams();
     TextDocumentItem i = new TextDocumentItem();
     i.setUri(

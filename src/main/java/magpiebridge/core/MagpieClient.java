@@ -1,6 +1,5 @@
 package magpiebridge.core;
 
-import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.services.LanguageClient;
 
@@ -13,5 +12,5 @@ import org.eclipse.lsp4j.services.LanguageClient;
 public interface MagpieClient extends LanguageClient {
 
   @JsonNotification("magpiebridge/showHTML")
-  void showHTML(MessageParams messageParams);
+  void showHTML(String content);
 }

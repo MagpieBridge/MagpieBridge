@@ -26,7 +26,7 @@ public class MagpieHttpServer {
       InetSocketAddress socket = new InetSocketAddress(ipAddress.getHostName(), 0);
       HttpServer server = HttpServer.create(socket, 0);
       HttpContext context = server.createContext("/config");
-      context.setHandler(new MagpieHttpHandler(magpieServer));
+      context.setHandler(new MagpieHttpHandler(magpieServer, server.getAddress().toString()));
       server.start();
       return new URI("http", server.getAddress().toString() + "/config", null);
     } catch (IOException | URISyntaxException e) {

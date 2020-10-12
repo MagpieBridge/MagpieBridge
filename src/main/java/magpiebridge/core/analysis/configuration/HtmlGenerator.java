@@ -21,11 +21,15 @@ public class HtmlGenerator {
 
   private static String sourceOption;
   private static String sourceAction;
+  private static String serverAddress;
 
   public static String generateHTML(
-      List<ConfigurationOption> configuration, List<ConfigurationAction> actions) {
+      List<ConfigurationOption> configuration,
+      List<ConfigurationAction> actions,
+      String serverAddress) {
     sourceOption = null;
     sourceAction = null;
+    HtmlGenerator.serverAddress = serverAddress;
     return html(generateHeader(), generateBody(configuration, actions)).renderFormatted();
   }
 
@@ -76,20 +80,56 @@ public class HtmlGenerator {
                 + "}}"));
   }
 
+  private static ContainerTag generateScriptForButtonClick(String functionName, String uri) {
+    String url = "http:/" + serverAddress + "/config" + uri.replace(" ", "%20");
+    String scriptCode =
+        "var "
+            + functionName
+            + " = {};"
+            + "if (typeof acquireVsCodeApi == 'undefined'){"
+            + functionName
+            + " = function(){"
+            + "var httpRequest = new XMLHttpRequest();"
+            + "var url = '"
+            + url
+            + "';"
+            + "httpRequest.open('GET',url);"
+            + "httpRequest.send();"
+            + "}}else{"
+            + functionName
+            + " = function(){\n"
+            + "window.vscode.postMessage({command: 'action',text: '"
+            + url
+            + "'});"
+            + "}}";
+    return script(rawHtml(scriptCode));
+  }
+
   private static String cleanClassName(String className) {
     return className.replaceAll("[^A-Za-z0-9]", "");
   }
 
   private static ContainerTag generateActions(List<ConfigurationAction> actions) {
     ContainerTag ret = div();
+    ret.with(generateGlobalScript());
     for (ConfigurationAction action : actions) {
       if (!action.getSource().equals(sourceAction)) {
         ret.with(h3(action.getSource()));
         sourceAction = action.getSource();
       }
-      ret.with(generateButton(action.getName(), action.getSource()), br());
+      String name = action.getName();
+      String source = action.getSource();
+      String uri = "?action=" + action.getName() + "&" + "source=" + source;
+      ret.with(generateButton(name, uri), br());
+      ret.with(generateScriptForButtonClick(action.getName().replace(" ", ""), uri));
     }
     return ret;
+  }
+
+  private static ContainerTag generateGlobalScript() {
+    String code =
+        "if (typeof acquireVsCodeApi != 'undefined'){window.vscode = acquireVsCodeApi();}";
+    return script(rawHtml(code));
   }
 
   private static ContainerTag generateForm(List<ConfigurationOption> configration) {
@@ -133,13 +173,14 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static ContainerTag generateButton(String name, String source) {
+  private static ContainerTag generateButton(String name, String uri) {
     return a().withClasses("btn", "btn-default")
         .withRole("button")
         .withName(name)
         .withId(name)
-        .withHref("?action=" + name + "&" + "source=" + source)
-        .with(text(name));
+        .withHref(uri)
+        .with(text(name))
+        .attr("onClick", name.replace(" ", "") + "()");
   }
 
   private static EmptyTag generateCheckbox(ConfigurationOption o, String className) {
