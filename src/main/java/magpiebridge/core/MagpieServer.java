@@ -100,6 +100,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   protected AnalysisResultConsumerFactory resultsConsumerFactory;
 
+  protected SuppressWarningHandler suppressWarningHandler;
+
   protected FalsePositiveHandler falsePositiveHandler;
 
   protected ConfusionHandler confusionHandler;
@@ -159,6 +161,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.falsePositiveHandler.registerAt(this);
     this.confusionHandler = config.getConfusionHanlder();
     this.confusionHandler.registerAt(this);
+    this.suppressWarningHandler = config.getSuppressWarningHandler();
+    this.suppressWarningHandler.registerAt(this);
     this.languageAnalyses = new HashMap<>();
     this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
@@ -595,6 +599,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
+  public void removeDiagnosticFromClient(String decodedUri, JsonObject jdiag) {
+    // TODO. remove diagnostics.
+  }
+
   /**
    * Consume the analysis results.
    *
@@ -617,7 +625,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               diagList = new ArrayList<>();
               this.diagnostics.put(clientURL, diagList);
             }
-            if (!falsePositiveHandler.isFalsePositive(result)) {
+            boolean isFP = falsePositiveHandler.isFalsePositive(result);
+            boolean isSuppressed = suppressWarningHandler.isSuppressed(result);
+            if (!isFP && !isSuppressed) {
               resultsConsumerFactory
                   .createDiagnosticConsumer(publishDiags, diagList, source)
                   .accept(result);
@@ -671,6 +681,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     return this.falsePositiveHandler;
   }
 
+  public SuppressWarningHandler getSuppressWarningHandler() {
+    return this.suppressWarningHandler;
+  }
   /** @return the {@link ConfusionHandler} configured for Server. */
   public ConfusionHandler getConfusionHandler() {
     return this.confusionHandler;

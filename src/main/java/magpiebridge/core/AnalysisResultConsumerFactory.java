@@ -101,9 +101,18 @@ public class AnalysisResultConsumerFactory {
                         server.addCodeAction(url, d.getRange(), act);
                       });
             }
+            if (server.config.supportWarningSuppression()) {
+              // support warning suppression.
+              String title = "Suppress this warning.";
+              CodeAction suppressWarning =
+                  CodeActionGenerator.generateCommandAction(
+                      title, clientUri, d, CodeActionCommand.suppressWarning.name());
+              server.addCodeAction(url, d.getRange(), suppressWarning);
+            }
+
             if (server.config.reportFalsePositive()) {
               // report false positive
-              String title = String.format("Report it as false alarm (%s).", d.getMessage());
+              String title = "Report false alarm.";
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportFP.name());
@@ -111,8 +120,7 @@ public class AnalysisResultConsumerFactory {
             }
             if (server.config.reportConfusion()) {
               // report confusion about the warning message
-              String title =
-                  String.format("I don't understand this warning message (%s).", d.getMessage());
+              String title = "I don't understand this warning.";
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportConfusion.name());

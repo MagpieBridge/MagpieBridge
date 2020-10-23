@@ -15,6 +15,7 @@ import magpiebridge.command.FixCommand;
 import magpiebridge.command.OpenURLCommand;
 import magpiebridge.command.ReportConfusionCommand;
 import magpiebridge.command.ReportFalsePositiveCommand;
+import magpiebridge.command.SuppressWarningCommand;
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
@@ -47,6 +48,7 @@ public class MagpieWorkspaceService implements WorkspaceService {
     this.commands.put(CodeActionCommand.reportFP.name(), new ReportFalsePositiveCommand());
     this.commands.put(CodeActionCommand.reportConfusion.name(), new ReportConfusionCommand());
     this.commands.put(CodeActionCommand.openURL.name(), new OpenURLCommand());
+    this.commands.put(CodeActionCommand.suppressWarning.name(), new SuppressWarningCommand());
   }
 
   @Override
@@ -98,6 +100,17 @@ public class MagpieWorkspaceService implements WorkspaceService {
           } else if (command.equals(CodeActionCommand.reportConfusion.name())) {
             server.forwardMessageToClient(
                 new MessageParams(MessageType.Info, "Thank you for your feedback!"));
+          } else if (command.equals(CodeActionCommand.suppressWarning.name())) {
+            List<Object> args = params.getArguments();
+            JsonPrimitive uri = (JsonPrimitive) args.get(0);
+            JsonObject jdiag = (JsonObject) args.get(1);
+            try {
+              String decodedUri = URLDecoder.decode(uri.getAsString(), "UTF-8");
+              server.getSuppressWarningHandler().recordSuppression(decodedUri, jdiag);
+            } catch (UnsupportedEncodingException e) {
+              MagpieServer.ExceptionLogger.log(e);
+              e.printStackTrace();
+            }
           } else if (this.commands.containsKey(command)) {
             WorkspaceCommand cmd = this.commands.get(command);
             cmd.execute(params, server, server.client);
