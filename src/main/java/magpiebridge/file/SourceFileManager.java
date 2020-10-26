@@ -35,7 +35,7 @@ public class SourceFileManager {
   /** Client-side URI mapped to source file module. */
   private Map<URI, SourceFileModule> sourceFileModules;
   /** Server-side URI string mapped to client-side URI string. */
-  private Map<String, String> serverClientUri;
+  private Map<String, String> serverClientUris;
 
   private Map<URI, FileState> fileStates;
 
@@ -43,13 +43,13 @@ public class SourceFileManager {
    * Instantiates a new source file manager.
    *
    * @param language the language
-   * @param serverClientUri the server client uri
+   * @param serverClientUris the server client uri
    */
-  public SourceFileManager(String language, Map<String, String> serverClientUri) {
+  public SourceFileManager(String language, Map<String, String> serverClientUris) {
     this.language = language;
     this.versionedFiles = new HashMap<>();
     this.sourceFileModules = new HashMap<>();
-    this.serverClientUri = serverClientUri;
+    this.serverClientUris = serverClientUris;
     this.fileStates = new HashMap<>();
   }
 
@@ -182,9 +182,9 @@ public class SourceFileManager {
       this.sourceFileModules.put(clientUri, sourceFile);
       URI serverUri = Paths.get(file.toURI()).toUri();
       // store the mapping from server-side URI to client-side URI.
-      this.serverClientUri.put(serverUri.toString(), clientUri.toString());
+      this.serverClientUris.put(serverUri.toString(), clientUri.toString());
       if (serverUri.toString().startsWith("file:///")) {
-        this.serverClientUri.put(
+        this.serverClientUris.put(
             "file:/" + serverUri.toString().substring(8), clientUri.toString());
       }
     } catch (IOException e) {
