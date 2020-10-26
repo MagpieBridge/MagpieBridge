@@ -500,11 +500,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @return the source file manager
    */
   public SourceFileManager getSourceFileManager(String language) {
-    if (!this.languageSourceFileManagers.containsKey(language)) {
-      this.languageSourceFileManagers.put(
-          language, new SourceFileManager(language, this.serverClientUri));
-    }
-    return this.languageSourceFileManagers.get(language);
+    return this.languageSourceFileManagers.computeIfAbsent(language, k -> new SourceFileManager(language, this.serverClientUri));
   }
 
   /**
