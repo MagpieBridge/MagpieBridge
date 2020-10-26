@@ -20,13 +20,13 @@ public class DefaultAnalysisResult implements AnalysisResult {
   private final String code;
 
   public DefaultAnalysisResult(
-          Kind kind,
-          Position pos,
-          String msg,
-          Iterable<Pair<Position, String>> relatedInfo,
-          DiagnosticSeverity severity,
-          Pair<Position, String> repair,
-          String code) {
+      Kind kind,
+      Position pos,
+      String msg,
+      Iterable<Pair<Position, String>> relatedInfo,
+      DiagnosticSeverity severity,
+      Pair<Position, String> repair,
+      String code) {
     this.kind = kind;
     this.position = pos;
     this.message = msg;
@@ -69,21 +69,21 @@ public class DefaultAnalysisResult implements AnalysisResult {
   @Override
   public String toString() {
     return getClass().getName()
-            + " [kind="
-            + kind
-            + ", position="
-            + position
-            + ", code="
-            + code
-            + ", message="
-            + message
-            + ", related="
-            + related
-            + ", severity="
-            + severity
-            + ", repair="
-            + repair
-            + "]";
+        + " [kind="
+        + kind
+        + ", position="
+        + position
+        + ", code="
+        + code
+        + ", message="
+        + message
+        + ", related="
+        + related
+        + ", severity="
+        + severity
+        + ", repair="
+        + repair
+        + "]";
   }
 
   public String code() {
