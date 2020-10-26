@@ -60,7 +60,7 @@ public class SourceFileManager {
    */
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem doc = params.getTextDocument();
-    if( doc.getLanguageId() == null || doc.getLanguageId().isEmpty()){
+    if (doc.getLanguageId() == null || doc.getLanguageId().isEmpty()) {
       // not well formed request according to lsp spec
       return;
     }
@@ -85,7 +85,7 @@ public class SourceFileManager {
     URI clientUri = URI.create(uri);
     this.fileStates.put(clientUri, FileState.CHANGED);
     VersionedSourceFile existFile = versionedFiles.get(URI.create(uri));
-    if(existFile == null){
+    if (existFile == null) {
       return;
     }
     int newVersion = doc.getVersion();
@@ -113,7 +113,7 @@ public class SourceFileManager {
     String uri = doc.getUri();
     URI clientUri = URI.create(uri);
     VersionedSourceFile existFile = versionedFiles.get(URI.create(uri));
-    if(existFile == null){
+    if (existFile == null) {
       return;
     }
     this.fileStates.put(clientUri, FileState.SAVED);
