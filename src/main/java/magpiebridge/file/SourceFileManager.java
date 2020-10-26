@@ -81,6 +81,9 @@ public class SourceFileManager {
     URI clientUri = URI.create(uri);
     this.fileStates.put(clientUri, FileState.CHANGED);
     VersionedSourceFile existFile = versionedFiles.get(URI.create(uri));
+    if(existFile == null){
+      return;
+    }
     int newVersion = doc.getVersion();
     if (newVersion > existFile.getVersion()) {
       String existText = existFile.getText();
@@ -188,6 +191,7 @@ public class SourceFileManager {
    * @return the file suffix
    */
   private String getFileSuffix() {
+
     if (language.equals("java")) {
       return ".java";
     } else if (language.equals("python") || language.equals("py")) {
