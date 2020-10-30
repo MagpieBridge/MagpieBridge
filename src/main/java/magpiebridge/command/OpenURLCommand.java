@@ -1,19 +1,17 @@
 package magpiebridge.command;
 
 import com.google.gson.JsonPrimitive;
-import com.ibm.wala.util.io.FileUtil;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import magpiebridge.core.MagpieClient;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.core.WorkspaceCommand;
 import magpiebridge.util.URIUtils;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.ExecuteCommandParams;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 /**
@@ -58,10 +56,10 @@ public class OpenURLCommand implements WorkspaceCommand {
       throws IOException, URISyntaxException {
     if (server.clientSupportShowHTML()) {
       if (client instanceof MagpieClient) {
-        MessageParams mp = new MessageParams();
-        mp.setType(MessageType.Info);
-        mp.setMessage(new String(FileUtil.readBytes(new URL(URIUtils.checkURI(uri)).openStream())));
-        ((MagpieClient) client).showHTML(mp);
+        if (!uri.contains("://")) uri = uri.replace(":/", "://");
+        String content =
+            IOUtils.toString(new URI(URIUtils.checkURI(uri)), StandardCharsets.UTF_8.toString());
+        ((MagpieClient) client).showHTML(content);
       }
     } else {
       if (Desktop.isDesktopSupported())

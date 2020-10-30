@@ -16,12 +16,23 @@ import java.util.List;
 public class SourceCodeReader {
 
   /**
-   * Gets the lines of code at the give position.
+   * Gets the lines of code at the give position without comment.
    *
    * @param p the position where to get the code
    * @return the lines
    */
   public static List<String> getLines(Position p) {
+    return getLines(p, false);
+  }
+
+  /**
+   * Gets the lines of code at the give position.
+   *
+   * @param p the position where to get the code
+   * @param includeComment if comment should be removed.
+   * @return the lines
+   */
+  public static List<String> getLines(Position p, boolean includeComment) {
     List<String> lines = new ArrayList<>();
 
     String url = p.getURL().toString();
@@ -47,15 +58,15 @@ public class SourceCodeReader {
           } while (p.getFirstLine() > line);
 
           // first line
-          lines.add(removeComment(currentLine.substring(p.getFirstCol())));
+          lines.add(removeComment(currentLine.substring(p.getFirstCol()), includeComment));
 
           while (p.getLastLine() < line) {
             currentLine = reader.readLine();
             line++;
             if (p.getLastLine() == line) {
-              lines.add(removeComment(currentLine.substring(0, p.getLastCol())));
+              lines.add(removeComment(currentLine.substring(0, p.getLastCol()), includeComment));
             } else {
-              lines.add(removeComment(currentLine));
+              lines.add(removeComment(currentLine, includeComment));
             }
           }
         }
@@ -72,7 +83,8 @@ public class SourceCodeReader {
    * @param line the line
    * @return the string
    */
-  public static String removeComment(String line) {
+  public static String removeComment(String line, boolean includeComment) {
+    if (includeComment) return line;
     if (line.contains("//")) {
       line = line.split("(\\s)*//")[0];
     }
@@ -80,14 +92,15 @@ public class SourceCodeReader {
   }
 
   /**
-   * Gets the lines of code at the give position.
+   * Gets the lines of code at the give position with/without comment.
    *
    * @param p the position where to get the code
+   * @param includeComment if comment should be removed.
    * @return the lines in string
    * @throws Exception the exception
    */
-  public static String getLinesInString(Position p) throws Exception {
-    List<String> lines = getLines(p);
+  public static String getLinesInString(Position p, boolean includeComment) throws Exception {
+    List<String> lines = getLines(p, includeComment);
     StringBuilder result = new StringBuilder();
     for (int i = 0; i < lines.size(); i++) {
       if (i == lines.size() - 1) {
@@ -97,5 +110,15 @@ public class SourceCodeReader {
       }
     }
     return result.toString();
+  }
+  /**
+   * Gets the lines of code at the give position without comment.
+   *
+   * @param p the position where to get the code
+   * @return the lines in string
+   * @throws Exception the exception
+   */
+  public static String getLinesInString(Position p) throws Exception {
+    return getLinesInString(p, false);
   }
 }
