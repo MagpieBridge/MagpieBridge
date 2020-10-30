@@ -4,7 +4,7 @@
 
 	<groupId>magpiebridge</groupId>
 	<artifactId>magpiebridge</artifactId>
-	<version>0.0.8</version>
+	<version>0.0.9</version>
 	<packaging>jar</packaging>
 	<name>magpiebridge</name>
 	<url>https://github.com/MagpieBridge/MagpieBridge</url>
@@ -101,6 +101,12 @@
 			<artifactId>j2html</artifactId>
 			<version>${j2html.version}</version>
 		</dependency>
+        <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>5.9.0.202009080501-r</version>
+        </dependency>
 	</dependencies>
 	<build>
 		<plugins>

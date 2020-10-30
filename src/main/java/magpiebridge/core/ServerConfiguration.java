@@ -14,6 +14,7 @@ import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
  * @author Linghui Luo
  */
 public class ServerConfiguration {
+  private boolean supportWarningSuppression;
   private boolean reportFalsePositive;
   private boolean reportConfusion;
   private boolean doAnalysisByOpen;
@@ -23,6 +24,7 @@ public class ServerConfiguration {
   private boolean addDefaultActions;
   private FalsePositiveHandler falsePositiveHandler;
   private ConfusionHandler confusionHandler;
+  private SuppressWarningHandler suppressWarningHandler;
   private long timeOut; // timeout in millisecond
 
   private MagpieMessageLogger logger;
@@ -32,10 +34,12 @@ public class ServerConfiguration {
     this.doAnalysisByOpen = true;
     this.doAnalysisBySave = true;
     this.doAnalysisByIdle = false;
+    this.supportWarningSuppression = false;
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
     this.addDefaultActions = false;
+    this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
     this.confusionHandler = new DefaultConfusionHandler();
     this.timeOut = 0;
@@ -85,6 +89,24 @@ public class ServerConfiguration {
 
   public boolean reportConfusion() {
     return reportConfusion;
+  }
+
+  public boolean supportWarningSuppression() {
+    return supportWarningSuppression;
+  }
+
+  /**
+   * Set up handler for supressing warnings.
+   *
+   * @param supportWarningSuppression true, if warning suppression should be supported
+   * @param handler the handler for supressing warnings.
+   * @return
+   */
+  public ServerConfiguration setSuppressWarningHandler(
+      boolean supportWarningSuppression, SuppressWarningHandler handler) {
+    this.supportWarningSuppression = supportWarningSuppression;
+    this.suppressWarningHandler = handler;
+    return this;
   }
 
   /**
@@ -231,5 +253,9 @@ public class ServerConfiguration {
 
   public boolean addDefaultActions() {
     return this.addDefaultActions;
+  }
+
+  public SuppressWarningHandler getSuppressWarningHandler() {
+    return this.suppressWarningHandler;
   }
 }

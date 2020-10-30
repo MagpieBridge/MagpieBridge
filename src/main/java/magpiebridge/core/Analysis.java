@@ -56,4 +56,9 @@ public interface Analysis<T extends AnalysisConsumer> {
    * @param configuration the configuration used to configure the analysis.
    */
   public default void configure(List<ConfigurationOption> configuration) {}
+
+  /**
+   * Clean up defined by the analysis. This will be called @link{{@link MagpieServer#shutdown()}}.
+   */
+  public default void cleanUp() {}
 }

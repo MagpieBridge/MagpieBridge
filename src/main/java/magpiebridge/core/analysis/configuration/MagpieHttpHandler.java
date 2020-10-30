@@ -28,9 +28,11 @@ import org.apache.http.client.utils.URLEncodedUtils;
 public class MagpieHttpHandler implements HttpHandler {
 
   private MagpieServer magpieServer;
+  private String serverAddress;
 
-  public MagpieHttpHandler(MagpieServer magpieServer) {
+  public MagpieHttpHandler(MagpieServer magpieServer, String serverAddress) {
     this.magpieServer = magpieServer;
+    this.serverAddress = serverAddress;
   }
 
   @Override
@@ -40,7 +42,9 @@ public class MagpieHttpHandler implements HttpHandler {
     if ("GET".equals(exchange.getRequestMethod().toUpperCase())) {
       String htmlPage =
           HtmlGenerator.generateHTML(
-              magpieServer.getAnalysisConfiguration(), magpieServer.getConfigurationActions());
+              magpieServer.getAnalysisConfiguration(),
+              magpieServer.getConfigurationActions(),
+              this.serverAddress);
       List<NameValuePair> params = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
       if (!params.isEmpty() && params.size() == 2) {
         magpieServer.performConfiguredAction(params.get(0), params.get(1));
@@ -69,7 +73,8 @@ public class MagpieHttpHandler implements HttpHandler {
       }
       List<ConfigurationOption> newOptions = magpieServer.setConfigurationOptions(requestOptions);
       String htmlPage =
-          HtmlGenerator.generateHTML(newOptions, magpieServer.getConfigurationActions());
+          HtmlGenerator.generateHTML(
+              newOptions, magpieServer.getConfigurationActions(), this.serverAddress);
       exchange.sendResponseHeaders(200, htmlPage.length());
       outputStream.write(htmlPage.getBytes());
       outputStream.flush();

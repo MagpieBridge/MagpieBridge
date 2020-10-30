@@ -16,5 +16,6 @@ public enum CodeActionCommand {
   fix,
   reportFP,
   reportConfusion,
-  openURL
+  openURL,
+  suppressWarning
 }
