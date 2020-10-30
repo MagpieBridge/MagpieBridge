@@ -3,6 +3,7 @@
  */
 package magpiebridge.core;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.HashMapFactory;
@@ -34,6 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import magpiebridge.command.OpenURLCommand;
 import magpiebridge.core.analysis.configuration.ConfigurationAction;
 import magpiebridge.core.analysis.configuration.ConfigurationOption;
@@ -599,8 +601,34 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
-  public void removeDiagnosticFromClient(String decodedUri, JsonObject jdiag) {
-    // TODO. remove diagnostics.
+  /**
+   * This method removes the given Diagnostic from the given uri in the client.
+   *
+   * @param uri the uri of the source code file
+   * @param jdiag the jsonfied dagnostic
+   */
+  public void removeDiagnosticFromClient(String uri, JsonObject jdiag) {
+    Gson gson = new Gson();
+    Diagnostic diag = gson.fromJson(jdiag, Diagnostic.class);
+    if (uri.startsWith("file:///")) uri = uri.replace("file:///", "file:/");
+    try {
+      List<Diagnostic> diags = this.diagnostics.get(new URL(uri));
+      // We only compare the code range and message.
+      List<Diagnostic> updated =
+          diags.stream()
+              .filter(
+                  d ->
+                      !(d.getRange().equals(diag.getRange())
+                          && d.getMessage().equals(diag.getMessage())))
+              .collect(Collectors.toList());
+      PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
+      pdp.setDiagnostics(updated);
+      pdp.setUri(uri);
+      client.publishDiagnostics(pdp);
+    } catch (MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
   }
 
   /**
