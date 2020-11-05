@@ -35,7 +35,7 @@
 		<commonio.version>2.6</commonio.version>
 		<commonslang3.version>3.9</commonslang3.version>
 		<sun.httpserver.version>20070405</sun.httpserver.version>
-		<apache.httpclient.version>4.5.12</apache.httpclient.version>
+		<apache.httpclient.version>4.5.13</apache.httpclient.version>
 		<j2html.version>1.4.0</j2html.version>
 	</properties>
 
@@ -43,7 +43,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>4.13.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
