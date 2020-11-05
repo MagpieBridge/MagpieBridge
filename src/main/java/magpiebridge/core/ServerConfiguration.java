@@ -14,6 +14,7 @@ import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
  * @author Linghui Luo
  */
 public class ServerConfiguration {
+  private String httpServerURL;
   private boolean supportWarningSuppression;
   private boolean reportFalsePositive;
   private boolean reportConfusion;
@@ -38,6 +39,7 @@ public class ServerConfiguration {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
+    this.httpServerURL = null;
     this.addDefaultActions = false;
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
@@ -96,11 +98,11 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up handler for supressing warnings.
+   * Set up handler for suppressing warnings.
    *
    * @param supportWarningSuppression true, if warning suppression should be supported
-   * @param handler the handler for supressing warnings.
-   * @return
+   * @param handler the handler for suppressing warnings.
+   * @return the server configuration
    */
   public ServerConfiguration setSuppressWarningHandler(
       boolean supportWarningSuppression, SuppressWarningHandler handler) {
@@ -134,18 +136,31 @@ public class ServerConfiguration {
 
   /**
    * Set up the server to start a configuration page (HTML page in client or browser) after
-   * initialization.
+   * initialization. If you want to use your own HTTP server, use {@link #setHTTPServerURL(String)}
+   * to set up the URL.
    *
    * @param showConfigurationPage true, if the server should start a configuration page. The default
    *     value is false.
    * @param addDefaultActions true, if the server should add default action button <code>
-   *     Run Analysis</code> to the configuration page.
+   *     Run Analysis</code> to the default configuration page.
    * @return the server configuration
    */
   public ServerConfiguration setShowConfigurationPage(
       boolean showConfigurationPage, boolean addDefaultActions) {
     this.showConfigurationPage = showConfigurationPage;
     this.addDefaultActions = addDefaultActions;
+    return this;
+  }
+
+  /**
+   * Instead of the default configuration page, set up your own HTTPServerURL that hosts the
+   * configuration page.
+   *
+   * @param url your HTTP server URL.
+   * @return the server configuration
+   */
+  public ServerConfiguration setHTTPServerURL(String url) {
+    this.httpServerURL = url;
     return this;
   }
 
@@ -257,5 +272,13 @@ public class ServerConfiguration {
 
   public SuppressWarningHandler getSuppressWarningHandler() {
     return this.suppressWarningHandler;
+  }
+
+  public String getHTTPServerURL() {
+    return httpServerURL;
+  }
+
+  public boolean useMagpieHTTPServer() {
+    return httpServerURL == null;
   }
 }

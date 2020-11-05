@@ -63,6 +63,7 @@ import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -382,8 +383,13 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
-        URI uri = MagpieHttpServer.createAndStartLocalHttpServer(this);
-        OpenURLCommand.showHTMLinClientOrBroswer(this, client, uri.toString());
+        String url = null;
+        if (config.useMagpieHTTPServer()) {
+          url = MagpieHttpServer.createAndStartLocalHttpServer(this);
+        } else {
+          url = config.getHTTPServerURL();
+        }
+        OpenURLCommand.showHTMLinClientOrBroswer(this, client, url);
       } catch (IOException | URISyntaxException e) {
         MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
@@ -957,5 +963,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void forwardMessageToClient(MessageParams message) {
     if (client != null) client.showMessage(message);
+  }
+
+  public void forwardMessageRequestToClient(ShowMessageRequestParams messageRequest) {
+    if (client != null) client.showMessageRequest(messageRequest);
   }
 }

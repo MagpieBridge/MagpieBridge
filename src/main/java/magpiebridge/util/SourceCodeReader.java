@@ -81,6 +81,7 @@ public class SourceCodeReader {
    * Removes the comment in a line.
    *
    * @param line the line
+   * @param includeComment tells if code comment should be included in the line.
    * @return the string
    */
   public static String removeComment(String line, boolean includeComment) {
