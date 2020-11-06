@@ -410,7 +410,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
         for (ConfigurationOption option :
             (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions()) {
-          analysisConfiguration.add(option.setSource(source + ": " + language));
+          ConfigurationOption o = option.setSource(source + ": " + language);
+          if (!analysisConfiguration.contains(o)) analysisConfiguration.add(o);
         }
       }
     }
@@ -926,7 +927,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     }));
     // Reset the available configuration options and read them from analyses.
     // This is useful when configuration options change
-    analysisConfiguration.clear();
+    // analysisConfiguration.clear();
     initAnalysisConfiguration();
     return getAnalysisConfiguration();
   }
@@ -934,8 +935,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected void setConfigurationOptionsRecursively(
       List<? extends ConfigurationOption> configuration, Map<String, String> requestOptions) {
     for (ConfigurationOption option : configuration) {
-      String value = requestOptions.get(option.getName());
-      ((ConfigurationOption) option).setValue(value);
+      if (requestOptions.containsKey(option.getName())) {
+        String value = requestOptions.get(option.getName());
+        ((ConfigurationOption) option).setValue(value);
+      }
       if (option.hasChildren()) {
         setConfigurationOptionsRecursively(option.getChildren(), requestOptions);
       }

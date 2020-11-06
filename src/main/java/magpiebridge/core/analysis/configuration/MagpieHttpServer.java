@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.core.ServerConfiguration;
 
@@ -27,11 +26,11 @@ public class MagpieHttpServer {
       HttpContext context = server.createContext("/config");
       context.setHandler(new MagpieHttpHandler(magpieServer, server.getAddress().toString()));
       server.start();
-      return new URI("http", server.getAddress().toString()+"/config",null).toURL().toString();
-    } catch (IOException|URISyntaxException e) {
+      return new URI("http", server.getAddress().toString() + "/config", null).toURL().toString();
+    } catch (IOException | URISyntaxException e) {
       MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();
-    } 
+    }
     return null;
   }
 }

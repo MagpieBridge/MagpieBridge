@@ -181,7 +181,9 @@ public class HtmlGenerator {
       sourceOption = o.getSource();
     }
     String name = o.getName();
-    if (o.getType().equals(OptionType.checkbox)) {
+    if (o.getType().equals(OptionType.container)) {
+      ret.with(generateLabel(name));
+    } else if (o.getType().equals(OptionType.checkbox)) {
       ret.with(generateCheckbox(o, className), generateLabel(name));
     } else if (o.getType().equals(OptionType.text)) {
       ret.with(generateLabel(name), generateTextfield(o));
@@ -209,7 +211,8 @@ public class HtmlGenerator {
         .withId(name)
         .withHref(uri)
         .with(text(name))
-        .attr("onclick", name.replace(" ", "") + "()");
+        .attr("onclick", name.replace(" ", "") + "()")
+        .withStyle("margin: 5px");
   }
 
   private static EmptyTag generateCheckbox(ConfigurationOption o, String className) {
