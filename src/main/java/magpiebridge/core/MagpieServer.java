@@ -40,6 +40,7 @@ import magpiebridge.command.OpenURLCommand;
 import magpiebridge.core.analysis.configuration.ConfigurationAction;
 import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
+import magpiebridge.core.analysis.configuration.OptionType;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.ExceptionLogger;
 import magpiebridge.util.MagpieMessageLogger;
@@ -941,6 +942,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       if (requestOptions.containsKey(option.getName())) {
         String value = requestOptions.get(option.getName());
         ((ConfigurationOption) option).setValue(value);
+      } else {
+        if (option.getType().equals(OptionType.checkbox)) option.setValue("off");
       }
       if (option.hasChildren()) {
         setConfigurationOptionsRecursively(option.getChildren(), requestOptions);
