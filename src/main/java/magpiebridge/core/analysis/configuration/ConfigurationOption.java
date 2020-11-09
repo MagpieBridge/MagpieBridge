@@ -120,4 +120,8 @@ public class ConfigurationOption {
     } else if (!value.equals(other.value)) return false;
     return true;
   }
+
+  public void setChildren(List<ConfigurationOption> children) {
+    this.children = children;
+  }
 }
