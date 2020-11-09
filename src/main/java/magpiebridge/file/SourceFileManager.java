@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -218,5 +220,17 @@ public class SourceFileManager {
    */
   public Map<URI, SourceFileModule> getSourceFileModules() {
     return sourceFileModules;
+  }
+
+  /** Delete all server-side source files sent by the client. */
+  public void cleanUp() {
+    for (String file : this.serverClientUri.keySet()) {
+      try {
+        Files.deleteIfExists(Paths.get(new URI(file)));
+      } catch (IOException | URISyntaxException e) {
+        MagpieServer.ExceptionLogger.log(e);
+        e.printStackTrace();
+      }
+    }
   }
 }

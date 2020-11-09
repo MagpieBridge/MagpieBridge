@@ -453,6 +453,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public CompletableFuture<Object> shutdown() {
+    for (SourceFileManager sfm : this.languageSourceFileManagers.values()) {
+      sfm.cleanUp();
+    }
     for (String lang : languageAnalyses.keySet()) {
       for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyses.get(lang)) {
         if (analysis.isLeft()) {
