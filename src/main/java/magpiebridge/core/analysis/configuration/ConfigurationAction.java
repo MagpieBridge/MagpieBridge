@@ -9,13 +9,23 @@ import magpiebridge.core.Analysis;
  */
 public class ConfigurationAction {
 
+  private String id;
   private String name;
   private Runnable action;
   private String source;
 
   public ConfigurationAction(String name, Runnable action) {
+    this(name, action, name);
+  }
+
+  public ConfigurationAction(String name, Runnable action, String id) {
     this.name = name;
     this.action = action;
+    this.id = id;
+  }
+
+  public String getId() {
+    return id;
   }
 
   public String getName() {
@@ -37,6 +47,14 @@ public class ConfigurationAction {
 
   @Override
   public String toString() {
-    return "ConfigurationAction [name=" + name + ", action=" + action + ", source=" + source + "]";
+    return "ConfigurationAction [id="
+        + id
+        + ", name="
+        + name
+        + ", action="
+        + action
+        + ", source="
+        + source
+        + "]";
   }
 }
