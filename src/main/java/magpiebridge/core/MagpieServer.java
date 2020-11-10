@@ -258,8 +258,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Launch on socket port. Will create a new {@link MagpieServer} instance for each new connecting
-   * client using the given supplier. Example:
+   * Launch on socket port at local host. Will create a new {@link MagpieServer} instance for each
+   * new connecting client using the given supplier. Example:
    *
    * <pre>
    * <code>
@@ -431,8 +431,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               new ConfigurationAction(
                       "Run Analysis",
                       () -> {
-                        String msg = "The analyzer " + source + " started analyzing the code.";
-                        client.showMessage(new MessageParams(MessageType.Info, msg));
                         this.cleanUp();
                         this.doSingleAnalysis(language, e, true);
                       })
@@ -779,7 +777,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param serverUri the server uri
    * @return the client uri
    */
-  protected String getClientUri(String serverUri) {
+  public String getClientUri(String serverUri) {
     serverUri = URIUtils.checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {

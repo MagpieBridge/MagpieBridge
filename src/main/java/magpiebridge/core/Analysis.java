@@ -23,7 +23,7 @@ public interface Analysis<T extends AnalysisConsumer> {
   /**
    * The files to be analyzed.
    *
-   * @param files the files
+   * @param files the files that have been opened in the editor.
    * @param server the server which consumes the analysis results
    * @param rerun tells if the analysis should be reran
    */

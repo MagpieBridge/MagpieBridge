@@ -76,13 +76,12 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    if (server.config.doAnalysisByOpen()) {
+    if (server.config.doAnalysisByOpen() || server.config.doAnalysisByFirstOpen()) {
       if (isFirstOpenedFile) {
         server.doAnalysis(language, true);
         isFirstOpenedFile = false;
       } else {
-        // don't need to rerun the analysis if no file is changed.
-        server.doAnalysis(language, false);
+        server.doAnalysis(language, server.config.doAnalysisByOpen());
       }
     }
   }

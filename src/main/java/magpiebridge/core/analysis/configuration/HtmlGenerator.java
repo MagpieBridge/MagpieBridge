@@ -147,11 +147,12 @@ public class HtmlGenerator {
         ret.with(h3(action.getSource()));
         sourceAction = action.getSource();
       }
-      String name = action.getName();
       String source = action.getSource();
+      String functionName = action.getName().concat(source.split(":")[0]).replace(" ", "");
       String uri = "?action=" + action.getName() + "&" + "source=" + source;
-      ret.with(generateButton(name, uri), br());
-      ret.with(generateScriptForButtonClick(action.getName().replace(" ", ""), uri));
+      ret.with(generateButton(action.getName(), functionName, uri), br());
+
+      ret.with(generateScriptForButtonClick(functionName, uri));
     }
     return ret;
   }
@@ -204,14 +205,14 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static ContainerTag generateButton(String name, String uri) {
-    return a().withClasses("btn", "btn-default")
+  private static ContainerTag generateButton(String name, String functionName, String uri) {
+    return a().withClasses("btn", "btn-primary")
         .withRole("button")
         .withName(name)
-        .withId(name)
+        .withId(functionName)
         .withHref(uri)
         .with(text(name))
-        .attr("onclick", name.replace(" ", "") + "()")
+        .attr("onclick", functionName.replace(" ", "") + "()")
         .withStyle("margin: 5px");
   }
 
@@ -238,7 +239,7 @@ public class HtmlGenerator {
 
   private static EmptyTag generateSubmit() {
     return input()
-        .withClasses("btn", "btn-default")
+        .withClasses("btn", "btn-primary")
         .withType("submit")
         .withValue("Submit Configuration")
         .attr("onclick", "submitConfiguration()");

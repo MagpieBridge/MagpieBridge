@@ -19,6 +19,7 @@ public class ServerConfiguration {
   private boolean reportFalsePositive;
   private boolean reportConfusion;
   private boolean doAnalysisByOpen;
+  private boolean doAnalysisByFirstOpen;
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
@@ -32,8 +33,9 @@ public class ServerConfiguration {
   private PrintWriter traceWriter;
 
   public ServerConfiguration() {
-    this.doAnalysisByOpen = true;
+    this.doAnalysisByFirstOpen = true;
     this.doAnalysisBySave = true;
+    this.doAnalysisByOpen = false;
     this.doAnalysisByIdle = false;
     this.supportWarningSuppression = false;
     this.reportFalsePositive = false;
@@ -165,17 +167,28 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up the server to run analysis whenever a source file is opened.
+   * Set up the server to run analysis when the first time a source file is opened at in an editor.
    *
-   * @param doAnalysisByOpen true, if the server runs the analysis when the first time a source file
-   *     is opened at in an editor. The default value is true.
+   * @param doAnalysisByFirstOpen true, if the server runs the analysis when the first time a source
+   *     file is opened at in an editor. The default value is true.
+   * @return the server configuration
+   */
+  public ServerConfiguration setDoAnalysisByFirstOpen(boolean doAnalysisByFirstOpen) {
+    this.doAnalysisByFirstOpen = doAnalysisByFirstOpen;
+    return this;
+  }
+
+  /**
+   * Set up the server to run analysis whenever a source file is opened at in an editor.
+   *
+   * @param doAnalysisByOpen true, if the server runs the analysis whenever a file is opened. The
+   *     default value is false.
    * @return the server configuration
    */
   public ServerConfiguration setDoAnalysisByOpen(boolean doAnalysisByOpen) {
     this.doAnalysisByOpen = doAnalysisByOpen;
     return this;
   }
-
   /**
    * Set up the server to run analysis whenever a source file is saved.
    *
@@ -232,6 +245,10 @@ public class ServerConfiguration {
 
   public MagpieMessageLogger getMagpieMessageLogger() {
     return this.logger;
+  }
+
+  public boolean doAnalysisByFirstOpen() {
+    return this.doAnalysisByFirstOpen;
   }
 
   public boolean doAnalysisByOpen() {
