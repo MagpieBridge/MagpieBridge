@@ -23,6 +23,7 @@ public class ExceptionLogger {
   private FileOutputStream logStream;
   private File log;
   private MagpieServer server;
+  private boolean debug;
 
   public ExceptionLogger(MagpieServer server) {
     this.server = server;
@@ -41,6 +42,7 @@ public class ExceptionLogger {
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
+    debug = false;
   }
 
   public void log(Exception e) {
@@ -48,12 +50,14 @@ public class ExceptionLogger {
     if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
+    if (debug) e.printStackTrace();
   }
 
   public void log(String msg) {
     if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
+    if (debug) System.err.println(msg);
   }
 
   public void cleanUp() {
@@ -63,5 +67,9 @@ public class ExceptionLogger {
       e.printStackTrace();
     }
     if (writer != null) writer.close();
+  }
+
+  public void setDebug(boolean debug) {
+    this.debug = debug;
   }
 }

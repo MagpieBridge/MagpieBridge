@@ -59,6 +59,7 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
@@ -908,6 +909,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         && ((JsonObject) clientConfig.getExperimental()).get("supportsShowHTML").getAsBoolean();
   }
 
+  /** @return true if the client supports showing input box. */
+  public boolean clientSupportShowInputBox() {
+    return clientConfig != null
+        && clientConfig.getExperimental() instanceof JsonObject
+        && ((JsonObject) clientConfig.getExperimental()).has("supportsShowInputBox")
+        && ((JsonObject) clientConfig.getExperimental()).get("supportsShowInputBox").getAsBoolean();
+  }
+
   /**
    * Set up the analyses based on the configuration options chosen by the users in the configuration
    * page. This is an advanced feature and is only used when {@link
@@ -972,7 +981,26 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     if (client != null) client.showMessage(message);
   }
 
-  public void forwardMessageRequestToClient(ShowMessageRequestParams messageRequest) {
-    if (client != null) client.showMessageRequest(messageRequest);
+  /**
+   * Forward MessageRequest which should be shown in the client.
+   *
+   * @param messageRequest the messageRequest to be forwarded
+   * @return the response from the client.
+   */
+  public CompletableFuture<MessageActionItem> forwardMessageRequestToClient(
+      ShowMessageRequestParams messageRequest) {
+    if (client != null) return client.showMessageRequest(messageRequest);
+    else return null;
+  }
+
+  /**
+   * Show an input box in client to ask the user for input if the client supports showing input box.
+   *
+   * @param messages the messages to ask user
+   * @return the user input
+   */
+  public CompletableFuture<Map<String, String>> showInputBoxInClient(List<String> messages) {
+    if (clientSupportShowInputBox()) return client.showInputBox(messages);
+    else return null;
   }
 }
