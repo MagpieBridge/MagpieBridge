@@ -82,7 +82,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  */
 public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
 
-  public static ExceptionLogger ExceptionLogger;
+  public static ExceptionLogger ExceptionLogger = new ExceptionLogger();
 
   protected static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 

@@ -45,16 +45,39 @@ public class ExceptionLogger {
     debug = false;
   }
 
+  public ExceptionLogger() {
+    this(null);
+  }
+  /**
+   * Log without forwarding the exception to client.
+   *
+   * @param e exception
+   */
   public void log(Exception e) {
+    log(e, false);
+  }
+
+  /**
+   * Log without forwarding the exception to client.
+   *
+   * @param msg message
+   */
+  public void log(String msg) {
+    log(msg, false);
+  }
+
+  public void log(Exception e, boolean forwardToClient) {
     String msg = e.toString() + ":\n" + ExceptionUtils.getStackTrace(e);
-    if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
+    if (forwardToClient && server != null)
+      server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
     if (debug) e.printStackTrace();
   }
 
-  public void log(String msg) {
-    if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
+  public void log(String msg, boolean forwardToClient) {
+    if (forwardToClient && server != null)
+      server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
     if (debug) System.err.println(msg);
