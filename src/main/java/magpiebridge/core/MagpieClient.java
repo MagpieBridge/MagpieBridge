@@ -19,5 +19,5 @@ public interface MagpieClient extends LanguageClient {
   void showHTML(String content);
 
   @JsonRequest("magpiebridge/showInputBox")
-  CompletableFuture<Map<String, String>> showInputBox(List<String> message);
+  CompletableFuture<Map<String, String>> showInputBox(List<String> messages);
 }

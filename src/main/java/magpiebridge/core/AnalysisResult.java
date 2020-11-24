@@ -64,9 +64,10 @@ public interface AnalysisResult {
   public String code();
 
   /**
-   * A Command to be used in a CodeLens
+   * Commands to be used in code lenses if the client supports code lenses, otherwise code actions
+   * if the client supports code actions.
    *
-   * @return the command, or null if no special command
+   * @return the commands.
    */
   public default Iterable<Command> command() {
     return Collections.emptySet();

@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -18,6 +19,7 @@ import magpiebridge.command.CodeActionGenerator;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
@@ -92,15 +94,26 @@ public class AnalysisResultConsumerFactory {
                   .command()
                   .forEach(
                       (cmd) -> {
-                        CodeLens codeLens = new CodeLens();
-                        codeLens.setCommand(cmd);
-                        codeLens.setRange(d.getRange());
-                        server.addCodeLens(url, codeLens);
+                        if (server.clientConfig.getTextDocument().getCodeLens() != null) {
+                          CodeLens codeLens = new CodeLens();
+                          codeLens.setCommand(cmd);
+                          codeLens.setRange(d.getRange());
+                          server.addCodeLens(url, codeLens);
+                        } else {
+                          if (server.clientConfig.getTextDocument().getCodeAction() != null) {
+                            CodeAction codeAction = new CodeAction();
+                            codeAction.setCommand(cmd);
+                            codeAction.setTitle(cmd.getTitle());
+                            codeAction.setDiagnostics(Collections.singletonList(d));
+                            codeAction.setKind(CodeActionKind.Source);
+                            server.addCodeAction(url, d.getRange(), codeAction);
+                          }
+                        }
                       });
             }
             if (server.config.supportWarningSuppression()) {
               // support warning suppression.
-              String title = "Suppress this warning.";
+              String title = "Suppress this warning";
               CodeAction suppressWarning =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.suppressWarning.name());
@@ -109,7 +122,7 @@ public class AnalysisResultConsumerFactory {
 
             if (server.config.reportFalsePositive()) {
               // report false positive
-              String title = "Report false alarm.";
+              String title = "Report false alarm";
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportFP.name());
@@ -117,7 +130,7 @@ public class AnalysisResultConsumerFactory {
             }
             if (server.config.reportConfusion()) {
               // report confusion about the warning message
-              String title = "I don't understand this warning.";
+              String title = "I don't understand this warning";
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
                       title, clientUri, d, CodeActionCommand.reportConfusion.name());
