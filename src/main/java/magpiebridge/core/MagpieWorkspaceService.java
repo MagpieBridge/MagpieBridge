@@ -43,12 +43,25 @@ public class MagpieWorkspaceService implements WorkspaceService {
     addDefaultCommands();
   }
 
+  /** Add default commands, see {@link CodeActionCommand}. */
   protected void addDefaultCommands() {
     this.commands.put(CodeActionCommand.fix.name(), new FixCommand());
     this.commands.put(CodeActionCommand.reportFP.name(), new ReportFalsePositiveCommand());
     this.commands.put(CodeActionCommand.reportConfusion.name(), new ReportConfusionCommand());
     this.commands.put(CodeActionCommand.openURL.name(), new OpenURLCommand());
     this.commands.put(CodeActionCommand.suppressWarning.name(), new SuppressWarningCommand());
+  }
+
+  /**
+   * Add a code action and its corresponding command.
+   *
+   * @param commandName the name of the command.
+   * @param command the implementation of the command.
+   */
+  protected void addCommand(String commandName, WorkspaceCommand command) {
+    if (!this.commands.containsKey(commandName)) {
+      this.commands.put(commandName, command);
+    }
   }
 
   @Override

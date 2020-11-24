@@ -2,6 +2,7 @@ package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
+import java.util.Collections;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -68,7 +69,6 @@ public interface AnalysisResult {
    * @return the command, or null if no special command
    */
   public default Iterable<Command> command() {
-    assert kind() != Kind.CodeLens || repair() != null;
-    return null;
+    return Collections.emptySet();
   }
 }

@@ -159,15 +159,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public MagpieServer(ServerConfiguration config) {
     ExceptionLogger = new ExceptionLogger(this);
     this.config = config;
-    this.textDocumentService = new MagpieTextDocumentService(this);
-    this.workspaceService = new MagpieWorkspaceService(this);
-    this.resultsConsumerFactory = new AnalysisResultConsumerFactory(this);
+    // set up everything depends on the config.
+    this.logger = config.getMagpieMessageLogger();
     this.falsePositiveHandler = config.getFalsePositiveHandler();
     this.falsePositiveHandler.registerAt(this);
     this.confusionHandler = config.getConfusionHanlder();
     this.confusionHandler.registerAt(this);
     this.suppressWarningHandler = config.getSuppressWarningHandler();
     this.suppressWarningHandler.registerAt(this);
+    this.textDocumentService = new MagpieTextDocumentService(this);
+    this.workspaceService = new MagpieWorkspaceService(this);
+    this.resultsConsumerFactory = new AnalysisResultConsumerFactory(this);
     this.languageAnalyses = new HashMap<>();
     this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
@@ -178,7 +180,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    this.logger = config.getMagpieMessageLogger();
   }
 
   public LanguageClient getClient() {
@@ -404,6 +405,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   protected void initAnalysisConfiguration() {
+    // Reset the available configuration options and read them from analyses.
+    // This is useful when the configuration options change
+    analysisConfiguration = new ArrayList<>();
     for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
         languageAnalyses.entrySet()) {
       String language = entry.getKey();
@@ -546,8 +550,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.versionControlService = Optional.of(versionControlService);
   }
 
-  public void addCommand(String commandName, WorkspaceCommand processor) {
-    getWorkspaceService().commands.put(commandName, processor);
+  public void addCommand(String commandName, WorkspaceCommand command) {
+    getWorkspaceService().addCommand(commandName, command);
   }
 
   /**
@@ -772,6 +776,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     actionList.put(range, actions);
   }
 
+  protected void addCodeLens(URL url, CodeLens codeLens) {
+    if (!this.codeLenses.containsKey(url)) {
+      this.codeLenses.put(url, new ArrayList<>());
+    }
+    List<CodeLens> lenses = this.codeLenses.get(url);
+    lenses.add(codeLens);
+  }
+
   /**
    * Gets the client uri.
    *
@@ -936,9 +948,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     e -> {
                       (e.isLeft() ? e.getLeft() : e.getRight()).configure(configuration);
                     }));
-    // Reset the available configuration options and read them from analyses.
-    // This is useful when configuration options change
-    // analysisConfiguration.clear();
     initAnalysisConfiguration();
     return getAnalysisConfiguration();
   }

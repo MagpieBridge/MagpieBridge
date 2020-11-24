@@ -8,7 +8,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -93,12 +92,10 @@ public class AnalysisResultConsumerFactory {
                   .command()
                   .forEach(
                       (cmd) -> {
-                        CodeAction act = new CodeAction();
-                        act.setCommand(cmd);
-                        act.setTitle(cmd.getTitle());
-                        act.setDiagnostics(Collections.singletonList(d));
-                        act.setKind("info");
-                        server.addCodeAction(url, d.getRange(), act);
+                        CodeLens codeLens = new CodeLens();
+                        codeLens.setCommand(cmd);
+                        codeLens.setRange(d.getRange());
+                        server.addCodeLens(url, codeLens);
                       });
             }
             if (server.config.supportWarningSuppression()) {
