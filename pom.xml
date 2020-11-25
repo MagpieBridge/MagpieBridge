@@ -210,15 +210,6 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>ossrh</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<properties>
-				<gpg.passphrase>asfsfasfs$$1</gpg.passphrase>
-			</properties>
-		</profile>
-		<profile>
 			<id>release-sign-artifacts</id>
 			<activation>
 				<property>
