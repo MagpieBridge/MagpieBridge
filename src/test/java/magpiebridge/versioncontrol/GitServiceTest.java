@@ -1,4 +1,4 @@
- package magpiebridge.versioncontrol;
+package magpiebridge.versioncontrol;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
