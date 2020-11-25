@@ -150,6 +150,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   protected Map<String, Consumer<Command>> commands = HashMapFactory.make();
 
+  private String httpserverUrl;
+
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
    * MagpieWorkspaceService} with given {@link ServerConfiguration}.
@@ -386,13 +388,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
-        String url = null;
         if (config.useMagpieHTTPServer()) {
-          url = MagpieHttpServer.createAndStartLocalHttpServer(this);
-        } else {
-          url = config.getHTTPServerURL();
+          this.httpserverUrl = MagpieHttpServer.createAndStartLocalHttpServer(this);
         }
-        OpenURLCommand.showHTMLinClientOrBroswer(this, client, url);
+        OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
       } catch (IOException | URISyntaxException e) {
         MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
@@ -1011,5 +1010,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public CompletableFuture<Map<String, String>> showInputBoxInClient(List<String> messages) {
     if (clientSupportShowInputBox()) return client.showInputBox(messages);
     else return null;
+  }
+
+  /**
+   * add a http server to communicate with the magpie server.
+   *
+   * @param url the url of the http server
+   */
+  public void addHttpServer(String url) {
+    httpserverUrl = url;
   }
 }

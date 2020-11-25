@@ -2,6 +2,7 @@ package magpiebridge.core;
 
 import java.io.PrintWriter;
 import java.util.function.Function;
+import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.util.MagpieMessageLogger;
 import magpiebridge.util.MessageLogger;
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
@@ -14,7 +15,6 @@ import org.eclipse.lsp4j.jsonrpc.validation.NonNull;
  * @author Linghui Luo
  */
 public class ServerConfiguration {
-  private String httpServerURL;
   private boolean supportWarningSuppression;
   private boolean reportFalsePositive;
   private boolean reportConfusion;
@@ -31,17 +31,18 @@ public class ServerConfiguration {
 
   private MagpieMessageLogger logger;
   private PrintWriter traceWriter;
+  private boolean useMagpieHTTPServer;
 
   public ServerConfiguration() {
     this.doAnalysisByFirstOpen = true;
     this.doAnalysisBySave = true;
+    this.useMagpieHTTPServer = true;
     this.doAnalysisByOpen = false;
     this.doAnalysisByIdle = false;
     this.supportWarningSuppression = false;
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
-    this.httpServerURL = null;
     this.addDefaultActions = false;
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
@@ -138,8 +139,8 @@ public class ServerConfiguration {
 
   /**
    * Set up the server to start a configuration page (HTML page in client or browser) after
-   * initialization. If you want to use your own HTTP server, use {@link #setHTTPServerURL(String)}
-   * to set up the URL.
+   * initialization. If you want to use your own HTTP server, use {@link
+   * MagpieServer#addHttpServer(String)} to set up the URL.
    *
    * @param showConfigurationPage true, if the server should start a configuration page. The default
    *     value is false.
@@ -151,18 +152,6 @@ public class ServerConfiguration {
       boolean showConfigurationPage, boolean addDefaultActions) {
     this.showConfigurationPage = showConfigurationPage;
     this.addDefaultActions = addDefaultActions;
-    return this;
-  }
-
-  /**
-   * Instead of the default configuration page, set up your own HTTPServerURL that hosts the
-   * configuration page.
-   *
-   * @param url your HTTP server URL.
-   * @return the server configuration
-   */
-  public ServerConfiguration setHTTPServerURL(String url) {
-    this.httpServerURL = url;
     return this;
   }
 
@@ -243,6 +232,18 @@ public class ServerConfiguration {
     return this;
   }
 
+  /**
+   * Set up the server to communicate with {@link MagpieHttpServer}.
+   *
+   * @param useMagpieHTTPServer true if server communicates with {@link MagpieHttpServer}, otherwise
+   *     use {@link MagpieServer#addHttpServer(String)} to add server url.
+   * @return the ServerConfiguration with the option set up
+   */
+  public ServerConfiguration setUseMagpieHTTPServer(boolean useMagpieHTTPServer) {
+    this.useMagpieHTTPServer = useMagpieHTTPServer;
+    return this;
+  }
+
   public MagpieMessageLogger getMagpieMessageLogger() {
     return this.logger;
   }
@@ -291,11 +292,7 @@ public class ServerConfiguration {
     return this.suppressWarningHandler;
   }
 
-  public String getHTTPServerURL() {
-    return httpServerURL;
-  }
-
   public boolean useMagpieHTTPServer() {
-    return httpServerURL == null;
+    return this.useMagpieHTTPServer;
   }
 }
