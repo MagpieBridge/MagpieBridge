@@ -1,3 +1,4 @@
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.magpiebridge/magpiebridge.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.magpiebridge%22%20AND%20a:%22magpiebridge%22)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/MagpieBridge/MagpieBridge)
 [![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
 [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)
