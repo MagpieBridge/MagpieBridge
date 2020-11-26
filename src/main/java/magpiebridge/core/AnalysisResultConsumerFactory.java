@@ -27,6 +27,7 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -162,7 +163,6 @@ public class AnalysisResultConsumerFactory {
             Position pos = URIUtils.replaceURL(result.position(), clientURL);
             Hover hover = new Hover();
 
-            List<Either<String, MarkedString>> contents = new ArrayList<>();
             if (server.clientConfig != null
                 && server.clientConfig.getTextDocument().getHover().getContentFormat() != null
                 && server
@@ -171,15 +171,16 @@ public class AnalysisResultConsumerFactory {
                     .getHover()
                     .getContentFormat()
                     .contains(MarkupKind.MARKDOWN)) {
-              contents.add(
-                  Either.forRight(new MarkedString(MarkupKind.MARKDOWN, result.toString(true))));
+              MarkupContent content = new MarkupContent(MarkupKind.MARKDOWN, result.toString(true));
+              hover.setContents(content);
             } else {
+              List<Either<String, MarkedString>> contents = new ArrayList<>();
               for (String str : result.toString(false).split("\n")) {
                 Either<String, MarkedString> content = Either.forLeft(str);
                 contents.add(content);
               }
+              hover.setContents(contents);
             }
-            hover.setContents(contents);
             hover.setRange(SourceCodePositionUtils.getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
             if (server.hovers.containsKey(clientURL)) {
