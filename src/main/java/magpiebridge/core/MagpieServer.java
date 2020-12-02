@@ -6,7 +6,6 @@ package magpiebridge.core;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.util.collections.HashMapFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +32,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import magpiebridge.command.OpenURLCommand;
@@ -51,7 +49,6 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
@@ -147,8 +144,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
 
   /** The logger. */
   protected MagpieMessageLogger logger;
-
-  protected Map<String, Consumer<Command>> commands = HashMapFactory.make();
 
   private String httpserverUrl;
 
@@ -472,7 +467,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.clientConfig = null;
     this.codeActions = null;
     this.codeLenses = null;
-    this.commands = null;
     this.config = null;
     this.diagnostics = null;
     this.hovers = null;

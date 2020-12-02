@@ -237,4 +237,55 @@ public class MagpieTextDocumentService implements TextDocumentService {
       return "unknown";
     }
   }
+
+  protected void removeCodeLenses(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeLenses.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeLenses.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeCodeActions(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeActions.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeActions.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeHovers(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.hovers.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.hovers.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
 }
