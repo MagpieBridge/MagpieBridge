@@ -117,7 +117,7 @@ public class AnalysisResultConsumerFactory {
               String title = "Suppress this warning";
               CodeAction suppressWarning =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.suppressWarning.name());
+                      title, clientUri, d, CodeActionCommand.suppressWarningFromMB.name());
               server.addCodeAction(url, d.getRange(), suppressWarning);
             }
 
@@ -126,7 +126,7 @@ public class AnalysisResultConsumerFactory {
               String title = "Report false alarm";
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportFP.name());
+                      title, clientUri, d, CodeActionCommand.reportFPFromMB.name());
               server.addCodeAction(url, d.getRange(), reportFalsePositive);
             }
             if (server.config.reportConfusion()) {
@@ -134,7 +134,7 @@ public class AnalysisResultConsumerFactory {
               String title = "I don't understand this warning";
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportConfusion.name());
+                      title, clientUri, d, CodeActionCommand.reportConfusionFromMB.name());
               server.addCodeAction(url, d.getRange(), reportConfusion);
             }
           } catch (MalformedURLException | UnsupportedEncodingException e) {
@@ -211,7 +211,7 @@ public class AnalysisResultConsumerFactory {
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
               Location loc = SourceCodePositionUtils.getLocationFrom(result.repair().fst);
-              codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
+              codeLens.setCommand(new Command("fix", CodeActionCommand.fixFromMB.name()));
               codeLens
                   .getCommand()
                   .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));
