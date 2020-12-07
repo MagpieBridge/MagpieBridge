@@ -222,6 +222,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             .setOutput(out)
             .setExecutorService(THREAD_POOL)
             .wrapMessages(logger.getWrapper())
+            .traceMessages(config.traceWriter())
             .create();
     connect(launcher.getRemoteProxy());
     launcher.startListening();
@@ -479,6 +480,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.workspaceService = null;
     this.falsePositiveHandler = null;
     this.confusionHandler = null;
+    logger.cleanUp();
     return CompletableFuture.completedFuture(new Object());
   }
 
