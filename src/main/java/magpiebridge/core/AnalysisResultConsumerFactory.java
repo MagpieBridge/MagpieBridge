@@ -19,6 +19,7 @@ import magpiebridge.command.CodeActionGenerator;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
@@ -26,6 +27,7 @@ import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkedString;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -93,37 +95,46 @@ public class AnalysisResultConsumerFactory {
                   .command()
                   .forEach(
                       (cmd) -> {
-                        CodeAction act = new CodeAction();
-                        act.setCommand(cmd);
-                        act.setTitle(cmd.getTitle());
-                        act.setDiagnostics(Collections.singletonList(d));
-                        act.setKind("info");
-                        server.addCodeAction(url, d.getRange(), act);
+                        if (server.clientConfig.getTextDocument().getCodeLens() != null) {
+                          CodeLens codeLens = new CodeLens();
+                          codeLens.setCommand(cmd);
+                          codeLens.setRange(d.getRange());
+                          server.addCodeLens(url, codeLens);
+                        } else {
+                          if (server.clientConfig.getTextDocument().getCodeAction() != null) {
+                            CodeAction codeAction = new CodeAction();
+                            codeAction.setCommand(cmd);
+                            codeAction.setTitle(cmd.getTitle());
+                            codeAction.setDiagnostics(Collections.singletonList(d));
+                            codeAction.setKind(CodeActionKind.Source);
+                            server.addCodeAction(url, d.getRange(), codeAction);
+                          }
+                        }
                       });
             }
             if (server.config.supportWarningSuppression()) {
               // support warning suppression.
-              String title = "Suppress this warning.";
+              String title = "Suppress this warning";
               CodeAction suppressWarning =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.suppressWarning.name());
+                      title, clientUri, d, CodeActionCommand.suppressWarningFromMB.name());
               server.addCodeAction(url, d.getRange(), suppressWarning);
             }
 
             if (server.config.reportFalsePositive()) {
               // report false positive
-              String title = "Report false alarm.";
+              String title = "Report false alarm";
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportFP.name());
+                      title, clientUri, d, CodeActionCommand.reportFPFromMB.name());
               server.addCodeAction(url, d.getRange(), reportFalsePositive);
             }
             if (server.config.reportConfusion()) {
               // report confusion about the warning message
-              String title = "I don't understand this warning.";
+              String title = "I don't understand this warning";
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportConfusion.name());
+                      title, clientUri, d, CodeActionCommand.reportConfusionFromMB.name());
               server.addCodeAction(url, d.getRange(), reportConfusion);
             }
           } catch (MalformedURLException | UnsupportedEncodingException e) {
@@ -152,7 +163,6 @@ public class AnalysisResultConsumerFactory {
             Position pos = URIUtils.replaceURL(result.position(), clientURL);
             Hover hover = new Hover();
 
-            List<Either<String, MarkedString>> contents = new ArrayList<>();
             if (server.clientConfig != null
                 && server.clientConfig.getTextDocument().getHover().getContentFormat() != null
                 && server
@@ -161,15 +171,16 @@ public class AnalysisResultConsumerFactory {
                     .getHover()
                     .getContentFormat()
                     .contains(MarkupKind.MARKDOWN)) {
-              contents.add(
-                  Either.forRight(new MarkedString(MarkupKind.MARKDOWN, result.toString(true))));
+              MarkupContent content = new MarkupContent(MarkupKind.MARKDOWN, result.toString(true));
+              hover.setContents(content);
             } else {
+              List<Either<String, MarkedString>> contents = new ArrayList<>();
               for (String str : result.toString(false).split("\n")) {
                 Either<String, MarkedString> content = Either.forLeft(str);
                 contents.add(content);
               }
+              hover.setContents(contents);
             }
-            hover.setContents(contents);
             hover.setRange(SourceCodePositionUtils.getLocationFrom(pos).getRange());
             NavigableMap<Position, Hover> hoverMap = new TreeMap<>();
             if (server.hovers.containsKey(clientURL)) {
@@ -200,7 +211,7 @@ public class AnalysisResultConsumerFactory {
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
               Location loc = SourceCodePositionUtils.getLocationFrom(result.repair().fst);
-              codeLens.setCommand(new Command("fix", CodeActionCommand.fix.name()));
+              codeLens.setCommand(new Command("fix", CodeActionCommand.fixFromMB.name()));
               codeLens
                   .getCommand()
                   .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));

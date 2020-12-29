@@ -1,6 +1,21 @@
 package magpiebridge.core.analysis.configuration;
 
-import static j2html.TagCreator.*;
+import static j2html.TagCreator.a;
+import static j2html.TagCreator.body;
+import static j2html.TagCreator.br;
+import static j2html.TagCreator.div;
+import static j2html.TagCreator.form;
+import static j2html.TagCreator.h1;
+import static j2html.TagCreator.h2;
+import static j2html.TagCreator.h3;
+import static j2html.TagCreator.head;
+import static j2html.TagCreator.html;
+import static j2html.TagCreator.input;
+import static j2html.TagCreator.label;
+import static j2html.TagCreator.rawHtml;
+import static j2html.TagCreator.script;
+import static j2html.TagCreator.text;
+import static j2html.TagCreator.title;
 
 import j2html.tags.ContainerTag;
 import j2html.tags.EmptyTag;
@@ -44,6 +59,7 @@ public class HtmlGenerator {
                 + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css\" integrity=\"sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp\" crossorigin=\"anonymous\">\n"
                 + "\n"
                 + "<!-- Latest compiled and minified JavaScript -->\n"
+                + "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"
                 + "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\" integrity=\"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa\" crossorigin=\"anonymous\"></script>"));
   }
 
@@ -146,11 +162,12 @@ public class HtmlGenerator {
         ret.with(h3(action.getSource()));
         sourceAction = action.getSource();
       }
-      String name = action.getName();
       String source = action.getSource();
+      String functionName = action.getName().concat(source.split(":")[0]).replace(" ", "");
       String uri = "?action=" + action.getName() + "&" + "source=" + source;
-      ret.with(generateButton(name, uri), br());
-      ret.with(generateScriptForButtonClick(action.getName().replace(" ", ""), uri));
+      ret.with(generateButton(action.getName(), functionName, uri), br());
+
+      ret.with(generateScriptForButtonClick(functionName, uri));
     }
     return ret;
   }
@@ -180,7 +197,9 @@ public class HtmlGenerator {
       sourceOption = o.getSource();
     }
     String name = o.getName();
-    if (o.getType().equals(OptionType.checkbox)) {
+    if (o.getType().equals(OptionType.container)) {
+      ret.with(generateLabel(name));
+    } else if (o.getType().equals(OptionType.checkbox)) {
       ret.with(generateCheckbox(o, className), generateLabel(name));
     } else if (o.getType().equals(OptionType.text)) {
       ret.with(generateLabel(name), generateTextfield(o));
@@ -201,14 +220,15 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static ContainerTag generateButton(String name, String uri) {
-    return a().withClasses("btn", "btn-default")
+  private static ContainerTag generateButton(String name, String functionName, String uri) {
+    return a().withClasses("btn", "btn-primary")
         .withRole("button")
         .withName(name)
-        .withId(name)
+        .withId(functionName)
         .withHref(uri)
         .with(text(name))
-        .attr("onclick", name.replace(" ", "") + "()");
+        .attr("onclick", functionName.replace(" ", "") + "()")
+        .withStyle("margin: 5px");
   }
 
   private static EmptyTag generateCheckbox(ConfigurationOption o, String className) {
@@ -234,7 +254,7 @@ public class HtmlGenerator {
 
   private static EmptyTag generateSubmit() {
     return input()
-        .withClasses("btn", "btn-default")
+        .withClasses("btn", "btn-primary")
         .withType("submit")
         .withValue("Submit Configuration")
         .attr("onclick", "submitConfiguration()");

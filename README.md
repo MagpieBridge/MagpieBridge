@@ -1,3 +1,4 @@
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.magpiebridge/magpiebridge.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.magpiebridge%22%20AND%20a:%22magpiebridge%22)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/MagpieBridge/MagpieBridge)
 [![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
 [![Build Status](https://travis-ci.com/MagpieBridge/MagpieBridge.svg?branch=develop)](https://travis-ci.com/MagpieBridge/MagpieBridge)
@@ -29,23 +30,25 @@ on opposite sides of the Milky Way. However, on the seventh day of the seventh l
 thousands of magpies form a bridge, called 鹊桥 in Chinese and Queqiao in pinyin, allowing the lovers
 to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary static analysis to arbitrary IDE.
 
-## How to use MagpieBridge?
-- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
-
-## Integrated Static Analyses using MagpieBridge
-- [MagpieBridge-based Facebook Infer](https://github.com/MagpieBridge/InferIDE)
-- [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
-- [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
-
 ## Use MagpieBridge in your Maven project
 You can either 
-1. MagpieBridge is published on the GitHub Package Registry. You can use the release by adding the following lines to your `pom.xml` (see all [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.7)) and set up your GitHub access token by following [these instructions](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-3.-How-To-Install-a-GitHub-Maven-Package). 
+
+1. Since version 0.1.0, MagpieBridge is available on Maven Central. Simply paste the following lines into your `pom.xml`.
+````
+ <dependency>
+    <groupId>com.github.magpiebridge</groupId>
+    <artifactId>magpiebridge</artifactId>
+    <version>0.1.0</version>
+</dependency>
+````
+
+The old versions till 0.0.9 of MagpieBridge were published on the GitHub Package Registry. You can use the release by adding the following lines to your `pom.xml` (see all [github package](https://github.com/MagpieBridge/MagpieBridge/packages/62902?version=0.0.9)) and set up your GitHub access token by following [these instructions](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-3.-How-To-Install-a-GitHub-Maven-Package). 
 ````
 <dependencies>
   <dependency>
     <groupId>magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.0.8</version>
+    <version>0.0.9</version>
   </dependency>
 </dependencies>
 
@@ -61,6 +64,14 @@ You can either
 2. or build MagpieBridge by yourself 
     -  check out the develop branch with `git clone -b develop https://github.com/MagpieBridge/MagpieBridge.git`
     -  run `mvn install` in the project root directory to build the tool and run all tests. To skip tests, run `mvn install -DskipTests`.
+
+## Tutorials 
+- [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
+
+## Integrated Static Analyses using MagpieBridge
+- [MagpieBridge-based Facebook Infer](https://github.com/MagpieBridge/InferIDE)
+- [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
+- [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
 
 ## Build MagpieBridge in IDE
 1. Simply import the project as maven project in your IDE, Maven should take care of all required dependences. For Eclipse: 

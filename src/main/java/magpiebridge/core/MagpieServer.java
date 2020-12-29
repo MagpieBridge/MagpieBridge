@@ -3,9 +3,9 @@
  */
 package magpiebridge.core;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.util.collections.HashMapFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,12 +32,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import magpiebridge.command.OpenURLCommand;
 import magpiebridge.core.analysis.configuration.ConfigurationAction;
 import magpiebridge.core.analysis.configuration.ConfigurationOption;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
+import magpiebridge.core.analysis.configuration.OptionType;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.ExceptionLogger;
 import magpiebridge.util.MagpieMessageLogger;
@@ -48,7 +49,6 @@ import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.Hover;
@@ -56,11 +56,13 @@ import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.InitializedParams;
 import org.eclipse.lsp4j.MarkupKind;
+import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -77,7 +79,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
  */
 public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageClientAware {
 
-  public static ExceptionLogger ExceptionLogger;
+  public static ExceptionLogger ExceptionLogger = new ExceptionLogger();
 
   protected static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
@@ -143,7 +145,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** The logger. */
   protected MagpieMessageLogger logger;
 
-  protected Map<String, Consumer<Command>> commands = HashMapFactory.make();
+  private String httpserverUrl;
 
   /**
    * Instantiates a new MagpieServer using default {@link MagpieTextDocumentService} and {@link
@@ -154,15 +156,17 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public MagpieServer(ServerConfiguration config) {
     ExceptionLogger = new ExceptionLogger(this);
     this.config = config;
-    this.textDocumentService = new MagpieTextDocumentService(this);
-    this.workspaceService = new MagpieWorkspaceService(this);
-    this.resultsConsumerFactory = new AnalysisResultConsumerFactory(this);
+    // set up everything depends on the config.
+    this.logger = config.getMagpieMessageLogger();
     this.falsePositiveHandler = config.getFalsePositiveHandler();
     this.falsePositiveHandler.registerAt(this);
     this.confusionHandler = config.getConfusionHanlder();
     this.confusionHandler.registerAt(this);
     this.suppressWarningHandler = config.getSuppressWarningHandler();
     this.suppressWarningHandler.registerAt(this);
+    this.textDocumentService = new MagpieTextDocumentService(this);
+    this.workspaceService = new MagpieWorkspaceService(this);
+    this.resultsConsumerFactory = new AnalysisResultConsumerFactory(this);
     this.languageAnalyses = new HashMap<>();
     this.analysisConfiguration = new ArrayList<>();
     this.languageSourceFileManagers = new HashMap<String, SourceFileManager>();
@@ -173,7 +177,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.codeLenses = new HashMap<>();
     this.codeActions = new HashMap<>();
     this.serverClientUri = new HashMap<>();
-    this.logger = config.getMagpieMessageLogger();
   }
 
   public LanguageClient getClient() {
@@ -219,6 +222,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
             .setOutput(out)
             .setExecutorService(THREAD_POOL)
             .wrapMessages(logger.getWrapper())
+            .traceMessages(config.traceWriter())
             .create();
     connect(launcher.getRemoteProxy());
     launcher.startListening();
@@ -254,8 +258,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   /**
-   * Launch on socket port. Will create a new {@link MagpieServer} instance for each new connecting
-   * client using the given supplier. Example:
+   * Launch on socket port at local host. Will create a new {@link MagpieServer} instance for each
+   * new connecting client using the given supplier. Example:
    *
    * <pre>
    * <code>
@@ -380,8 +384,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     if (config.showConfigurationPage()) {
       try {
         initAnalysisConfiguration();
-        URI uri = MagpieHttpServer.createAndStartLocalHttpServer(this);
-        OpenURLCommand.showHTMLinClientOrBroswer(this, client, uri.toString());
+        if (config.useMagpieHTTPServer()) {
+          this.httpserverUrl = MagpieHttpServer.createAndStartLocalHttpServer(this);
+        }
+        OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
       } catch (IOException | URISyntaxException e) {
         MagpieServer.ExceptionLogger.log(e);
         e.printStackTrace();
@@ -394,6 +400,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   }
 
   protected void initAnalysisConfiguration() {
+    // Reset the available configuration options and read them from analyses.
+    // This is useful when the configuration options change
+    analysisConfiguration = new ArrayList<>();
     for (Entry<String, Collection<Either<ServerAnalysis, ToolAnalysis>>> entry :
         languageAnalyses.entrySet()) {
       String language = entry.getKey();
@@ -402,7 +411,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         String source = (e.isLeft() ? e.getLeft() : e.getRight()).source();
         for (ConfigurationOption option :
             (e.isLeft() ? e.getLeft() : e.getRight()).getConfigurationOptions()) {
-          analysisConfiguration.add(option.setSource(source + ": " + language));
+          ConfigurationOption o = option.setSource(source + ": " + language);
+          if (!analysisConfiguration.contains(o)) analysisConfiguration.add(o);
         }
       }
     }
@@ -421,8 +431,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
               new ConfigurationAction(
                       "Run Analysis",
                       () -> {
-                        String msg = "The analyzer " + source + " started analyzing the code.";
-                        client.showMessage(new MessageParams(MessageType.Info, msg));
                         this.cleanUp();
                         this.doSingleAnalysis(language, e, true);
                       })
@@ -444,6 +452,9 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   @Override
   public CompletableFuture<Object> shutdown() {
+    for (SourceFileManager sfm : this.languageSourceFileManagers.values()) {
+      sfm.cleanUp();
+    }
     for (String lang : languageAnalyses.keySet()) {
       for (Either<ServerAnalysis, ToolAnalysis> analysis : languageAnalyses.get(lang)) {
         if (analysis.isLeft()) {
@@ -457,7 +468,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.clientConfig = null;
     this.codeActions = null;
     this.codeLenses = null;
-    this.commands = null;
     this.config = null;
     this.diagnostics = null;
     this.hovers = null;
@@ -470,6 +480,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.workspaceService = null;
     this.falsePositiveHandler = null;
     this.confusionHandler = null;
+    logger.cleanUp();
     return CompletableFuture.completedFuture(new Object());
   }
 
@@ -530,8 +541,8 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     this.versionControlService = Optional.of(versionControlService);
   }
 
-  public void addCommand(String commandName, WorkspaceCommand processor) {
-    getWorkspaceService().commands.put(commandName, processor);
+  public void addCommand(String commandName, WorkspaceCommand command) {
+    getWorkspaceService().addCommand(commandName, command);
   }
 
   /**
@@ -595,8 +606,34 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
   }
 
-  public void removeDiagnosticFromClient(String decodedUri, JsonObject jdiag) {
-    // TODO. remove diagnostics.
+  /**
+   * This method removes the given Diagnostic from the given uri in the client.
+   *
+   * @param uri the uri of the source code file
+   * @param jdiag the jsonfied dagnostic
+   */
+  public void removeDiagnosticFromClient(String uri, JsonObject jdiag) {
+    Gson gson = new Gson();
+    Diagnostic diag = gson.fromJson(jdiag, Diagnostic.class);
+    if (uri.startsWith("file:///")) uri = uri.replace("file:///", "file:/");
+    try {
+      List<Diagnostic> diags = this.diagnostics.get(new URL(uri));
+      // We only compare the code range and message.
+      List<Diagnostic> updated =
+          diags.stream()
+              .filter(
+                  d ->
+                      !(d.getRange().equals(diag.getRange())
+                          && d.getMessage().equals(diag.getMessage())))
+              .collect(Collectors.toList());
+      PublishDiagnosticsParams pdp = new PublishDiagnosticsParams();
+      pdp.setDiagnostics(updated);
+      pdp.setUri(uri);
+      client.publishDiagnostics(pdp);
+    } catch (MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -730,13 +767,21 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     actionList.put(range, actions);
   }
 
+  protected void addCodeLens(URL url, CodeLens codeLens) {
+    if (!this.codeLenses.containsKey(url)) {
+      this.codeLenses.put(url, new ArrayList<>());
+    }
+    List<CodeLens> lenses = this.codeLenses.get(url);
+    lenses.add(codeLens);
+  }
+
   /**
    * Gets the client uri.
    *
    * @param serverUri the server uri
    * @return the client uri
    */
-  protected String getClientUri(String serverUri) {
+  public String getClientUri(String serverUri) {
     serverUri = URIUtils.checkURI(serverUri);
     String clientUri = null;
     if (serverClientUri.containsKey(serverUri)) {
@@ -867,6 +912,14 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         && ((JsonObject) clientConfig.getExperimental()).get("supportsShowHTML").getAsBoolean();
   }
 
+  /** @return true if the client supports showing input box. */
+  public boolean clientSupportShowInputBox() {
+    return clientConfig != null
+        && clientConfig.getExperimental() instanceof JsonObject
+        && ((JsonObject) clientConfig.getExperimental()).has("supportsShowInputBox")
+        && ((JsonObject) clientConfig.getExperimental()).get("supportsShowInputBox").getAsBoolean();
+  }
+
   /**
    * Set up the analyses based on the configuration options chosen by the users in the configuration
    * page. This is an advanced feature and is only used when {@link
@@ -886,9 +939,6 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
                     e -> {
                       (e.isLeft() ? e.getLeft() : e.getRight()).configure(configuration);
                     }));
-    // Reset the available configuration options and read them from analyses.
-    // This is useful when configuration options change
-    analysisConfiguration.clear();
     initAnalysisConfiguration();
     return getAnalysisConfiguration();
   }
@@ -896,8 +946,12 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   protected void setConfigurationOptionsRecursively(
       List<? extends ConfigurationOption> configuration, Map<String, String> requestOptions) {
     for (ConfigurationOption option : configuration) {
-      String value = requestOptions.get(option.getName());
-      ((ConfigurationOption) option).setValue(value);
+      if (requestOptions.containsKey(option.getName())) {
+        String value = requestOptions.get(option.getName());
+        ((ConfigurationOption) option).setValue(value);
+      } else {
+        if (option.getType().equals(OptionType.checkbox)) option.setValue("off");
+      }
       if (option.hasChildren()) {
         setConfigurationOptionsRecursively(option.getChildren(), requestOptions);
       }
@@ -925,5 +979,37 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    */
   public void forwardMessageToClient(MessageParams message) {
     if (client != null) client.showMessage(message);
+  }
+
+  /**
+   * Forward MessageRequest which should be shown in the client.
+   *
+   * @param messageRequest the messageRequest to be forwarded
+   * @return the response from the client.
+   */
+  public CompletableFuture<MessageActionItem> forwardMessageRequestToClient(
+      ShowMessageRequestParams messageRequest) {
+    if (client != null) return client.showMessageRequest(messageRequest);
+    else return null;
+  }
+
+  /**
+   * Show an input box in client to ask the user for input if the client supports showing input box.
+   *
+   * @param messages the messages to ask user
+   * @return the user input
+   */
+  public CompletableFuture<Map<String, String>> showInputBoxInClient(List<String> messages) {
+    if (clientSupportShowInputBox()) return client.showInputBox(messages);
+    else return null;
+  }
+
+  /**
+   * add a http server to communicate with the magpie server.
+   *
+   * @param url the url of the http server
+   */
+  public void addHttpServer(String url) {
+    httpserverUrl = url;
   }
 }

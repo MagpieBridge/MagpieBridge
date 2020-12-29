@@ -41,8 +41,10 @@ public class GitService implements VersionControlService {
     this.rootPath = rootPath;
     File gitDir = new File(rootPath.toAbsolutePath() + File.separator + ".git");
     try {
-      if (gitDir.exists()) this.repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
-      this.git = new Git(repository);
+      if (gitDir.exists()) {
+        this.repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
+        this.git = new Git(repository);
+      }
     } catch (IOException e) {
       logger.error(gitDir + " doesn't exist.");
       e.printStackTrace();
@@ -119,5 +121,9 @@ public class GitService implements VersionControlService {
 
   public RepositoryState getRepositoryState() {
     return repository.getRepositoryState();
+  }
+
+  public Git getGit() {
+    return git;
   }
 }

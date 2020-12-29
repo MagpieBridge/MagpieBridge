@@ -2,6 +2,7 @@ package magpiebridge.core;
 
 import java.io.PrintWriter;
 import java.util.function.Function;
+import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.util.MagpieMessageLogger;
 import magpiebridge.util.MessageLogger;
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
@@ -18,6 +19,7 @@ public class ServerConfiguration {
   private boolean reportFalsePositive;
   private boolean reportConfusion;
   private boolean doAnalysisByOpen;
+  private boolean doAnalysisByFirstOpen;
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
@@ -29,10 +31,13 @@ public class ServerConfiguration {
 
   private MagpieMessageLogger logger;
   private PrintWriter traceWriter;
+  private boolean useMagpieHTTPServer;
 
   public ServerConfiguration() {
-    this.doAnalysisByOpen = true;
+    this.doAnalysisByFirstOpen = true;
     this.doAnalysisBySave = true;
+    this.useMagpieHTTPServer = true;
+    this.doAnalysisByOpen = false;
     this.doAnalysisByIdle = false;
     this.supportWarningSuppression = false;
     this.reportFalsePositive = false;
@@ -96,11 +101,11 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up handler for supressing warnings.
+   * Set up handler for suppressing warnings.
    *
    * @param supportWarningSuppression true, if warning suppression should be supported
-   * @param handler the handler for supressing warnings.
-   * @return
+   * @param handler the handler for suppressing warnings.
+   * @return the server configuration
    */
   public ServerConfiguration setSuppressWarningHandler(
       boolean supportWarningSuppression, SuppressWarningHandler handler) {
@@ -134,12 +139,13 @@ public class ServerConfiguration {
 
   /**
    * Set up the server to start a configuration page (HTML page in client or browser) after
-   * initialization.
+   * initialization. If you want to use your own HTTP server, use {@link
+   * MagpieServer#addHttpServer(String)} to set up the URL.
    *
    * @param showConfigurationPage true, if the server should start a configuration page. The default
    *     value is false.
    * @param addDefaultActions true, if the server should add default action button <code>
-   *     Run Analysis</code> to the configuration page.
+   *     Run Analysis</code> to the default configuration page.
    * @return the server configuration
    */
   public ServerConfiguration setShowConfigurationPage(
@@ -150,17 +156,28 @@ public class ServerConfiguration {
   }
 
   /**
-   * Set up the server to run analysis whenever a source file is opened.
+   * Set up the server to run analysis when the first time a source file is opened at in an editor.
    *
-   * @param doAnalysisByOpen true, if the server runs the analysis when the first time a source file
-   *     is opened at in an editor. The default value is true.
+   * @param doAnalysisByFirstOpen true, if the server runs the analysis when the first time a source
+   *     file is opened at in an editor. The default value is true.
+   * @return the server configuration
+   */
+  public ServerConfiguration setDoAnalysisByFirstOpen(boolean doAnalysisByFirstOpen) {
+    this.doAnalysisByFirstOpen = doAnalysisByFirstOpen;
+    return this;
+  }
+
+  /**
+   * Set up the server to run analysis whenever a source file is opened at in an editor.
+   *
+   * @param doAnalysisByOpen true, if the server runs the analysis whenever a file is opened. The
+   *     default value is false.
    * @return the server configuration
    */
   public ServerConfiguration setDoAnalysisByOpen(boolean doAnalysisByOpen) {
     this.doAnalysisByOpen = doAnalysisByOpen;
     return this;
   }
-
   /**
    * Set up the server to run analysis whenever a source file is saved.
    *
@@ -215,8 +232,24 @@ public class ServerConfiguration {
     return this;
   }
 
+  /**
+   * Set up the server to communicate with {@link MagpieHttpServer}.
+   *
+   * @param useMagpieHTTPServer true if server communicates with {@link MagpieHttpServer}, otherwise
+   *     use {@link MagpieServer#addHttpServer(String)} to add server url.
+   * @return the ServerConfiguration with the option set up
+   */
+  public ServerConfiguration setUseMagpieHTTPServer(boolean useMagpieHTTPServer) {
+    this.useMagpieHTTPServer = useMagpieHTTPServer;
+    return this;
+  }
+
   public MagpieMessageLogger getMagpieMessageLogger() {
     return this.logger;
+  }
+
+  public boolean doAnalysisByFirstOpen() {
+    return this.doAnalysisByFirstOpen;
   }
 
   public boolean doAnalysisByOpen() {
@@ -257,5 +290,9 @@ public class ServerConfiguration {
 
   public SuppressWarningHandler getSuppressWarningHandler() {
     return this.suppressWarningHandler;
+  }
+
+  public boolean useMagpieHTTPServer() {
+    return this.useMagpieHTTPServer;
   }
 }

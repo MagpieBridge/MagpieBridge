@@ -8,10 +8,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.URIish;
-import org.junit.Test;
+import org.junit.Ignore;
 
 public class GitServiceTest {
-  @Test
+  @Ignore
   public void testGetRemoteHost() throws GitAPIException, IOException {
     GitService gitService = new GitService();
     gitService.setRootPath(Paths.get("").toAbsolutePath()); // the MagpieBridge project dir

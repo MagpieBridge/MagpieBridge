@@ -76,13 +76,12 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    if (server.config.doAnalysisByOpen()) {
+    if (server.config.doAnalysisByOpen() || server.config.doAnalysisByFirstOpen()) {
       if (isFirstOpenedFile) {
         server.doAnalysis(language, true);
         isFirstOpenedFile = false;
       } else {
-        // don't need to rerun the analysis if no file is changed.
-        server.doAnalysis(language, false);
+        server.doAnalysis(language, server.config.doAnalysisByOpen());
       }
     }
   }
@@ -236,6 +235,57 @@ public class MagpieTextDocumentService implements TextDocumentService {
     } else {
       MagpieServer.ExceptionLogger.log("Couldn't infer the language of the source code in " + uri);
       return "unknown";
+    }
+  }
+
+  protected void removeCodeLenses(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeLenses.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeLenses.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeCodeActions(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeActions.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeActions.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeHovers(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.hovers.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.hovers.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
     }
   }
 }
