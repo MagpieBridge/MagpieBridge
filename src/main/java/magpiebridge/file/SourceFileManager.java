@@ -62,10 +62,6 @@ public class SourceFileManager {
    */
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem doc = params.getTextDocument();
-    if (doc.getLanguageId() == null || doc.getLanguageId().isEmpty()) {
-      // not well formed request according to lsp spec
-      return;
-    }
     if (doc.getLanguageId().equals(language)) {
       String uri = doc.getUri();
       VersionedSourceFile sourceFile = new VersionedSourceFile(doc.getText(), doc.getVersion());
@@ -236,7 +232,7 @@ public class SourceFileManager {
 
   /** Delete all server-side source files sent by the client. */
   public void cleanUp() {
-    for (String file : this.serverClientUri.keySet()) {
+    for (String file : this.serverClientUris.keySet()) {
       try {
         Files.deleteIfExists(Paths.get(new URI(file)));
       } catch (IOException | URISyntaxException e) {
