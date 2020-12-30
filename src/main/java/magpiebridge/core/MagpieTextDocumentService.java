@@ -19,20 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
-import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionParams;
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.CodeLensParams;
-import org.eclipse.lsp4j.ColorInformation;
-import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.DidChangeTextDocumentParams;
-import org.eclipse.lsp4j.DidCloseTextDocumentParams;
-import org.eclipse.lsp4j.DidOpenTextDocumentParams;
-import org.eclipse.lsp4j.DidSaveTextDocumentParams;
-import org.eclipse.lsp4j.DocumentColorParams;
-import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.TextDocumentItem;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
+import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
@@ -73,9 +60,15 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
+    if (language == null || language.isEmpty()) {
+      // not well formed request according to lsp spec
+      return;
+    }
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
-    fileManager.didOpen(params);
+    if (fileManager != null) {
+      fileManager.didOpen(params);
+    }
     if (server.config.doAnalysisByOpen() || server.config.doAnalysisByFirstOpen()) {
       if (isFirstOpenedFile) {
         server.doAnalysis(language, true);
@@ -157,7 +150,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
   }
 
   @Override
-  public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
+  public CompletableFuture<Hover> hover(HoverParams position) {
     return CompletableFuture.supplyAsync(
         () -> {
           Hover hover = new Hover();
