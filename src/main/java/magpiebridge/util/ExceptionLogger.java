@@ -34,8 +34,11 @@ public class ExceptionLogger {
     } else if (!tempDir.endsWith(seperator)) {
       tempDir += seperator;
     }
-    String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
-    log = new File(tempDir + "magpie_exceptions_" + suffix);
+    if (log == null) {
+      String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+      log = new File(tempDir + "magpie_exceptions_" + suffix);
+      System.err.println("Log file path: " + log.getAbsolutePath());
+    }
     try {
       logStream = new FileOutputStream(log);
       writer = new PrintWriter(logStream);
