@@ -38,7 +38,7 @@ You can either
  <dependency>
     <groupId>com.github.magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 ````
 
