@@ -37,7 +37,8 @@ public class ExceptionLogger {
     if (log == null) {
       String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
       log = new File(tempDir + "magpie_exceptions_" + suffix);
-      System.err.println("Log file path: " + log.getAbsolutePath());
+
+      // System.err.println("Log file path: " + log.getAbsolutePath());
     }
     try {
       logStream = new FileOutputStream(log);
@@ -83,7 +84,7 @@ public class ExceptionLogger {
       server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
-    if (debug) System.err.println(msg);
+   // if (debug) System.err.println(msg);
   }
 
   public void cleanUp() {
