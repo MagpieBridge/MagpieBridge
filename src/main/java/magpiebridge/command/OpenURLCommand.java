@@ -67,12 +67,16 @@ public class OpenURLCommand implements WorkspaceCommand {
       if (Desktop.isDesktopSupported()) {
         // disable stdout from browser as it corrupts jsonrpc stdio communication
         PrintStream original = System.out;
-        try{
-          System.setOut(new PrintStream(new OutputStream() {
-            public void write(int b) { }
-          }));
+        try {
+          PrintStream devnull = new PrintStream(
+                  new OutputStream() {
+                    public void write(int b) {
+                    }
+                  });
+          System.setErr(devnull);
+          System.setOut(devnull);
           Desktop.getDesktop().browse(new URI(URIUtils.checkURI(uri)));
-        }catch (Exception e){
+        } catch (Exception e) {
           e.printStackTrace();
         }
         System.setOut(original);
