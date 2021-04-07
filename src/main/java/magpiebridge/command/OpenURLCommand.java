@@ -3,6 +3,8 @@ package magpiebridge.command;
 import com.google.gson.JsonPrimitive;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -62,8 +64,19 @@ public class OpenURLCommand implements WorkspaceCommand {
         ((MagpieClient) client).showHTML(content);
       }
     } else {
-      if (Desktop.isDesktopSupported())
-        Desktop.getDesktop().browse(new URI(URIUtils.checkURI(uri)));
+      if (Desktop.isDesktopSupported()) {
+        // disable stdout from browser as it corrupts jsonrpc stdio communication
+        PrintStream original = System.out;
+        try{
+          System.setOut(new PrintStream(new OutputStream() {
+            public void write(int b) { }
+          }));
+          Desktop.getDesktop().browse(new URI(URIUtils.checkURI(uri)));
+        }catch (Exception e){
+          e.printStackTrace();
+        }
+        System.setOut(original);
+      }
     }
   }
 }
