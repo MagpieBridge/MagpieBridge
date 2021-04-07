@@ -79,7 +79,7 @@ public class OpenURLCommand implements WorkspaceCommand {
         } catch (Exception e) {
           e.printStackTrace();
         }
-        System.setOut(original);
+        // System.setOut(original);
       }
     }
   }
