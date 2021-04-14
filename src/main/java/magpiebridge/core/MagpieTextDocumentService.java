@@ -31,8 +31,6 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.Hover;
-import org.eclipse.lsp4j.MessageParams;
-import org.eclipse.lsp4j.MessageType;
 import org.eclipse.lsp4j.TextDocumentItem;
 import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -75,18 +73,16 @@ public class MagpieTextDocumentService implements TextDocumentService {
   public void didOpen(DidOpenTextDocumentParams params) {
     TextDocumentItem doc = params.getTextDocument();
     String language = doc.getLanguageId();
-    setProjectRootPath(language);
     // add the opened file to file manager and do analysis
     SourceFileManager fileManager = server.getSourceFileManager(language);
     fileManager.didOpen(params);
-    if (isFirstOpenedFile && server.config.doAnalysisByOpen()) {
-      server.forwardMessageToClient(
-          new MessageParams(MessageType.Info, "The analyzer started analyzing the code."));
-      server.doAnalysis(language, true);
-      isFirstOpenedFile = false;
-    } else {
-      // don't need to rerun the analysis if no file is changed.
-      server.doAnalysis(language, false);
+    if (server.config.doAnalysisByOpen() || server.config.doAnalysisByFirstOpen()) {
+      if (isFirstOpenedFile) {
+        server.doAnalysis(language, true);
+        isFirstOpenedFile = false;
+      } else {
+        server.doAnalysis(language, server.config.doAnalysisByOpen());
+      }
     }
   }
 
@@ -142,8 +138,6 @@ public class MagpieTextDocumentService implements TextDocumentService {
 
   private void runAnalysis(DidSaveTextDocumentParams params) {
     server.cleanUp();
-    server.forwardMessageToClient(
-        new MessageParams(MessageType.Info, "The analyzer started re-analyzing the code."));
     // re-analyze when file is saved.
     String language = inferLanguage(params.getTextDocument().getUri());
     server.doAnalysis(language, true);
@@ -241,6 +235,57 @@ public class MagpieTextDocumentService implements TextDocumentService {
     } else {
       MagpieServer.ExceptionLogger.log("Couldn't infer the language of the source code in " + uri);
       return "unknown";
+    }
+  }
+
+  protected void removeCodeLenses(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeLenses.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeLenses.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeCodeActions(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.codeActions.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.codeActions.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void removeHovers(String uri) {
+    try {
+      String decodedUri = URLDecoder.decode(uri, "UTF-8");
+      URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
+      boolean foundMatch = false;
+      if (server.hovers.containsKey(url)) {
+        foundMatch = true;
+      }
+      if (foundMatch) {
+        server.hovers.remove(url);
+      }
+    } catch (URISyntaxException | UnsupportedEncodingException | MalformedURLException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
     }
   }
 }

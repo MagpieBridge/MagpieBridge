@@ -22,10 +22,10 @@ import org.eclipse.lsp4j.Range;
 public class CodeActionGenerator {
 
   /**
-   * Generate a CodeAction which is a {@link CodeActionCommand#fix} command and it replaces code in
-   * the {@code range} with {@code replaceText}. This CodeAction will be executed when a {@code
-   * workspace/executeCommand} request is sent from the client to the {@link MagpieServer}. See
-   * {@link MagpieWorkspaceService#executeCommand(org.eclipse.lsp4j.ExecuteCommandParams)}.
+   * Generate a CodeAction which is a {@link CodeActionCommand#fixFromMB} command and it replaces
+   * code in the {@code range} with {@code replaceText}. This CodeAction will be executed when a
+   * {@code workspace/executeCommand} request is sent from the client to the {@link MagpieServer}.
+   * See {@link MagpieWorkspaceService#executeCommand(org.eclipse.lsp4j.ExecuteCommandParams)}.
    *
    * @param title the title
    * @param range the range
@@ -43,13 +43,13 @@ public class CodeActionGenerator {
     args.add(range);
     args.add(replaceText);
     args.add(diag);
-    codeAction.setCommand(new Command(title, CodeActionCommand.fix.name(), args));
+    codeAction.setCommand(new Command(title, CodeActionCommand.fixFromMB.name(), args));
     return codeAction;
   }
 
   /**
-   * Generate a CodeAction which is either {@link CodeActionCommand#reportFP} or {@link
-   * CodeActionCommand#reportConfusion}. This CodeAction will be executed when a {@code
+   * Generate a CodeAction which is either {@link CodeActionCommand#reportFPFromMB} or {@link
+   * CodeActionCommand#reportConfusionFromMB}. This CodeAction will be executed when a {@code
    * workspace/executeCommand} request is sent from the client to the {@link MagpieServer}. See
    * {@link MagpieWorkspaceService#executeCommand(org.eclipse.lsp4j.ExecuteCommandParams)}.
    *

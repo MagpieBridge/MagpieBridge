@@ -3,7 +3,6 @@ package magpiebridge.core.analysis.configuration;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -20,15 +19,14 @@ import magpiebridge.core.ServerConfiguration;
  */
 public class MagpieHttpServer {
 
-  public static URI createAndStartLocalHttpServer(MagpieServer magpieServer) {
+  public static String createAndStartLocalHttpServer(MagpieServer magpieServer) {
     try {
-      InetAddress ipAddress = InetAddress.getLocalHost();
-      InetSocketAddress socket = new InetSocketAddress(ipAddress.getHostName(), 0);
+      InetSocketAddress socket = new InetSocketAddress("localhost", 0);
       HttpServer server = HttpServer.create(socket, 0);
       HttpContext context = server.createContext("/config");
-      context.setHandler(new MagpieHttpHandler(magpieServer));
+      context.setHandler(new MagpieHttpHandler(magpieServer, server.getAddress().toString()));
       server.start();
-      return new URI("http", server.getAddress().toString() + "/config", null);
+      return new URI("http", server.getAddress().toString() + "/config", null).toURL().toString();
     } catch (IOException | URISyntaxException e) {
       MagpieServer.ExceptionLogger.log(e);
       e.printStackTrace();

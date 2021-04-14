@@ -23,7 +23,7 @@ public interface Analysis<T extends AnalysisConsumer> {
   /**
    * The files to be analyzed.
    *
-   * @param files the files
+   * @param files the files that have been opened in the editor.
    * @param server the server which consumes the analysis results
    * @param rerun tells if the analysis should be reran
    */
@@ -56,4 +56,9 @@ public interface Analysis<T extends AnalysisConsumer> {
    * @param configuration the configuration used to configure the analysis.
    */
   public default void configure(List<ConfigurationOption> configuration) {}
+
+  /**
+   * Clean up defined by the analysis. This will be called @link{{@link MagpieServer#shutdown()}}.
+   */
+  public default void cleanUp() {}
 }

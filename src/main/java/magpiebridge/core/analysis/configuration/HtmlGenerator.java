@@ -1,6 +1,21 @@
 package magpiebridge.core.analysis.configuration;
 
-import static j2html.TagCreator.*;
+import static j2html.TagCreator.a;
+import static j2html.TagCreator.body;
+import static j2html.TagCreator.br;
+import static j2html.TagCreator.div;
+import static j2html.TagCreator.form;
+import static j2html.TagCreator.h1;
+import static j2html.TagCreator.h2;
+import static j2html.TagCreator.h3;
+import static j2html.TagCreator.head;
+import static j2html.TagCreator.html;
+import static j2html.TagCreator.input;
+import static j2html.TagCreator.label;
+import static j2html.TagCreator.rawHtml;
+import static j2html.TagCreator.script;
+import static j2html.TagCreator.text;
+import static j2html.TagCreator.title;
 
 import j2html.tags.ContainerTag;
 import j2html.tags.EmptyTag;
@@ -21,11 +36,15 @@ public class HtmlGenerator {
 
   private static String sourceOption;
   private static String sourceAction;
+  private static String serverAddress;
 
   public static String generateHTML(
-      List<ConfigurationOption> configuration, List<ConfigurationAction> actions) {
+      List<ConfigurationOption> configuration,
+      List<ConfigurationAction> actions,
+      String serverAddress) {
     sourceOption = null;
     sourceAction = null;
+    HtmlGenerator.serverAddress = serverAddress;
     return html(generateHeader(), generateBody(configuration, actions)).renderFormatted();
   }
 
@@ -40,6 +59,7 @@ public class HtmlGenerator {
                 + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css\" integrity=\"sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp\" crossorigin=\"anonymous\">\n"
                 + "\n"
                 + "<!-- Latest compiled and minified JavaScript -->\n"
+                + "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"
                 + "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\" integrity=\"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa\" crossorigin=\"anonymous\"></script>"));
   }
 
@@ -53,6 +73,7 @@ public class HtmlGenerator {
         div(div(div(
                         generetaH1Title(),
                         div(
+                                generateGlobalScript(),
                                 div(
                                         h2("Configuration"),
                                         generateForm(configration),
@@ -65,15 +86,69 @@ public class HtmlGenerator {
             .withClass("container"));
   }
 
+  // FIXME: FIX THE FORMDATA
   private static ContainerTag generateScript() {
-    return script(
-        rawHtml(
-            "function checkboxSelection(className, parentID) {"
-                + "var clist = document.getElementsByClassName(className);"
-                + "var parentStatus = document.getElementById(parentID).checked;"
-                + "for(var i = 0; i < clist.length; ++i) {"
-                + "clist[i].checked = parentStatus;"
-                + "}}"));
+    String url = "http:/" + serverAddress + "/config";
+    String scriptCode =
+        "function checkboxSelection(className, parentID) {"
+            + "var clist = document.getElementsByClassName(className);"
+            + "var parentStatus = document.getElementById(parentID).checked;"
+            + "for(var i = 0; i < clist.length; ++i) {"
+            + "  clist[i].checked = parentStatus;"
+            + "}}"
+            + "function getFormData(){"
+            + "  var confForm = document.getElementById('configForm');"
+            + "  var formData = new FormData(confForm);"
+            + "  var data = [...formData.entries()];\n"
+            + "  var asString = data.map(x => `${encodeURIComponent(x[0])}=${encodeURIComponent(x[1])}`).join('&');"
+            + "  return asString;"
+            + "}"
+            + "var submitConfiguration = {};"
+            + "if (typeof acquireVsCodeApi == 'undefined'){"
+            + "    submitConfiguration = function(){"
+            + "      var formData = getFormData();"
+            + "      var httpRequest = new XMLHttpRequest();"
+            + "      httpRequest.open('POST','"
+            + url
+            + "');"
+            + "      httpRequest.send(formData);"
+            + "    }"
+            + "  }else{"
+            + "     submitConfiguration = function(){"
+            + "       var formData = getFormData();"
+            + "       var message = '"
+            + url
+            + "';"
+            + "       message += '?'+formData;"
+            + "       window.vscode.postMessage({command: 'configuration',text: message });"
+            + "     }"
+            + "  }";
+    return script(rawHtml(scriptCode));
+  }
+
+  private static ContainerTag generateScriptForButtonClick(String functionName, String uri) {
+    String url = "http:/" + serverAddress + "/config" + uri.replace(" ", "%20");
+    String scriptCode =
+        "var "
+            + functionName
+            + " = {};"
+            + "if (typeof acquireVsCodeApi == 'undefined'){"
+            + functionName
+            + " = function(){"
+            + "var httpRequest = new XMLHttpRequest();"
+            + "var url = '"
+            + url
+            + "';"
+            + "httpRequest.open('GET',url);"
+            + "httpRequest.send();"
+            + "}}else{"
+            + functionName
+            + " = function(){\n"
+            + "window.vscode.postMessage({command: 'action',text: '"
+            + url
+            + "'});"
+            + "}}";
+    return script(rawHtml(scriptCode));
   }
 
   private static String cleanClassName(String className) {
@@ -87,23 +162,34 @@ public class HtmlGenerator {
         ret.with(h3(action.getSource()));
         sourceAction = action.getSource();
       }
-      ret.with(generateButton(action.getName(), action.getSource()), br());
+      String source = action.getSource();
+      String functionName = action.getName().concat(source.split(":")[0]).replace(" ", "");
+      String uri = "?action=" + action.getName() + "&" + "source=" + source;
+      ret.with(generateButton(action.getName(), functionName, uri), br());
+
+      ret.with(generateScriptForButtonClick(functionName, uri));
     }
     return ret;
   }
 
+  private static ContainerTag generateGlobalScript() {
+    String code =
+        "if (typeof acquireVsCodeApi != 'undefined'){window.vscode = acquireVsCodeApi();}";
+    return script(rawHtml(code));
+  }
+
   private static ContainerTag generateForm(List<ConfigurationOption> configration) {
-    ContainerTag ret = form().withMethod("post").withAction("/config");
+    ContainerTag ret = form().withMethod("post").withAction("/config").withId("configForm");
     List<ContainerTag> tags = new ArrayList<ContainerTag>();
     for (ConfigurationOption o : configration) {
-      tags.add(generateTag(o, 0, cleanClassName(o.getName())));
+      tags.add(generateOption(o, 0, cleanClassName(o.getName())));
     }
     ret.with(tags);
     ret.with(generateSubmit());
     return ret;
   }
 
-  private static ContainerTag generateTag(ConfigurationOption o, int i, String className) {
+  private static ContainerTag generateOption(ConfigurationOption o, int i, String className) {
     i++;
     ContainerTag ret = div();
     if (!o.getSource().equals(sourceOption)) {
@@ -111,20 +197,21 @@ public class HtmlGenerator {
       sourceOption = o.getSource();
     }
     String name = o.getName();
-    if (o.getType().equals(OptionType.checkbox)) {
+    if (o.getType().equals(OptionType.container)) {
+      ret.with(generateLabel(name));
+    } else if (o.getType().equals(OptionType.checkbox)) {
       ret.with(generateCheckbox(o, className), generateLabel(name));
     } else if (o.getType().equals(OptionType.text)) {
       ret.with(generateLabel(name), generateTextfield(o));
     } else if (o.getType().equals(OptionType.alert)) {
       ret = script(rawHtml("alert(\"" + o.getName() + "\");"));
-
       return ret;
     }
     ret.with(br());
     if (o.hasChildren()) {
       List<ContainerTag> tags = new ArrayList<ContainerTag>();
       for (ConfigurationOption child : o.getChildren()) {
-        ContainerTag tag = generateTag(child, i, cleanClassName(o.getName() + "child"));
+        ContainerTag tag = generateOption(child, i, cleanClassName(o.getName() + "child"));
         tag.withStyle("margin-left: " + (i * 50) + "px");
         tags.add(tag);
       }
@@ -133,13 +220,15 @@ public class HtmlGenerator {
     return ret;
   }
 
-  private static ContainerTag generateButton(String name, String source) {
-    return a().withClasses("btn", "btn-default")
+  private static ContainerTag generateButton(String name, String functionName, String uri) {
+    return a().withClasses("btn", "btn-primary")
         .withRole("button")
         .withName(name)
-        .withId(name)
-        .withHref("?action=" + name + "&" + "source=" + source)
-        .with(text(name));
+        .withId(functionName)
+        .withHref(uri)
+        .with(text(name))
+        .attr("onclick", functionName.replace(" ", "") + "()")
+        .withStyle("margin: 5px");
   }
 
   private static EmptyTag generateCheckbox(ConfigurationOption o, String className) {
@@ -165,9 +254,10 @@ public class HtmlGenerator {
 
   private static EmptyTag generateSubmit() {
     return input()
-        .withClasses("btn", "btn-default")
+        .withClasses("btn", "btn-primary")
         .withType("submit")
-        .withValue("Submit Configuration");
+        .withValue("Submit Configuration")
+        .attr("onclick", "submitConfiguration()");
   }
 
   private static EmptyTag generateTextfield(ConfigurationOption o) {

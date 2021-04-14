@@ -69,8 +69,26 @@ public class SourceCodeInfo {
         }
 
         @Override
+        public String toString() {
+          return getURL()
+              + " ["
+              + getFirstLine()
+              + ","
+              + getFirstCol()
+              + "]"
+              + ":["
+              + getLastLine()
+              + ","
+              + getLastCol()
+              + "]";
+        }
+        /** Compare the starting line and column numbers. */
+        @Override
         public int compareTo(SourcePosition o) {
-          return 0;
+          if (this.getFirstLine() == o.getFirstLine()) {
+            if (this.getFirstCol() == o.getFirstCol()) return 0;
+            else return this.getFirstCol() - o.getFirstCol();
+          } else return this.getFirstLine() - o.getFirstLine();
         }
 
         @Override

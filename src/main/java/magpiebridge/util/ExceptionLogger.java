@@ -23,6 +23,7 @@ public class ExceptionLogger {
   private FileOutputStream logStream;
   private File log;
   private MagpieServer server;
+  private boolean debug;
 
   public ExceptionLogger(MagpieServer server) {
     this.server = server;
@@ -33,27 +34,56 @@ public class ExceptionLogger {
     } else if (!tempDir.endsWith(seperator)) {
       tempDir += seperator;
     }
-    String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
-    log = new File(tempDir + "magpie_exceptions_" + suffix);
+    if (log == null) {
+      String suffix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".log";
+      log = new File(tempDir + "magpie_exceptions_" + suffix);
+      System.err.println("Log file path: " + log.getAbsolutePath());
+    }
     try {
       logStream = new FileOutputStream(log);
       writer = new PrintWriter(logStream);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
+    debug = false;
   }
 
+  public ExceptionLogger() {
+    this(null);
+  }
+  /**
+   * Log without forwarding the exception to client.
+   *
+   * @param e exception
+   */
   public void log(Exception e) {
-    String msg = e.toString() + ":\n" + ExceptionUtils.getStackTrace(e);
-    if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
-    String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
-    writer.println(timeStamp + msg);
+    log(e, false);
   }
 
+  /**
+   * Log without forwarding the exception to client.
+   *
+   * @param msg message
+   */
   public void log(String msg) {
-    if (server != null) server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
+    log(msg, false);
+  }
+
+  public void log(Exception e, boolean forwardToClient) {
+    String msg = e.toString() + ":\n" + ExceptionUtils.getStackTrace(e);
+    if (forwardToClient && server != null)
+      server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
     String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
     writer.println(timeStamp + msg);
+    if (debug) e.printStackTrace();
+  }
+
+  public void log(String msg, boolean forwardToClient) {
+    if (forwardToClient && server != null)
+      server.forwardMessageToClient(new MessageParams(MessageType.Warning, msg));
+    String timeStamp = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss:SS]").format(new Date());
+    writer.println(timeStamp + msg);
+    if (debug) System.err.println(msg);
   }
 
   public void cleanUp() {
@@ -63,5 +93,9 @@ public class ExceptionLogger {
       e.printStackTrace();
     }
     if (writer != null) writer.close();
+  }
+
+  public void setDebug(boolean debug) {
+    this.debug = debug;
   }
 }
