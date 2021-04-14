@@ -341,7 +341,8 @@ public class InferConfig {
     Path jar =
         mavenHome
             .resolve("repository")
-            .resolve(artifact.groupId.replace('.', File.separatorChar))
+            .resolve(
+                artifact.groupId.replace('.', File.separatorChar).replace(':', File.separatorChar))
             .resolve(artifact.artifactId)
             .resolve(artifact.version)
             .resolve(fileNameJar(artifact, source));
