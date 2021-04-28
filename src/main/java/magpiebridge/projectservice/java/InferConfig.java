@@ -341,8 +341,7 @@ public class InferConfig {
     Path jar =
         mavenHome
             .resolve("repository")
-            .resolve(
-                artifact.groupId.replace('.', File.separatorChar).replace(':', File.separatorChar))
+            .resolve(artifact.groupId.replace('.', File.separatorChar))
             .resolve(artifact.artifactId)
             .resolve(artifact.version)
             .resolve(fileNameJar(artifact, source));
@@ -354,7 +353,12 @@ public class InferConfig {
   }
 
   static String fileNameJar(Artifact artifact, boolean source) {
-    return artifact.artifactId + '-' + artifact.version + (source ? "-sources" : "") + ".jar";
+    return artifact.artifactId
+        + '-'
+        + artifact.version
+        + (source ? "-sources" : "")
+        + (!artifact.classifier.equals("") ? "-" + artifact.classifier : "")  // If there is a classifier, then append with "-<classifier>"
+        + ".jar";
   }
 
   static String fileNameJarOrAar(Artifact artifact, boolean source) {
@@ -384,7 +388,34 @@ public class InferConfig {
             .lines()
             .map(dependencyPattern::matcher)
             .filter(Matcher::find)
-            .map(matcher -> new Artifact(matcher.group(1), matcher.group(2), matcher.group(4)))
+            .map(
+                matcher -> {
+                  boolean b = !matcher.group(2).contains(":") && !matcher.group(4).contains(":");
+
+                  if (matcher.group(1).contains(":") && b) {
+                    // This condition checks for the row with 5 ':'.
+                    // If there is a 5 ':', then the addition colon is in the first group.
+                    // matcher.group(1).split(":")[0] gives group id
+                    // matcher.group(1).split(":")[1] gives artifact id
+                    // matcher.group(4) gives the version
+                    // matcher.group(3) gives the classifier
+                    return new Artifact(
+                        matcher.group(1).split(":")[0],
+                        matcher.group(1).split(":")[1],
+                        matcher.group(4),
+                        matcher.group(3));
+                  } else if (!matcher.group(1).contains(":") && b) {
+                    // This condition checks for the perfect 4 colons
+                    return new Artifact(matcher.group(1), matcher.group(2), matcher.group(4));
+                  } else {
+                    // Any other, replace ':' with File.separator, this will avoid the illegalcharacter exception.
+                    // However, this will not produce a valid library path and might show a warning "jar not found".
+                    return new Artifact(
+                        matcher.group(1).replace(":", File.separator),
+                        matcher.group(2).replace(":", File.separator),
+                        matcher.group(4).replace(":", File.separator));
+                  }
+                })
             .forEach(dependencies::add);
         reader.close();
         return dependencies;
