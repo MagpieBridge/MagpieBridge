@@ -21,6 +21,8 @@ public class FiveColonTest {
         InferConfig inferConfig = new InferConfig(root);
 
         System.out.println(inferConfig.libraryClassPath());
-        assertTrue(inferConfig.libraryClassPath().toArray()[0].toString().endsWith("javafx-base-17-ea+8-win.jar"));
+        assertTrue(inferConfig.libraryClassPath().toArray()[0].toString().endsWith("javafx-base-17-ea+8-linux.jar"));
+        assertTrue(inferConfig.libraryClassPath().toArray()[1].toString().endsWith("javafx-base-17-ea+8-win.jar"));
+        assertTrue(inferConfig.libraryClassPath().toArray()[2].toString().endsWith("javafx-base-17-ea+8-mac.jar"));
     }
 }
