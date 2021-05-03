@@ -20,6 +20,7 @@ public class FiveColonTest {
 
         InferConfig inferConfig = new InferConfig(root);
 
+        System.out.println(inferConfig.libraryClassPath());
         assertTrue(inferConfig.libraryClassPath().toArray()[0].toString().endsWith("javafx-base-17-ea+8-win.jar"));
     }
 }
