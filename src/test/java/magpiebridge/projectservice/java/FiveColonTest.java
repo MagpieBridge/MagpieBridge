@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import static org.junit.Assert.assertTrue;
 
@@ -20,9 +22,12 @@ public class FiveColonTest {
 
         InferConfig inferConfig = new InferConfig(root);
 
-        System.out.println(inferConfig.libraryClassPath());
-        assertTrue(inferConfig.libraryClassPath().toArray()[0].toString().endsWith("javafx-base-17-ea+8-linux.jar"));
-        assertTrue(inferConfig.libraryClassPath().toArray()[1].toString().endsWith("javafx-base-17-ea+8-win.jar"));
-        assertTrue(inferConfig.libraryClassPath().toArray()[2].toString().endsWith("javafx-base-17-ea+8-mac.jar"));
+        ArrayList<Path> libPath = new ArrayList<Path>(inferConfig.libraryClassPath());
+        Collections.sort(libPath);
+
+        System.out.println(libPath);
+        assertTrue(libPath.get(0).toString().endsWith("javafx-base-17-ea+8-linux.jar"));
+        assertTrue(libPath.get(1).toString().endsWith("javafx-base-17-ea+8-mac.jar"));
+        assertTrue(libPath.get(2).toString().endsWith("javafx-base-17-ea+8-win.jar"));
     }
 }
