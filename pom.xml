@@ -33,7 +33,7 @@
 		<wala.version>1.5.4</wala.version>
 		<lsp4j.version>0.8.1</lsp4j.version>
 		<javaparser.version>3.13.0</javaparser.version>
-		<commonio.version>2.6</commonio.version>
+		<commonio.version>2.7</commonio.version>
 		<commonslang3.version>3.9</commonslang3.version>
 		<sun.httpserver.version>20070405</sun.httpserver.version>
 		<apache.httpclient.version>4.5.13</apache.httpclient.version>
