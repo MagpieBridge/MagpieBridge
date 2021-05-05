@@ -18,13 +18,13 @@ MagpieBridge is a bridge between program analyses and developer tools. MagpieBri
 
 For soot users, you can find an IRConverter under  [https://github.com/MagpieBridge/IRConverter](https://github.com/MagpieBridge/IRConverter) for converting WALA IR to Soot IR, if you want to analyze Java source code with Soot. 
 
-## Upcoming Development 
-- supporting visualization of data-flow path
-- supporting parse SARIF and display result 
-
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/goal.PNG"  width="800">
 </p> 
+
+## Upcoming Development 
+- supporting visualization of data-flow path
+- supporting parse SARIF and display result 
 
 ## Cite the research paper
 For scientific usage, please **cite the paper** [[BibTex](https://drops.dagstuhl.de/opus/volltexte/2019/10813/)].
