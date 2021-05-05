@@ -357,7 +357,9 @@ public class InferConfig {
         + '-'
         + artifact.version
         + (source ? "-sources" : "")
-        + (!artifact.classifier.equals("") ? "-" + artifact.classifier : "")  // If there is a classifier, then append with "-<classifier>"
+        + (!artifact.classifier.equals("")
+            ? "-" + artifact.classifier
+            : "") // If there is a classifier, then append with "-<classifier>"
         + ".jar";
   }
 
@@ -408,8 +410,10 @@ public class InferConfig {
                     // This condition checks for the perfect 4 colons
                     return new Artifact(matcher.group(1), matcher.group(2), matcher.group(4));
                   } else {
-                    // Any other, replace ':' with File.separator, this will avoid the illegalcharacter exception.
-                    // However, this will not produce a valid library path and might show a warning "jar not found".
+                    // Any other, replace ':' with File.separator, this will avoid the
+                    // illegalcharacter exception.
+                    // However, this will not produce a valid library path and might show a warning
+                    // "jar not found".
                     return new Artifact(
                         matcher.group(1).replace(":", File.separator),
                         matcher.group(2).replace(":", File.separator),
