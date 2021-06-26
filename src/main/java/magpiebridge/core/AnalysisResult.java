@@ -43,6 +43,13 @@ public interface AnalysisResult {
   public Iterable<Pair<Position, String>> related();
 
   /**
+   * Edge information of the flow graph
+   *
+   * @return edges of the graph
+   */
+  public Iterable<Pair<Position, Position>> flows();
+
+  /**
    * Severity of this result, usually used for diagnostics.
    *
    * @return the diagnostic severity

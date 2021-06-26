@@ -3,6 +3,7 @@ package magpiebridge.util;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -120,5 +121,52 @@ public class SourceCodeReader {
    */
   public static String getLinesInString(Position p) throws IOException {
     return getLinesInString(p, false);
+  }
+  /**
+   * Get the whole line of code.
+   *
+   * @param position the position where to get the code
+   * @param includeComment if comment should be removed.
+   * @return whole line as string
+   * @throws IOException happens by parsing file
+   */
+  public static String getWholeCodeLineInString(Position position, boolean includeComment)
+      throws IOException {
+    String code = "";
+    String url = position.getURL().toString();
+    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+      // take care of url in windows
+      if (!url.startsWith("file:///")) {
+        url = url.replace("file://", "file:///");
+      }
+    }
+
+    File file = new File(new URL(url).getFile());
+    if (file.exists() && file.isFile()) {
+      try (FileReader freader = new FileReader(file);
+          BufferedReader reader = new BufferedReader(freader)) {
+
+        String currentLine = null;
+        int line = 0;
+        do {
+          currentLine = reader.readLine();
+          if (currentLine == null) {
+            return code;
+          }
+          line++;
+        } while (position.getFirstLine() > line);
+
+        code = removeComment(currentLine, includeComment);
+
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+
+    return code;
   }
 }
