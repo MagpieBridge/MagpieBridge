@@ -95,10 +95,10 @@ public class AnalysisResultConsumerFactory {
                * The message with link to view flow graph
                */
               String title = "View flow diagram: " + httpserverUrl;
-              CodeAction reportFalsePositive =
+              CodeAction dataFlowView =
                   CodeActionGenerator.generateCommandAction(
                       title, httpserverUrl, d, CodeActionCommand.openURLFromMB.name());
-              server.addCodeAction(url, d.getRange(), reportFalsePositive);
+              server.addCodeAction(url, d.getRange(), dataFlowView);
             }
             if (result.repair() != null) {
               // add code action (quickfix) related to analysis result
