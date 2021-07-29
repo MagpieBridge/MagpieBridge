@@ -18,7 +18,6 @@ import j2html.tags.UnescapedText;
 import java.io.IOException;
 import java.util.HashMap;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.util.SourceCodeReader;
 
 /**
  * The class generates a HTML page to show flow graph. It uses the flows() function of the
@@ -113,23 +112,32 @@ public class DataFlowPathHtmlGenerator {
     return script(rawHtml(code));
   }
 
-  private static ContainerTag generateDataFlow(Iterable<Pair<Position, Position>> flows)
+  private static ContainerTag generateDataFlow(Iterable<Pair<Position, String>> flows)
       throws IOException {
+    if (flows == null) {
+      return script(rawHtml(""));
+    }
     String code = " cy.add([";
     HashMap<Position, Integer> existingNodes = new HashMap<Position, Integer>();
     String from = "";
     String to = "";
     Position fromPosition = null;
     Position toPosition = null;
-    String value = "";
     int nodeCount = 0;
     int edgeCount = 0;
+    Position previousPosition = null;
+    String previousLine = "";
 
-    for (Pair<Position, Position> flow : flows) {
-      fromPosition = flow.fst;
-      from = SourceCodeReader.getWholeCodeLineInString(fromPosition, false);
-      toPosition = flow.snd;
-      to = SourceCodeReader.getWholeCodeLineInString(toPosition, false);
+    for (Pair<Position, String> flow : flows) {
+      if (previousPosition == null) {
+        previousPosition = flow.fst;
+        previousLine = flow.snd;
+        continue;
+      }
+      fromPosition = previousPosition;
+      from = previousLine;
+      toPosition = flow.fst;
+      to = flow.snd;
 
       if (!existingNodes.containsKey(fromPosition)) {
         code +=
@@ -158,6 +166,8 @@ public class DataFlowPathHtmlGenerator {
                 "target: 'n" + existingNodes.get(toPosition) + "'",
               });
       edgeCount++;
+      previousPosition = flow.fst;
+      previousLine = flow.snd;
     }
     code += "]); cy.layout(options).run();";
     return script(rawHtml(code));
@@ -190,7 +200,7 @@ public class DataFlowPathHtmlGenerator {
                         .withClass("center-block"))
                     .withClass("row"),
                 generateDataFlowScriptConfiguration(),
-                generateDataFlow(result.flows()))
+                generateDataFlow(result.related()))
             .withClass("container"));
   }
 
