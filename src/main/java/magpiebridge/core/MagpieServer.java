@@ -382,16 +382,20 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     }
 
     if (config.showConfigurationPage()) {
-      try {
-        initAnalysisConfiguration();
-        if (config.useMagpieHTTPServer()) {
-          this.httpserverUrl = MagpieHttpServer.createAndStartLocalHttpServer(this);
-        }
-        OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
-      } catch (IOException | URISyntaxException e) {
-        MagpieServer.ExceptionLogger.log(e);
-        e.printStackTrace();
+      createAndStartLocalHttpServer();
+    }
+  }
+
+  protected void createAndStartLocalHttpServer() {
+    try {
+      initAnalysisConfiguration();
+      if (config.useMagpieHTTPServer()) {
+        this.httpserverUrl = MagpieHttpServer.createAndStartLocalHttpServer(this);
       }
+      OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
+    } catch (IOException | URISyntaxException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
     }
 
     if (config.showSarifFileUploadPage()) {
