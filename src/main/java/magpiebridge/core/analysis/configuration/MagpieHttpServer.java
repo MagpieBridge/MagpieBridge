@@ -58,4 +58,26 @@ public class MagpieHttpServer {
     }
     return null;
   }
+  /**
+   * Creates a HTTP Server for SARIF file upload
+   * 
+   * @param magpieServer
+   * @return
+   */
+  public static String createAndStartSarifFileUploadHttpServer(MagpieServer magpieServer) {
+    try {
+      String routeName = "/sarif-file";
+      InetSocketAddress socket = new InetSocketAddress("localhost", 0);
+      HttpServer server = HttpServer.create(socket, 0);
+      HttpContext context = server.createContext(routeName);
+      context.setHandler(
+          new SarifFileUploadHttpHandler(magpieServer, server.getAddress().toString()));
+      server.start();
+      return new URI("http", server.getAddress().toString() + routeName, null).toURL().toString();
+    } catch (IOException | URISyntaxException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+    return null;
+  }
 }
