@@ -6,7 +6,8 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.MagpieServer;
 
@@ -47,17 +48,6 @@ public class DataFlowPathHttpHandler implements HttpHandler {
           responseHeaders.set("Content-Type", "application/json");
           exchange.sendResponseHeaders(200, sarif.length());
           outputStream.write(sarif.getBytes());
-          outputStream.flush();
-          outputStream.close();
-        } else if (address.matches("/flow/node")) {
-          Map<String, Object> attributes = exchange.getHttpContext().getAttributes();
-          String startLine = uri.toString();
-          if (attributes.containsKey("startLine")) {
-            startLine = (String) attributes.get("startLine");
-          }
-
-          exchange.sendResponseHeaders(200, startLine.length());
-          outputStream.write(startLine.getBytes());
           outputStream.flush();
           outputStream.close();
         }
