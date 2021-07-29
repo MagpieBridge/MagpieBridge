@@ -20,7 +20,7 @@ import java.util.HashMap;
 import magpiebridge.core.AnalysisResult;
 
 /**
- * The class generates a HTML page to show flow graph. It uses the flows() function of the
+ * The class generates a HTML page to show flow graph. It uses the related() function of the
  * AnalysisResult.
  */
 public class DataFlowPathHtmlGenerator {
