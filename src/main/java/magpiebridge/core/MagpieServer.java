@@ -393,6 +393,19 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
         e.printStackTrace();
       }
     }
+
+    if (config.showSarifFileUploadPage()) {
+      try {
+        initAnalysisConfiguration();
+        if (config.useMagpieHTTPServer()) {
+          this.httpserverUrl = MagpieHttpServer.createAndStartSarifFileUploadHttpServer(this);
+        }
+        OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
+      } catch (IOException | URISyntaxException e) {
+        MagpieServer.ExceptionLogger.log(e);
+        e.printStackTrace();
+      }
+    }
   }
 
   public List<ConfigurationOption> getAnalysisConfiguration() {
