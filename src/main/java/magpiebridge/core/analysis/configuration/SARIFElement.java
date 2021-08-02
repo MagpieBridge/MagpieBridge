@@ -140,10 +140,10 @@ public class SARIFElement {
     JsonObject region =
         notNullAndHas(phsicalLocation, "region") ? phsicalLocation.getAsJsonObject("region") : null;
 
-    int firstLine = notNullAndHas(region, "startLine") ? region.get("startLine").getAsInt() : 0;
-    int lastLine = notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : 0;
-    int firstCol = notNullAndHas(region, "startColumn") ? region.get("startColumn").getAsInt() : 0;
-    int lastCol = notNullAndHas(region, "endColumn") ? region.get("endColumn").getAsInt() : 0;
+    int firstLine = notNullAndHas(region, "startLine") ? region.get("startLine").getAsInt() : -1;
+    int lastLine = notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : -1;
+    int firstCol = notNullAndHas(region, "startColumn") ? region.get("startColumn").getAsInt() : -1;
+    int lastCol = notNullAndHas(region, "endColumn") ? region.get("endColumn").getAsInt() : -1;
     URL url =
         notNullAndHas(artifactLocation, "uri")
             ? new URL(artifactLocation.get("uri").getAsString())
