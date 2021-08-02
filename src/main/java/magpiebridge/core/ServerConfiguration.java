@@ -44,7 +44,7 @@ public class ServerConfiguration {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
-    this.setShowSarifFileUploadPage(false);
+    this.showSarifFileUploadPage = false;
     this.addDefaultActions = false;
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
