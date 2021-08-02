@@ -12,9 +12,7 @@ import java.util.Stack;
 import magpiebridge.core.MagpieServer;
 import org.apache.commons.io.IOUtils;
 
-/**
- * The class handles HTTP requests of the SARIF page. 
- */
+/** The class handles HTTP requests of the SARIF page. */
 public class SarifFileUploadHttpHandler implements HttpHandler {
 
   private MagpieServer magpieServer;
@@ -62,7 +60,7 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
   }
   /**
    * Keep only JSON part of the string
-   * 
+   *
    * @param str
    * @return
    */

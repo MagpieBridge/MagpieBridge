@@ -6,9 +6,7 @@ import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
-/**
- * This class defines the analysis result from SARIF file
- */
+/** This class defines the analysis result from SARIF file */
 public class SARIFResult implements AnalysisResult {
 
   private Kind kind;

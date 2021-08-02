@@ -60,7 +60,7 @@ public class MagpieHttpServer {
   }
   /**
    * Creates a HTTP Server for SARIF file upload
-   * 
+   *
    * @param magpieServer
    * @return
    */

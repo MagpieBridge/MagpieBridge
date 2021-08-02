@@ -6,8 +6,6 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.MagpieServer;
 

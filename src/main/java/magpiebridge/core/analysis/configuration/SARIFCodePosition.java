@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
 
-/**
- * This class defines the code position from SARIF file
- */
+/** This class defines the code position from SARIF file */
 public class SARIFCodePosition implements Position {
 
   private int firstLine;

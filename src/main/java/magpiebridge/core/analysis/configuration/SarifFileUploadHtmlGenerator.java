@@ -23,9 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import magpiebridge.core.AnalysisResult;
 
-/**
- * The class generates a HTML page to show SARIF file upload page.
- */
+/** The class generates a HTML page to show SARIF file upload page. */
 public class SarifFileUploadHtmlGenerator {
   private static String serverAddress;
 
