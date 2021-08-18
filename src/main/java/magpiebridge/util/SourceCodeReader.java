@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,5 +169,23 @@ public class SourceCodeReader {
     }
 
     return code;
+  }
+  /**
+   * Get the file with the position
+   *
+   * @param position
+   * @return
+   * @throws MalformedURLException
+   */
+  public static File getFileWithPosition(Position position) throws MalformedURLException {
+    String url = position.getURL().toString();
+    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+      // take care of url in windows
+      if (!url.startsWith("file:///")) {
+        url = url.replace("file://", "file:///");
+      }
+    }
+
+    return new File(new URL(url).getFile());
   }
 }
