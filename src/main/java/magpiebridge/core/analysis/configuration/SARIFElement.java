@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
+import magpiebridge.core.SARIFResult;
+
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 /** Converts SARIF JSON to analysis results */
