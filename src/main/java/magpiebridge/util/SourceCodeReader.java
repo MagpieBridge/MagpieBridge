@@ -40,14 +40,7 @@ public class SourceCodeReader {
   public static List<String> getLines(Position p, boolean includeComment) throws IOException {
     List<String> lines = new ArrayList<>();
 
-    String url = p.getURL().toString();
-    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-      // take care of url in windows
-      if (!url.startsWith("file:///")) {
-        url = url.replace("file://", "file:///");
-      }
-    }
-    File file = new File(new URL(url).getFile());
+    File file = getFileWithPosition(p);
     if (file.exists() && file.isFile()) {
       try (FileReader freader = new FileReader(file);
           BufferedReader reader = new BufferedReader(freader)) {
@@ -134,15 +127,7 @@ public class SourceCodeReader {
   public static String getWholeCodeLineInString(Position position, boolean includeComment)
       throws IOException {
     String code = "";
-    String url = position.getURL().toString();
-    if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
-      // take care of url in windows
-      if (!url.startsWith("file:///")) {
-        url = url.replace("file://", "file:///");
-      }
-    }
-
-    File file = new File(new URL(url).getFile());
+    File file = getFileWithPosition(position);
     if (file.exists() && file.isFile()) {
       try (FileReader freader = new FileReader(file);
           BufferedReader reader = new BufferedReader(freader)) {
