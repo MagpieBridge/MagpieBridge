@@ -84,7 +84,7 @@ public class AnalysisResultConsumerFactory {
              * If a AnalysisResult is type Diagnostic and has data in flows
              * then we will start the data flow server
              */
-            if (result.related() != null) {
+            if (result instanceof SARIFResult && result.related() != null) {
               String httpserverUrl = "";
               server.initAnalysisConfiguration();
               if (server.config.useMagpieHTTPServer()) {
