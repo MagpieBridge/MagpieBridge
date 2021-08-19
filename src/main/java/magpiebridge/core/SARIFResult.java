@@ -13,7 +13,6 @@ public class SARIFResult implements AnalysisResult {
   private Iterable<Pair<Position, String>> related;
   private DiagnosticSeverity severity;
   private Pair<Position, String> repair;
-  private Iterable<Pair<Position, Position>> flows;
   private String code;
 
   public SARIFResult(
@@ -30,7 +29,6 @@ public class SARIFResult implements AnalysisResult {
     this.related = relatedInfo;
     this.severity = severity;
     this.repair = repair;
-    this.flows = null;
     this.code = code;
   }
 
@@ -47,11 +45,6 @@ public class SARIFResult implements AnalysisResult {
   @Override
   public Iterable<Pair<Position, String>> related() {
     return related;
-  }
-
-  @Override
-  public Iterable<Pair<Position, Position>> flows() {
-    return flows;
   }
 
   @Override

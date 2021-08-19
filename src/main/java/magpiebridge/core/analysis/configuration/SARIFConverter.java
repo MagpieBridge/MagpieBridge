@@ -93,7 +93,7 @@ public class SARIFConverter {
     JsonObject location = new JsonObject();
     JsonObject threadFlows = new JsonObject();
     JsonArray locations = new JsonArray();
-    for (Pair<Position, Position> flow : this.analysisResult.flows()) {
+    for (Pair<Position, String> flow : this.analysisResult.related()) {
       location = getLocation(flow.fst);
 
       locations.add(location);
