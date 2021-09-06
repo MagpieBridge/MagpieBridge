@@ -14,6 +14,7 @@ public class SARIFResult implements AnalysisResult {
   private DiagnosticSeverity severity;
   private Pair<Position, String> repair;
   private String code;
+  private String methodName;
 
   public SARIFResult(
       Kind kind,
@@ -22,7 +23,8 @@ public class SARIFResult implements AnalysisResult {
       Iterable<Pair<Position, String>> relatedInfo,
       DiagnosticSeverity severity,
       Pair<Position, String> repair,
-      String code) {
+      String code,
+      String methodName) {
     this.kind = kind;
     this.position = pos;
     this.message = msg;
@@ -30,6 +32,7 @@ public class SARIFResult implements AnalysisResult {
     this.severity = severity;
     this.repair = repair;
     this.code = code;
+    this.methodName = methodName;
   }
 
   @Override
@@ -60,6 +63,10 @@ public class SARIFResult implements AnalysisResult {
   @Override
   public String code() {
     return code;
+  }
+
+  public String mehodName() {
+    return methodName;
   }
 
   @Override
