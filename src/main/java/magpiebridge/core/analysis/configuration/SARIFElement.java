@@ -11,6 +11,7 @@ import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
 import magpiebridge.core.SARIFResult;
+import magpiebridge.util.JsonFormatHandler;
 
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -20,14 +21,14 @@ public class SARIFElement {
 
   public SARIFElement(JsonObject sarif) throws MalformedURLException {
     this.analysisResults = new ArrayList<AnalysisResult>();
-    if (notNullAndHas(sarif, "runs")) {
+    if (JsonFormatHandler.notNullAndHas(sarif, "runs")) {
       JsonArray runs = sarif.get("runs").getAsJsonArray();
       JsonArray results = new JsonArray();
       JsonObject run = new JsonObject();
       JsonObject result = new JsonObject();
       for (int i = 0; i < runs.size(); i++) {
         run = runs.get(i).getAsJsonObject();
-        if (notNullAndHas(run, "results")) {
+        if (JsonFormatHandler.notNullAndHas(run, "results")) {
           results = run.get("results").getAsJsonArray();
           for (int j = 0; j < results.size(); j++) {
             result = results.get(j).getAsJsonObject();
@@ -45,7 +46,7 @@ public class SARIFElement {
   private void insertAnalysisResult(JsonObject result) throws MalformedURLException {
     JsonObject message = result.get("message").getAsJsonObject();
     JsonArray locations = result.get("locations").getAsJsonArray();
-    String messageText = notNullAndHas(message, "text") ? message.get("text").getAsString() : null;
+    String messageText = JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").getAsString() : null;
     Position errorPosition = locationToPosition(locations.get(0).getAsJsonObject());
 
     if (errorPosition == null || messageText == null) {
@@ -55,7 +56,7 @@ public class SARIFElement {
     List<Pair<Position, String>> relatedInfo = new ArrayList<>();
     String code = locationToCode(locations.get(0).getAsJsonObject());
 
-    if (notNullAndHas(result, "codeFlows")) {
+    if (JsonFormatHandler.notNullAndHas(result, "codeFlows")) {
       JsonArray codeFlows = result.get("codeFlows").getAsJsonArray();
       JsonObject codeFlow = new JsonObject();
       JsonArray threadFlows = new JsonArray();
@@ -64,14 +65,14 @@ public class SARIFElement {
       for (int i = 0; i < codeFlows.size(); i++) {
         codeFlow = codeFlows.get(i).getAsJsonObject();
         threadFlows =
-            notNullAndHas(codeFlow, "threadFlows")
+        		JsonFormatHandler.notNullAndHas(codeFlow, "threadFlows")
                 ? codeFlow.get("threadFlows").getAsJsonArray()
                 : null;
         if (threadFlows != null) {
           for (int j = 0; j < threadFlows.size(); j++) {
             threadFlow = threadFlows.get(j).getAsJsonObject();
             threadFlowLocations =
-                notNullAndHas(threadFlow, "locations")
+            		JsonFormatHandler.notNullAndHas(threadFlow, "locations")
                     ? threadFlow.get("locations").getAsJsonArray()
                     : null;
             if (threadFlowLocations != null) {
@@ -89,7 +90,8 @@ public class SARIFElement {
                       relatedInfo,
                       DiagnosticSeverity.Error,
                       null,
-                      code));
+                      code,
+                      null));
             }
           }
         }
@@ -106,7 +108,8 @@ public class SARIFElement {
               relatedInfo,
               DiagnosticSeverity.Error,
               null,
-              code));
+              code,
+              null));
     }
   }
 
@@ -130,24 +133,24 @@ public class SARIFElement {
   }
 
   private Position locationToPosition(JsonObject location) throws MalformedURLException {
-    if (!notNullAndHas(location, "physicalLocation")) {
+    if (!JsonFormatHandler.notNullAndHas(location, "physicalLocation")) {
       return null;
     }
 
     JsonObject phsicalLocation = location.getAsJsonObject("physicalLocation");
     JsonObject artifactLocation =
-        notNullAndHas(phsicalLocation, "artifactLocation")
+    		JsonFormatHandler.notNullAndHas(phsicalLocation, "artifactLocation")
             ? phsicalLocation.getAsJsonObject("artifactLocation")
             : null;
     JsonObject region =
-        notNullAndHas(phsicalLocation, "region") ? phsicalLocation.getAsJsonObject("region") : null;
+    		JsonFormatHandler.notNullAndHas(phsicalLocation, "region") ? phsicalLocation.getAsJsonObject("region") : null;
 
-    int firstLine = notNullAndHas(region, "startLine") ? region.get("startLine").getAsInt() : -1;
-    int lastLine = notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : -1;
-    int firstCol = notNullAndHas(region, "startColumn") ? region.get("startColumn").getAsInt() : -1;
-    int lastCol = notNullAndHas(region, "endColumn") ? region.get("endColumn").getAsInt() : -1;
+    int firstLine = JsonFormatHandler.notNullAndHas(region, "startLine") ? region.get("startLine").getAsInt() : -1;
+    int lastLine = JsonFormatHandler.notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : -1;
+    int firstCol = JsonFormatHandler.notNullAndHas(region, "startColumn") ? region.get("startColumn").getAsInt() : -1;
+    int lastCol = JsonFormatHandler.notNullAndHas(region, "endColumn") ? region.get("endColumn").getAsInt() : -1;
     URL url =
-        notNullAndHas(artifactLocation, "uri")
+    		JsonFormatHandler.notNullAndHas(artifactLocation, "uri")
             ? new URL(artifactLocation.get("uri").getAsString())
             : null;
     SARIFCodePosition position = new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url);
@@ -156,12 +159,9 @@ public class SARIFElement {
 
   private String locationToCode(JsonObject location) {
     JsonObject message =
-        notNullAndHas(location, "message") ? location.getAsJsonObject("message") : null;
-    String text = notNullAndHas(message, "text") ? message.get("text").toString() : null;
+    		JsonFormatHandler.notNullAndHas(location, "message") ? location.getAsJsonObject("message") : null;
+    String text = JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").toString() : null;
     return text;
   }
 
-  private boolean notNullAndHas(JsonObject obj, String property) {
-    return obj != null && obj.has(property);
-  }
 }

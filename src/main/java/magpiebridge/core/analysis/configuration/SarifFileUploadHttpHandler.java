@@ -10,6 +10,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Stack;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.util.JsonFormatHandler;
+
 import org.apache.commons.io.IOUtils;
 
 /** The class handles HTTP requests of the SARIF page. */
@@ -38,7 +40,7 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
 
         StringWriter writer = new StringWriter();
         IOUtils.copy(exchange.getRequestBody(), writer, StandardCharsets.UTF_8);
-        String theString = getJsonFromString(writer.toString());
+        String theString = JsonFormatHandler.getJsonFromString(writer.toString());
         JsonObject sarifJson = (JsonObject) new JsonParser().parse(theString);
         String finalResult = "";
         try {
@@ -57,37 +59,5 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
     } finally {
       if (outputStream != null) outputStream.close();
     }
-  }
-  /**
-   * Keep only JSON part of the string
-   *
-   * @param str
-   * @return
-   */
-  public String getJsonFromString(String str) {
-    String content = "";
-    String temp = "";
-    Stack<Character> stack = new Stack<Character>();
-    for (char singleChar : str.toCharArray()) {
-      if (stack.isEmpty() && singleChar == '{') {
-        stack.push(singleChar);
-        temp += singleChar;
-      } else if (!stack.isEmpty()) {
-        temp += singleChar;
-        if (singleChar == '}' && stack.peek().equals('{')) {
-          stack.pop();
-          if (stack.isEmpty()) {
-            content += temp;
-            temp = "";
-          }
-        } else if (singleChar == '{' || singleChar == '}') {
-          stack.push(singleChar);
-        }
-      } else if (temp.length() > 0 && stack.isEmpty()) {
-        content += temp;
-        temp = "";
-      }
-    }
-    return content;
   }
 }
