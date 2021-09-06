@@ -160,6 +160,34 @@ public class DataFlowPathHtmlGenerator {
     return script(rawHtml(code));
   }
 
+  private static ContainerTag generateNodeClickScript() {
+    String postUrl = "http:/" + serverAddress + "/flow/show-line";
+    String code =
+        "cy.on('tap', 'node', function(){\r\n"
+            + "   var position = {\r\n"
+            + "     url : this.data('url'),\r\n"
+            + "     firstLine : this.data('firstLine'),\r\n"
+            + "     firstCol : this.data('firstCol'),\r\n"
+            + "     lastLine : this.data('lastLine'),\r\n"
+            + "     lastCol : this.data('lastCol'),\r\n"
+            + "     code : this.data('value')\r\n"
+            + "   };\r\n"
+            + "   $.ajax({\r\n"
+            + "      url: '"
+            + postUrl
+            + "',\r\n"
+            + "      type: 'post',\r\n"
+            + "      dataType: 'json',\r\n"
+            + "      contentType: 'application/json',\r\n"
+            + "      success: function (data) {\r\n"
+            + "        console.log(data);\r\n"
+            + "      },\r\n"
+            + "      data: JSON.stringify(position)\r\n"
+            + "   });\r\n"
+            + "});";
+    return script(rawHtml(code));
+  }
+
   private static void setDataFlowGraphAndSidebar(Iterable<Pair<Position, String>> flows)
       throws IOException {
     if (flows == null) {
@@ -191,8 +219,7 @@ public class DataFlowPathHtmlGenerator {
         currentFileName = tempFileName;
 
         code +=
-            getGraphElement(
-                "nodes", new String[] {"id: 'n" + nodeCount + "', value: '" + previousLine + "'"});
+            getGraphElement("nodes", generateNodeData(nodeCount, previousLine, previousPosition));
         existingNodes.put(previousPosition, nodeCount);
         line = Pair.make(existingNodes.get(previousPosition), previousPosition.getFirstLine());
         lineNumbers.add(line);
@@ -206,18 +233,14 @@ public class DataFlowPathHtmlGenerator {
       to = flow.snd;
 
       if (!existingNodes.containsKey(fromPosition)) {
-        code +=
-            getGraphElement(
-                "nodes", new String[] {"id: 'n" + nodeCount + "', value: '" + from + "'"});
+        code += getGraphElement("nodes", generateNodeData(nodeCount, from, fromPosition));
 
         existingNodes.put(fromPosition, nodeCount);
         nodeCount++;
       }
 
       if (!existingNodes.containsKey(toPosition)) {
-        code +=
-            getGraphElement(
-                "nodes", new String[] {"id: 'n" + nodeCount + "', value: '" + to + "'"});
+        code += getGraphElement("nodes", generateNodeData(nodeCount, to, toPosition));
 
         existingNodes.put(toPosition, nodeCount);
         nodeCount++;
@@ -260,6 +283,27 @@ public class DataFlowPathHtmlGenerator {
 
     dataFlowGraph = script(rawHtml(code));
     setSidebar(sidebarInfos);
+  }
+
+  private static String[] generateNodeData(int id, String value, Position position) {
+    return new String[] {
+      "id: 'n"
+          + id
+          + "', value: '"
+          + value
+          + "', url: \""
+          + position.getURL()
+          + "\""
+          + ", firstLine: '"
+          + position.getFirstLine()
+          + "', firstCol: '"
+          + position.getFirstCol()
+          + "', lastLine: '"
+          + position.getLastLine()
+          + "', lastCol: '"
+          + position.getLastCol()
+          + "'"
+    };
   }
 
   private static void setSidebar(
@@ -339,6 +383,7 @@ public class DataFlowPathHtmlGenerator {
                             .withClass("row"),
                         generateDataFlowScriptConfiguration(),
                         dataFlowGraph,
+                        generateNodeClickScript(),
                         generateSidebarLinkClickScript(),
                         generateSidebarCollapseScript())
                     .withId("content"))
@@ -347,7 +392,7 @@ public class DataFlowPathHtmlGenerator {
 
   private static DomContent generateHeader() {
     return head(
-        title("MagpieBridge"),
+        title("MagpieBridge Data Flow Page"),
         new UnescapedText(
             "<!-- Latest compiled and minified CSS -->\n"
                 + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css\" integrity=\"sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4\" crossorigin=\"anonymous\">\n"
@@ -576,7 +621,7 @@ public class DataFlowPathHtmlGenerator {
     return custom;
   }
 
-  public static String getFileNameFromPosition(Position position) throws MalformedURLException {
+  private static String getFileNameFromPosition(Position position) throws MalformedURLException {
     File file = SourceCodeReader.getFileWithPosition(position);
     return file.exists() && file.isFile() ? file.getName() : "";
   }
