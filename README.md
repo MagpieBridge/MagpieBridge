@@ -74,6 +74,7 @@ The old versions till 0.0.9 of MagpieBridge were published on the GitHub Package
 - [Check the tutorials to create your first project with MagpieBridge](https://github.com/MagpieBridge/MagpieBridge/wiki) :star2:**UPDATED**:star2: 
 
 ## Integrated Static Analyses using MagpieBridge
+- [SecuCheck](https://secucheck.github.io)
 - [MagpieBridge-based Facebook Infer](https://github.com/MagpieBridge/InferIDE)
 - [MagpieBridge-based CogniCrypt](https://github.com/MagpieBridge/CryptoLSPDemo)
 - [MagpieBridge-based FlowDroid](https://github.com/MagpieBridge/FlowDroidLSPDemo)
