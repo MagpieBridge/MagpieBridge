@@ -72,7 +72,10 @@ public class DataFlowPathHttpHandler implements HttpHandler {
           try {
             Position errorPosition = locationToPosition(data);
             List<AnalysisResult> flowResults = new ArrayList<AnalysisResult>();
-            String code = JsonFormatHandler.notNullAndHas(data, "code") ? data.get("code").getAsString() : null;
+            String code =
+                JsonFormatHandler.notNullAndHas(data, "code")
+                    ? data.get("code").getAsString()
+                    : null;
             AnalysisResult flowResult =
                 new SARIFResult(
                     Kind.Diagnostic,
@@ -102,13 +105,20 @@ public class DataFlowPathHttpHandler implements HttpHandler {
 
   private Position locationToPosition(JsonObject data) throws MalformedURLException {
 
-    int firstLine = JsonFormatHandler.notNullAndHas(data, "firstLine") ? data.get("firstLine").getAsInt() : -1;
-    int lastLine = JsonFormatHandler.notNullAndHas(data, "lastLine") ? data.get("lastLine").getAsInt() : -1;
-    int firstCol = JsonFormatHandler.notNullAndHas(data, "firstCol") ? data.get("firstCol").getAsInt() : -1;
-    int lastCol = JsonFormatHandler.notNullAndHas(data, "lastCol") ? data.get("lastCol").getAsInt() : -1;
-    URL url = JsonFormatHandler.notNullAndHas(data, "url") ? new URL(data.get("url").getAsString()) : null;
-    SARIFCodePosition position = new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url);
+    int firstLine =
+        JsonFormatHandler.notNullAndHas(data, "firstLine") ? data.get("firstLine").getAsInt() : -1;
+    int lastLine =
+        JsonFormatHandler.notNullAndHas(data, "lastLine") ? data.get("lastLine").getAsInt() : -1;
+    int firstCol =
+        JsonFormatHandler.notNullAndHas(data, "firstCol") ? data.get("firstCol").getAsInt() : -1;
+    int lastCol =
+        JsonFormatHandler.notNullAndHas(data, "lastCol") ? data.get("lastCol").getAsInt() : -1;
+    URL url =
+        JsonFormatHandler.notNullAndHas(data, "url")
+            ? new URL(data.get("url").getAsString())
+            : null;
+    SARIFCodePosition position =
+        new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
     return position;
   }
-
 }
