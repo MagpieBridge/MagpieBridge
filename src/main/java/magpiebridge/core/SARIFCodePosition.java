@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod.SourcePosition;
@@ -13,14 +13,17 @@ public class SARIFCodePosition implements Position {
   private int lastLine;
   private int firstCol;
   private int lastCol;
+  private String methodName;
   private URL url;
 
-  public SARIFCodePosition(int firstLine, int firstCol, int lastLine, int lastCol, URL url) {
+  public SARIFCodePosition(
+      int firstLine, int firstCol, int lastLine, int lastCol, URL url, String methodName) {
     this.firstLine = firstLine;
     this.firstCol = firstCol;
     this.lastLine = lastLine;
     this.lastCol = lastCol;
     this.url = url;
+    this.methodName = methodName;
   }
 
   @Override
@@ -63,6 +66,10 @@ public class SARIFCodePosition implements Position {
     return this.url;
   }
 
+  public String getMehodName() {
+    return this.methodName;
+  }
+
   @Override
   public Reader getReader() throws IOException {
     // TODO Auto-generated method stub
@@ -72,13 +79,15 @@ public class SARIFCodePosition implements Position {
   public String toString() {
     return "First Line: "
         + firstLine
-        + ", First Col :"
+        + ", First Col : "
         + firstCol
-        + ", Last Line :"
+        + ", Last Line : "
         + lastLine
-        + ", Last Col :"
+        + ", Last Col : "
         + lastCol
         + ", url : "
-        + url.toString();
+        + url.toString()
+        + ", methodName : "
+        + methodName;
   }
 }
