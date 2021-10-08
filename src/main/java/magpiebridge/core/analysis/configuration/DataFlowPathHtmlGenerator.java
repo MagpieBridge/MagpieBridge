@@ -39,6 +39,7 @@ public class DataFlowPathHtmlGenerator {
   private static String serverAddress;
   private static ContainerTag dataFlowGraph;
   private static UnescapedText sidebarList;
+  private static String lastNodeId;
 
   public static String generateHTML(AnalysisResult result, String serverAddress)
       throws IOException {
@@ -296,6 +297,7 @@ public class DataFlowPathHtmlGenerator {
 
     code += "]); cy.layout(options).run();";
 
+    lastNodeId = nodeCount != 0 ? "n" + (nodeCount - 1) : "n0";
     dataFlowGraph = script(rawHtml(code));
     setSidebar(sidebarInfos);
   }
