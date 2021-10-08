@@ -160,6 +160,21 @@ public class DataFlowPathHtmlGenerator {
     return script(rawHtml(code));
   }
 
+  private static ContainerTag generatesGraphButtonScript() {
+    String code =
+        "var data = \"<div class='btn-div-sm'>"
+            + "<button type='button' class='btn btn-outline-dark btn-sm' onClick='resetGraph()'>"
+            + "<i class='fa fa-repeat' aria-hidden='true'></i></button>"
+            + "<button type='button' class='btn btn-outline-dark btn-sm' onClick='increaseZoom()'>"
+            + "<i class='fa fa-plus' aria-hidden='true'></i></button>"
+            + "<button type='button' class='btn btn-outline-dark btn-sm' onClick='decreaseZoom()'>"
+            + "<i class='fa fa-minus' aria-hidden='true'></i></button></div>"
+            + "<div class='right-graph-div'>"
+            + "<button type='button' class='btn btn-outline-dark btn-md' data-toggle='modal' data-target='#helpModel'>"
+            + "<i class='fa fa-question' aria-hidden='true'></i></button></div>\"\r\n"
+            + "$('#cy > div:first').prepend(data);";
+    return script(rawHtml(code));
+  }
   private static ContainerTag generateNodeClickScript() {
     String postUrl = "http:/" + serverAddress + "/flow/show-line";
     String code =
