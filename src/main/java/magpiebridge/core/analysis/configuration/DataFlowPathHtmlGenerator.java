@@ -293,8 +293,8 @@ public class DataFlowPathHtmlGenerator {
 
     String currentFileName = "";
     String tempFileName = "";
-    Vector<Pair<Integer, Integer>> lineNumbers = new Vector<>();
-    Pair<Integer, Integer> line;
+    Vector<Pair<Integer, String>> lineNumbers = new Vector<>();
+    Pair<Integer, String> line;
     for (Pair<Position, String> flow : flows) {
       tempFileName = getFileNameFromPosition(flow.fst);
 
@@ -336,7 +336,7 @@ public class DataFlowPathHtmlGenerator {
       // then we will save the previous file name with its line numbers
       if (!tempFileName.isEmpty() && !tempFileName.equals(currentFileName)) {
         if (!lineNumbers.isEmpty()) {
-          Pair<String, Vector<Pair<Integer, Integer>>> pair =
+          Pair<String, Vector<Pair<Integer, String>>> pair =
               Pair.make(currentFileName, lineNumbers);
           sidebarInfos.add(pair);
         }
