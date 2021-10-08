@@ -176,6 +176,44 @@ public class DataFlowPathHtmlGenerator {
             + "$('#cy > div:first').prepend(data);";
     return script(rawHtml(code));
   }
+
+  private static ContainerTag generatesFunctionsScript() {
+    String code =
+        "          function identifySinkSource(){\r\n"
+            + "                 cy.getElementById('n0').style('border-width', 4);\r\n"
+            + "                 cy.getElementById('"
+            + lastNodeId
+            + "').style('background-color', '#ba0000');\r\n"
+            + "              }\r\n"
+            + "\r\n"
+            + "              function setDefaultBackgroundOfAllNodes(){\r\n"
+            + "                 cy.nodes().style('background-color', '#007bff');\r\n"
+            + "             }\r\n"
+            + "\r\n"
+            + "             function increaseZoom(){\r\n"
+            + "                 var zoom = parseFloat(cy.zoom()) + 0.50;\r\n"
+            + "                 cy.zoom(zoom)\r\n"
+            + "\r\n"
+            + "             }\r\n"
+            + "\r\n"
+            + "             function decreaseZoom(){\r\n"
+            + "                var zoom = parseFloat(cy.zoom()) - 0.50;\r\n"
+            + "                 cy.zoom(zoom)\r\n"
+            + "             }\r\n"
+            + "\r\n"
+            + "             function resetGraph(){\r\n"
+            + "                cy.elements().remove();\r\n"
+            + "                nodesSet();\r\n"
+            + "             }\r\n"
+            + "\r\n"
+            + "            function nodesSet(){\r\n"
+            + "              cy.add(cyNodes);\r\n"
+            + "              identifySinkSource();\r\n"
+            + "              cy.layout(options).run();\r\n"
+            + "            }";
+
+    return script(rawHtml(code));
+  }
   private static ContainerTag generateNodeClickScript() {
     String postUrl = "http:/" + serverAddress + "/flow/show-line";
     String code =
