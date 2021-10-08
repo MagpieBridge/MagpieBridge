@@ -157,8 +157,9 @@ public class DataFlowPathHtmlGenerator {
             + "          const node = cy.getElementById(nid);\r\n"
             + "          cy.zoom(7);\r\n"
             + "          cy.center(node);\r\n"
-            + "          cy.nodes().style('background-color', '#007bff');\r\n"
-            + "          node.style('background-color', '#F27100');\r\n"
+            + "          setDefaultBackgroundOfAllNodes();\r\n"
+            + "          identifySinkSource();\r\n"
+            + "          node.style('background-color', '#F27100');"
             + "      })";
     return script(rawHtml(code));
   }
