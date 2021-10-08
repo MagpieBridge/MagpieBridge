@@ -8,10 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Stack;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.util.JsonFormatHandler;
-
 import org.apache.commons.io.IOUtils;
 
 /** The class handles HTTP requests of the SARIF page. */
@@ -44,7 +42,8 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
         JsonObject sarifJson = (JsonObject) new JsonParser().parse(theString);
         String finalResult = "";
         try {
-          SARIFElement sarifElement = new SARIFElement(sarifJson);
+          SARIFToAanlysisResultConverter sarifElement =
+              new SARIFToAanlysisResultConverter(sarifJson);
           this.magpieServer.consume(sarifElement.getAnalysisResults(), "Sarif File Upload");
           finalResult = sarifElement.getAnalysisResults().toString();
         } catch (Exception e) {

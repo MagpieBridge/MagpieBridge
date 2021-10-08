@@ -15,13 +15,12 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.core.SARIFCodePosition;
 import magpiebridge.core.SARIFResult;
 import magpiebridge.util.JsonFormatHandler;
-
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -82,8 +81,7 @@ public class DataFlowPathHttpHandler implements HttpHandler {
                     null,
                     DiagnosticSeverity.Error,
                     null,
-                    code,
-                    null);
+                    code);
             flowResults.add(flowResult);
             this.magpieServer.consume(flowResults, "Show in the editor.");
             finalResult = errorPosition.toString() + " " + result.position().toString();
