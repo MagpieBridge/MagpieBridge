@@ -443,7 +443,7 @@ public class DataFlowPathHtmlGenerator {
         new UnescapedText(
             "<!-- Latest compiled and minified CSS -->\n"
                 + "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css\" integrity=\"sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4\" crossorigin=\"anonymous\">\n"
-                + "\n"
+                + "<link href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\" rel=\"stylesheet\">"
                 + "<!-- Latest compiled and minified JavaScript -->\n"
                 + "<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>"
                 + "<script src=\"https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js\"></script>"
