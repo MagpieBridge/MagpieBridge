@@ -214,6 +214,31 @@ public class DataFlowPathHtmlGenerator {
 
     return script(rawHtml(code));
   }
+
+  private static ContainerTag generateMouseOverNodeScript() {
+    String code =
+        " cy.on('mouseover ', 'node', function(){\r\n"
+            + "                  var node = $('.node-line[node=\"'+ this.data('id')+'\"]');\r\n"
+            + "                  var fileId = node.closest(\"ul\").attr('id');\r\n"
+            + "                  var fileLink =  $('.dropdown-toggle[href=\"#'+fileId+'\"]');\r\n"
+            + "                  if(fileLink.attr('aria-expanded') == 'false'){\r\n"
+            + "                     fileLink.click();\r\n"
+            + "                  }\r\n"
+            + "                  node.focus();\r\n"
+            + "                  var sidebar = $('#sidebar');\r\n"
+            + "              });\r\n"
+            + "\r\n"
+            + "              cy.on('tap', function(event){\r\n"
+            + "                var evtTarget = event.target;\r\n"
+            + "                if( evtTarget == cy ){\r\n"
+            + "                  $(':focus').blur();\r\n"
+            + "                  setDefaultBackgroundOfAllNodes();\r\n"
+            + "                  identifySinkSource();\r\n"
+            + "                } \r\n"
+            + "              });";
+    return script(rawHtml(code));
+  }
+
   private static ContainerTag generateNodeClickScript() {
     String postUrl = "http:/" + serverAddress + "/flow/show-line";
     String code =
