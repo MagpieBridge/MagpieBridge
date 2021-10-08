@@ -278,7 +278,7 @@ public class DataFlowPathHtmlGenerator {
     if (flows == null) {
       return;
     }
-    String code = " cy.add([";
+    String code = " let cyNodes = [";
     HashMap<Position, Integer> existingNodes = new HashMap<Position, Integer>();
     String from = "";
     String to = "";
@@ -365,8 +365,7 @@ public class DataFlowPathHtmlGenerator {
       sidebarInfos.add(pair);
     }
 
-    code += "]); cy.layout(options).run();";
-
+    code += "]; nodesSet();";
     lastNodeId = nodeCount != 0 ? "n" + (nodeCount - 1) : "n0";
     dataFlowGraph = script(rawHtml(code));
     setSidebar(sidebarInfos);
