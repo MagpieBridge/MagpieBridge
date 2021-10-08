@@ -10,16 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
+import magpiebridge.core.SARIFCodePosition;
 import magpiebridge.core.SARIFResult;
 import magpiebridge.util.JsonFormatHandler;
-
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 /** Converts SARIF JSON to analysis results */
-public class SARIFElement {
+public class SARIFToAanlysisResultConverter {
   private List<AnalysisResult> analysisResults;
 
-  public SARIFElement(JsonObject sarif) throws MalformedURLException {
+  public SARIFToAanlysisResultConverter(JsonObject sarif) throws MalformedURLException {
     this.analysisResults = new ArrayList<AnalysisResult>();
     if (JsonFormatHandler.notNullAndHas(sarif, "runs")) {
       JsonArray runs = sarif.get("runs").getAsJsonArray();
@@ -46,7 +46,8 @@ public class SARIFElement {
   private void insertAnalysisResult(JsonObject result) throws MalformedURLException {
     JsonObject message = result.get("message").getAsJsonObject();
     JsonArray locations = result.get("locations").getAsJsonArray();
-    String messageText = JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").getAsString() : null;
+    String messageText =
+        JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").getAsString() : null;
     Position errorPosition = locationToPosition(locations.get(0).getAsJsonObject());
 
     if (errorPosition == null || messageText == null) {
@@ -65,14 +66,14 @@ public class SARIFElement {
       for (int i = 0; i < codeFlows.size(); i++) {
         codeFlow = codeFlows.get(i).getAsJsonObject();
         threadFlows =
-        		JsonFormatHandler.notNullAndHas(codeFlow, "threadFlows")
+            JsonFormatHandler.notNullAndHas(codeFlow, "threadFlows")
                 ? codeFlow.get("threadFlows").getAsJsonArray()
                 : null;
         if (threadFlows != null) {
           for (int j = 0; j < threadFlows.size(); j++) {
             threadFlow = threadFlows.get(j).getAsJsonObject();
             threadFlowLocations =
-            		JsonFormatHandler.notNullAndHas(threadFlow, "locations")
+                JsonFormatHandler.notNullAndHas(threadFlow, "locations")
                     ? threadFlow.get("locations").getAsJsonArray()
                     : null;
             if (threadFlowLocations != null) {
@@ -90,8 +91,7 @@ public class SARIFElement {
                       relatedInfo,
                       DiagnosticSeverity.Error,
                       null,
-                      code,
-                      null));
+                      code));
             }
           }
         }
@@ -108,8 +108,7 @@ public class SARIFElement {
               relatedInfo,
               DiagnosticSeverity.Error,
               null,
-              code,
-              null));
+              code));
     }
   }
 
@@ -139,29 +138,44 @@ public class SARIFElement {
 
     JsonObject phsicalLocation = location.getAsJsonObject("physicalLocation");
     JsonObject artifactLocation =
-    		JsonFormatHandler.notNullAndHas(phsicalLocation, "artifactLocation")
+        JsonFormatHandler.notNullAndHas(phsicalLocation, "artifactLocation")
             ? phsicalLocation.getAsJsonObject("artifactLocation")
             : null;
     JsonObject region =
-    		JsonFormatHandler.notNullAndHas(phsicalLocation, "region") ? phsicalLocation.getAsJsonObject("region") : null;
+        JsonFormatHandler.notNullAndHas(phsicalLocation, "region")
+            ? phsicalLocation.getAsJsonObject("region")
+            : null;
 
-    int firstLine = JsonFormatHandler.notNullAndHas(region, "startLine") ? region.get("startLine").getAsInt() : -1;
-    int lastLine = JsonFormatHandler.notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : -1;
-    int firstCol = JsonFormatHandler.notNullAndHas(region, "startColumn") ? region.get("startColumn").getAsInt() : -1;
-    int lastCol = JsonFormatHandler.notNullAndHas(region, "endColumn") ? region.get("endColumn").getAsInt() : -1;
+    int firstLine =
+        JsonFormatHandler.notNullAndHas(region, "startLine")
+            ? region.get("startLine").getAsInt()
+            : -1;
+    int lastLine =
+        JsonFormatHandler.notNullAndHas(region, "endLine") ? region.get("endLine").getAsInt() : -1;
+    int firstCol =
+        JsonFormatHandler.notNullAndHas(region, "startColumn")
+            ? region.get("startColumn").getAsInt()
+            : -1;
+    int lastCol =
+        JsonFormatHandler.notNullAndHas(region, "endColumn")
+            ? region.get("endColumn").getAsInt()
+            : -1;
     URL url =
-    		JsonFormatHandler.notNullAndHas(artifactLocation, "uri")
+        JsonFormatHandler.notNullAndHas(artifactLocation, "uri")
             ? new URL(artifactLocation.get("uri").getAsString())
             : null;
-    SARIFCodePosition position = new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url);
+    SARIFCodePosition position =
+        new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
     return position;
   }
 
   private String locationToCode(JsonObject location) {
     JsonObject message =
-    		JsonFormatHandler.notNullAndHas(location, "message") ? location.getAsJsonObject("message") : null;
-    String text = JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").toString() : null;
+        JsonFormatHandler.notNullAndHas(location, "message")
+            ? location.getAsJsonObject("message")
+            : null;
+    String text =
+        JsonFormatHandler.notNullAndHas(message, "text") ? message.get("text").toString() : null;
     return text;
   }
-
 }
