@@ -285,7 +285,7 @@ public class DataFlowPathHtmlGenerator {
     Position previousPosition = null;
     String previousLine = "";
     // filename and its line numbers for making sidebar
-    List<Pair<String, Vector<Pair<Integer, Integer>>>> sidebarInfos = new ArrayList<>();
+    List<Pair<String, Vector<Pair<Integer, String>>>> sidebarInfos = new ArrayList<>();
 
     String currentFileName = "";
     String tempFileName = "";
@@ -302,7 +302,8 @@ public class DataFlowPathHtmlGenerator {
         code +=
             getGraphElement("nodes", generateNodeData(nodeCount, previousLine, previousPosition));
         existingNodes.put(previousPosition, nodeCount);
-        line = Pair.make(existingNodes.get(previousPosition), previousPosition.getFirstLine());
+        line =
+            Pair.make(existingNodes.get(previousPosition), sidebarPositionName(previousPosition));
         lineNumbers.add(line);
         nodeCount++;
         continue;
@@ -338,7 +339,7 @@ public class DataFlowPathHtmlGenerator {
         currentFileName = tempFileName;
         lineNumbers = new Vector<>();
       }
-      line = Pair.make(existingNodes.get(toPosition), toPosition.getFirstLine());
+      line = Pair.make(existingNodes.get(toPosition), sidebarPositionName(toPosition));
       lineNumbers.add(line);
 
       code +=
@@ -356,7 +357,7 @@ public class DataFlowPathHtmlGenerator {
 
     // For the last edge entry
     if (!lineNumbers.isEmpty()) {
-      Pair<String, Vector<Pair<Integer, Integer>>> pair = Pair.make(currentFileName, lineNumbers);
+      Pair<String, Vector<Pair<Integer, String>>> pair = Pair.make(currentFileName, lineNumbers);
       sidebarInfos.add(pair);
     }
 
@@ -400,13 +401,14 @@ public class DataFlowPathHtmlGenerator {
   }
 
   private static void setSidebar(
-      Iterable<Pair<String, Vector<Pair<Integer, Integer>>>> sidebarInfos) {
+      Iterable<Pair<String, Vector<Pair<Integer, String>>>> sidebarInfos) {
     String code = "";
     String fileName = "";
     String collapseId = "";
     String locationCount = "";
-    int node, lineNumber, numberOfElement, count = 1;
-    for (Pair<String, Vector<Pair<Integer, Integer>>> sidebarInfo : sidebarInfos) {
+    String sidebarPostionName = "";
+    int node, numberOfElement, count = 1;
+    for (Pair<String, Vector<Pair<Integer, String>>> sidebarInfo : sidebarInfos) {
       fileName = sidebarInfo.fst;
       numberOfElement = sidebarInfo.snd.size();
       collapseId = "side-line-" + count;
@@ -423,15 +425,15 @@ public class DataFlowPathHtmlGenerator {
               + "<ul class='collapse list-unstyled' id='"
               + collapseId
               + "'>";
-      for (Pair<Integer, Integer> line : sidebarInfo.snd) {
+      for (Pair<Integer, String> line : sidebarInfo.snd) {
         node = line.fst;
-        lineNumber = line.snd;
+        sidebarPostionName = line.snd;
         code +=
             "<li>"
                 + "<a class='node-line' href='#' node='n"
                 + node
-                + "'>Line "
-                + lineNumber
+                + "'>"
+                + sidebarPostionName
                 + "</a>\r\n"
                 + "</li>";
       }
