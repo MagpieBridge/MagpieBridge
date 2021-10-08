@@ -246,6 +246,9 @@ public class DataFlowPathHtmlGenerator {
     String postUrl = "http:/" + serverAddress + "/flow/show-line";
     String code =
         "cy.on('tap', 'node', function(){\r\n"
+            + "setDefaultBackgroundOfAllNodes();\r\n"
+            + "identifySinkSource();\r\n"
+            + "this.style('background-color', '#F27100');\r\n"
             + "   var position = {\r\n"
             + "     url : this.data('url'),\r\n"
             + "     firstLine : this.data('firstLine'),\r\n"
