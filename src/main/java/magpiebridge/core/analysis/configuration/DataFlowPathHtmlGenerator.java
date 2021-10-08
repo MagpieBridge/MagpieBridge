@@ -3,15 +3,16 @@ package magpiebridge.core.analysis.configuration;
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.button;
 import static j2html.TagCreator.div;
-import static j2html.TagCreator.h1;
 import static j2html.TagCreator.h3;
 import static j2html.TagCreator.h5;
 import static j2html.TagCreator.head;
 import static j2html.TagCreator.html;
+import static j2html.TagCreator.li;
 import static j2html.TagCreator.nav;
 import static j2html.TagCreator.p;
 import static j2html.TagCreator.rawHtml;
 import static j2html.TagCreator.script;
+import static j2html.TagCreator.span;
 import static j2html.TagCreator.title;
 import static j2html.TagCreator.ul;
 
@@ -28,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import magpiebridge.core.AnalysisResult;
+import magpiebridge.core.SARIFCodePosition;
 import magpiebridge.util.SourceCodeReader;
 
 /**
@@ -363,6 +365,17 @@ public class DataFlowPathHtmlGenerator {
     lastNodeId = nodeCount != 0 ? "n" + (nodeCount - 1) : "n0";
     dataFlowGraph = script(rawHtml(code));
     setSidebar(sidebarInfos);
+  }
+
+  private static String sidebarPositionName(Position position) {
+    String methodName = "";
+    if (position instanceof SARIFCodePosition) {
+      SARIFCodePosition codePostion = (SARIFCodePosition) position;
+      if (codePostion.getMehodName() != null) {
+        methodName += codePostion.getMehodName() + " : ";
+      }
+    }
+    return methodName + "Line " + position.getFirstLine();
   }
 
   private static String[] generateNodeData(int id, String value, Position position) {
