@@ -377,6 +377,38 @@ public class DataFlowPathHtmlGenerator {
     return ul(p(projectName), sidebarList).withClass("list-unstyled components");
   }
 
+  private static ContainerTag helpModal() {
+    return div(div(div(
+                    div(
+                            h5("Help").withClass("modal-title").withId("helpModelLabel"),
+                            button(span(rawHtml("&times;")).attr("aria-hidden", "true"))
+                                .withClass("close")
+                                .attr("data-dismiss", "modal")
+                                .attr("aria-label", "Close"))
+                        .withClass("modal-header"),
+                    div(ul(
+                                li("Grab to move the Graph.").withClass("list-group-item"),
+                                li("Scroll to zoom.").withClass("list-group-item"),
+                                li("Click nodes in the graph to view the code in the IDE.")
+                                    .withClass("list-group-item"),
+                                li("Graph edges with variable name.").withClass("list-group-item"))
+                            .withClass("list-group"))
+                        .withClass("modal-body"),
+                    div(button("Close")
+                            .withClasses("btn", "btn-secondary")
+                            .attr("data-dismiss", "modal"))
+                        .withClass("modal-footer"))
+                .withClass("modal-content"))
+            .withClass("modal-dialog")
+            .attr("role", "document"))
+        .withClasses("modal", "fade")
+        .withId("helpModel")
+        .attr("tabindex", "-1")
+        .attr("role", "dialog")
+        .attr("aria-labelledby", "helpModelLabel")
+        .attr("aria-hidden", "true");
+  }
+
   private static DomContent generateBody(AnalysisResult result) throws IOException {
     String problemDescription = result.severity() + ": " + result.toString(true);
     setDataFlowGraphAndSidebar(result.related());
