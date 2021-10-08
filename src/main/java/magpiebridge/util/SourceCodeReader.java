@@ -60,7 +60,7 @@ public class SourceCodeReader {
         while (p.getLastLine() < line) {
           currentLine = reader.readLine();
           line++;
-          if (p.getLastLine() == line) {
+          if (p.getLastLine() == line && p.getLastCol() != -1) {
             lines.add(removeComment(currentLine.substring(0, p.getLastCol()), includeComment));
           } else {
             lines.add(removeComment(currentLine, includeComment));
