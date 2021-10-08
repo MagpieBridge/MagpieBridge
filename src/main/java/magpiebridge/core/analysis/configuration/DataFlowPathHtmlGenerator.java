@@ -508,14 +508,18 @@ public class DataFlowPathHtmlGenerator {
                         div(
                                 generateGlobalScript(),
                                 div(h5(problemDescription))
-                                    .withClasses("col-md-12", "alert", "alert-danger"),
-                                div(div().withId("cy")).withClass("col-md-12"))
+                                    .withClasses("col-md-12", "alert", "div-danger"),
+                                div(div().withId("cy")).withClass("col-md-12"),
+                                helpModal())
                             .withClass("row"),
                         generateDataFlowScriptConfiguration(),
+                        generatesFunctionsScript(),
                         dataFlowGraph,
                         generateNodeClickScript(),
+                        generateMouseOverNodeScript(),
                         generateSidebarLinkClickScript(),
-                        generateSidebarCollapseScript())
+                        generateSidebarCollapseScript(),
+                        generatesGraphButtonScript())
                     .withId("content"))
             .withClass("wrapper"));
   }
