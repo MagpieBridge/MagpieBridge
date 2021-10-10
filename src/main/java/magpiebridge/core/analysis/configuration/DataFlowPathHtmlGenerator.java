@@ -42,6 +42,7 @@ public class DataFlowPathHtmlGenerator {
   private static ContainerTag dataFlowGraph;
   private static UnescapedText sidebarList;
   private static String lastNodeId;
+  private static List<String> previousTaintedVariable = new ArrayList<String>();
 
   public static String generateHTML(AnalysisResult result, String serverAddress)
       throws IOException {
@@ -353,6 +354,7 @@ public class DataFlowPathHtmlGenerator {
                 "id: 'e" + edgeCount + "'",
                 "source: 'n" + existingNodes.get(fromPosition) + "'",
                 "target: 'n" + existingNodes.get(toPosition) + "'",
+                "label: '" + lineToVariableName(previousLine) + "'",
               });
       edgeCount++;
       previousPosition = flow.fst;
@@ -369,6 +371,34 @@ public class DataFlowPathHtmlGenerator {
     lastNodeId = nodeCount != 0 ? "n" + (nodeCount - 1) : "n0";
     dataFlowGraph = script(rawHtml(code));
     setSidebar(sidebarInfos);
+  }
+
+  private static String lineToVariableName(String line) {
+    String[] splitOnEqual = line.split("=");
+    int taintVarPos = 0;
+    if (splitOnEqual.length == 2
+        && !line.contains("if(")
+        && !line.contains("if ")
+        && !line.contains("for(")
+        && !line.contains("for ")
+        && !line.contains("while(")
+        && !line.contains("while ")) {
+
+      String variableWithType = splitOnEqual[0].replaceAll("[-+*/](?![^(]*\\))", "");
+      String[] splitOnSpace = variableWithType.split(" ");
+      taintVarPos = splitOnSpace.length > 0 ? splitOnSpace.length - 1 : 0;
+      previousTaintedVariable.add(splitOnSpace[taintVarPos]);
+      return splitOnSpace[taintVarPos];
+    } else {
+      for (int i = 0; i < previousTaintedVariable.size(); i++) {
+        if (line.contains(previousTaintedVariable.get(i) + " ")
+            || line.contains(previousTaintedVariable.get(i) + ")")
+            || line.contains(previousTaintedVariable.get(i) + ",")) {
+          return previousTaintedVariable.get(i);
+        }
+      }
+    }
+    return "";
   }
 
   private static String sidebarPositionName(Position position) {
