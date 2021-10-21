@@ -244,7 +244,7 @@ public class DataFlowPathHtmlGenerator {
   }
 
   private static ContainerTag generateNodeClickScript() {
-    String postUrl = "http:/" + serverAddress + "/flow/show-line";
+    String postUrl = "http:/" + serverAddress + "/flow";
     String code =
         "cy.on('tap', 'node', function(){\r\n"
             + "setDefaultBackgroundOfAllNodes();\r\n"

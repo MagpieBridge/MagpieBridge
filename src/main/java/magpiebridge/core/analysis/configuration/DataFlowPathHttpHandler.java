@@ -3,14 +3,12 @@ package magpiebridge.core.analysis.configuration;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -40,7 +38,6 @@ public class DataFlowPathHttpHandler implements HttpHandler {
 
   @Override
   public void handle(HttpExchange exchange) throws IOException {
-    URI uri = exchange.getRequestURI();
     OutputStream outputStream = exchange.getResponseBody();
     try {
       if ("GET".equals(exchange.getRequestMethod().toUpperCase())) {
@@ -52,50 +49,35 @@ public class DataFlowPathHttpHandler implements HttpHandler {
         outputStream.close();
 
       } else if ("POST".equals(exchange.getRequestMethod().toUpperCase())) {
-        String address = uri.toString();
-        // covert result to Sarif format
-        if (address.matches("/flow")) {
-          SARIFConverter converter = new SARIFConverter(result);
-          String sarif = converter.makeSarif().toString();
-          Headers responseHeaders = exchange.getResponseHeaders();
-          responseHeaders.set("Content-Type", "application/json");
-          exchange.sendResponseHeaders(200, sarif.length());
-          outputStream.write(sarif.getBytes());
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(exchange.getRequestBody(), writer, StandardCharsets.UTF_8);
+        String theString = JsonFormatHandler.getJsonFromString(writer.toString());
+        JsonObject data = (JsonObject) new JsonParser().parse(theString);
+        String finalResult = "";
+        try {
+          Position errorPosition = locationToPosition(data);
+          List<AnalysisResult> flowResults = new ArrayList<AnalysisResult>();
+          String code =
+              JsonFormatHandler.notNullAndHas(data, "code") ? data.get("code").getAsString() : null;
+          AnalysisResult flowResult =
+              new FlowAnalysisResult(
+                  Kind.Diagnostic,
+                  errorPosition,
+                  "Affected line",
+                  null,
+                  DiagnosticSeverity.Error,
+                  null,
+                  code);
+          flowResults.add(flowResult);
+          this.magpieServer.consume(flowResults, "Show in the editor.");
+          finalResult = errorPosition.toString() + " " + result.position().toString();
+        } catch (Exception e) {
+          finalResult = e.toString();
+        } finally {
+          exchange.sendResponseHeaders(200, finalResult.length());
+          outputStream.write(finalResult.getBytes());
           outputStream.flush();
           outputStream.close();
-        } else if (address.matches("/flow/show-line")) {
-          StringWriter writer = new StringWriter();
-          IOUtils.copy(exchange.getRequestBody(), writer, StandardCharsets.UTF_8);
-          String theString = JsonFormatHandler.getJsonFromString(writer.toString());
-          JsonObject data = (JsonObject) new JsonParser().parse(theString);
-          String finalResult = "";
-          try {
-            Position errorPosition = locationToPosition(data);
-            List<AnalysisResult> flowResults = new ArrayList<AnalysisResult>();
-            String code =
-                JsonFormatHandler.notNullAndHas(data, "code")
-                    ? data.get("code").getAsString()
-                    : null;
-            AnalysisResult flowResult =
-                new FlowAnalysisResult(
-                    Kind.Diagnostic,
-                    errorPosition,
-                    "Affected line",
-                    null,
-                    DiagnosticSeverity.Error,
-                    null,
-                    code);
-            flowResults.add(flowResult);
-            this.magpieServer.consume(flowResults, "Show in the editor.");
-            finalResult = errorPosition.toString() + " " + result.position().toString();
-          } catch (Exception e) {
-            finalResult = e.toString();
-          } finally {
-            exchange.sendResponseHeaders(200, finalResult.length());
-            outputStream.write(finalResult.getBytes());
-            outputStream.flush();
-            outputStream.close();
-          }
         }
       }
     } finally {
