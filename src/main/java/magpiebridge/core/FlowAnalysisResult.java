@@ -5,7 +5,7 @@ import com.ibm.wala.util.collections.Pair;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 /** This class defines the analysis result from SARIF file */
-public class SARIFResult implements AnalysisResult {
+public class FlowAnalysisResult implements AnalysisResult {
 
   private Kind kind;
   private Position position;
@@ -15,7 +15,7 @@ public class SARIFResult implements AnalysisResult {
   private Pair<Position, String> repair;
   private String code;
 
-  public SARIFResult(
+  public FlowAnalysisResult(
       Kind kind,
       Position pos,
       String msg,

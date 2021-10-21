@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.core.SARIFCodePosition;
+import magpiebridge.core.FlowCodePosition;
 import magpiebridge.util.SourceCodeReader;
 
 /**
@@ -403,8 +403,8 @@ public class DataFlowPathHtmlGenerator {
 
   private static String sidebarPositionName(Position position) {
     String methodName = "";
-    if (position instanceof SARIFCodePosition) {
-      SARIFCodePosition codePostion = (SARIFCodePosition) position;
+    if (position instanceof FlowCodePosition) {
+      FlowCodePosition codePostion = (FlowCodePosition) position;
       if (codePostion.getMehodName() != null) {
         methodName += codePostion.getMehodName() + " : ";
       }

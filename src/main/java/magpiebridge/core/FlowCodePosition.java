@@ -7,7 +7,7 @@ import java.io.Reader;
 import java.net.URL;
 
 /** This class defines the code position from SARIF file */
-public class SARIFCodePosition implements Position {
+public class FlowCodePosition implements Position {
 
   private int firstLine;
   private int lastLine;
@@ -16,7 +16,7 @@ public class SARIFCodePosition implements Position {
   private String methodName;
   private URL url;
 
-  public SARIFCodePosition(
+  public FlowCodePosition(
       int firstLine, int firstCol, int lastLine, int lastCol, URL url, String methodName) {
     this.firstLine = firstLine;
     this.firstCol = firstCol;

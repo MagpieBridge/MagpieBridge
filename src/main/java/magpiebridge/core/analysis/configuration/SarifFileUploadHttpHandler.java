@@ -45,7 +45,8 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
           SARIFToAanlysisResultConverter sarifElement =
               new SARIFToAanlysisResultConverter(sarifJson);
           this.magpieServer.consume(sarifElement.getAnalysisResults(), "Sarif File Upload");
-          finalResult = sarifElement.getAnalysisResults().toString();
+          finalResult =
+              "SARIF file uploaded successfully. Please check the project to see the result.";
         } catch (Exception e) {
           finalResult = e.toString();
         } finally {

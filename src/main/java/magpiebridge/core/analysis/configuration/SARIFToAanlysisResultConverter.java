@@ -9,9 +9,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
+import magpiebridge.core.FlowAnalysisResult;
+import magpiebridge.core.FlowCodePosition;
 import magpiebridge.core.Kind;
-import magpiebridge.core.SARIFCodePosition;
-import magpiebridge.core.SARIFResult;
 import magpiebridge.util.JsonFormatHandler;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
@@ -84,7 +84,7 @@ public class SARIFToAanlysisResultConverter {
               }
 
               analysisResults.add(
-                  new SARIFResult(
+                  new FlowAnalysisResult(
                       Kind.Diagnostic,
                       errorPosition,
                       messageText,
@@ -101,7 +101,7 @@ public class SARIFToAanlysisResultConverter {
     // if the analysis result is empty add error with error position and message.
     if (analysisResults.isEmpty()) {
       analysisResults.add(
-          new SARIFResult(
+          new FlowAnalysisResult(
               Kind.Diagnostic,
               errorPosition,
               messageText,
@@ -164,8 +164,8 @@ public class SARIFToAanlysisResultConverter {
         JsonFormatHandler.notNullAndHas(artifactLocation, "uri")
             ? new URL(artifactLocation.get("uri").getAsString())
             : null;
-    SARIFCodePosition position =
-        new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
+    FlowCodePosition position =
+        new FlowCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
     return position;
   }
 

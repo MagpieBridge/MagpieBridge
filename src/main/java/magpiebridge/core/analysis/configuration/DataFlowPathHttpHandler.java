@@ -16,10 +16,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
+import magpiebridge.core.FlowAnalysisResult;
+import magpiebridge.core.FlowCodePosition;
 import magpiebridge.core.Kind;
 import magpiebridge.core.MagpieServer;
-import magpiebridge.core.SARIFCodePosition;
-import magpiebridge.core.SARIFResult;
 import magpiebridge.util.JsonFormatHandler;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -77,7 +77,7 @@ public class DataFlowPathHttpHandler implements HttpHandler {
                     ? data.get("code").getAsString()
                     : null;
             AnalysisResult flowResult =
-                new SARIFResult(
+                new FlowAnalysisResult(
                     Kind.Diagnostic,
                     errorPosition,
                     "Affected line",
@@ -117,8 +117,8 @@ public class DataFlowPathHttpHandler implements HttpHandler {
         JsonFormatHandler.notNullAndHas(data, "url")
             ? new URL(data.get("url").getAsString())
             : null;
-    SARIFCodePosition position =
-        new SARIFCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
+    FlowCodePosition position =
+        new FlowCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
     return position;
   }
 }
