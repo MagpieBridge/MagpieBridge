@@ -137,6 +137,20 @@ public class SARIFToAanlysisResultConverter {
     }
 
     JsonObject phsicalLocation = location.getAsJsonObject("physicalLocation");
+    JsonArray logicalLocations =
+        JsonFormatHandler.notNullAndHas(location, "logicalLocations")
+            ? location.getAsJsonArray("logicalLocations")
+            : null;
+    JsonObject firstLogicalLocation =
+        logicalLocations != null && logicalLocations.size() > 0
+            ? logicalLocations.get(0).getAsJsonObject()
+            : null;
+
+    String methodName =
+        JsonFormatHandler.notNullAndHas(firstLogicalLocation, "fullyQualifiedName")
+            ? firstLogicalLocation.get("fullyQualifiedName").getAsString()
+            : null;
+
     JsonObject artifactLocation =
         JsonFormatHandler.notNullAndHas(phsicalLocation, "artifactLocation")
             ? phsicalLocation.getAsJsonObject("artifactLocation")
@@ -165,7 +179,7 @@ public class SARIFToAanlysisResultConverter {
             ? new URL(artifactLocation.get("uri").getAsString())
             : null;
     FlowCodePosition position =
-        new FlowCodePosition(firstLine, firstCol, lastLine, lastCol, url, null);
+        new FlowCodePosition(firstLine, firstCol, lastLine, lastCol, url, methodName);
     return position;
   }
 
