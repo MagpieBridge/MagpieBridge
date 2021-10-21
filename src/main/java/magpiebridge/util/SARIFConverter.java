@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -6,7 +6,6 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
 import java.io.IOException;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.util.SourceCodeReader;
 
 /**
  * This class converts AnalysisResult to SARIF JSON format. It uses different functions to create
