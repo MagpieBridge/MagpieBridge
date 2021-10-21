@@ -72,7 +72,6 @@ public class FlowCodePosition implements Position {
 
   @Override
   public Reader getReader() throws IOException {
-    // TODO Auto-generated method stub
     return null;
   }
 
