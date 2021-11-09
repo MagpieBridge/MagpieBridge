@@ -60,9 +60,16 @@ public class SourceCodeReader {
         } while (p.getFirstLine() > line);
 
         // first line
-        lines.add(removeComment(currentLine.substring(p.getFirstCol()), includeComment));
+        if(p.getLastLine() == line) {
+          //all code sits on one line; only add substring from first to last col
+          lines.add(removeComment(currentLine.substring(p.getFirstCol(), p.getLastCol()), includeComment));
+        } else {
+          //code spans multiple lines; add all the rest of current line after first col
+          lines.add(removeComment(currentLine.substring(p.getFirstCol()), includeComment));
+        }
 
-        while (p.getLastLine() < line) {
+        //keep iterating until last line is reached
+        while (p.getLastLine() > line) {
           currentLine = reader.readLine();
           line++;
           if (p.getLastLine() == line) {
