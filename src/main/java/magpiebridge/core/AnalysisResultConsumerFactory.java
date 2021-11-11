@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 import magpiebridge.command.CodeActionCommand;
 import magpiebridge.command.CodeActionGenerator;
+import magpiebridge.core.analysis.configuration.MagpieHttpServer;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.CodeAction;
@@ -79,6 +80,26 @@ public class AnalysisResultConsumerFactory {
           String clientUri = server.getClientUri(serverUri);
           try {
             URL url = new URL(URLDecoder.decode(clientUri, "UTF-8"));
+            /*
+             * If a AnalysisResult is type Diagnostic and has data in flows
+             * then we will start the data flow server
+             */
+            if (result instanceof FlowAnalysisResult && result.related() != null) {
+              String httpserverUrl = "";
+              server.initAnalysisConfiguration();
+              if (server.config.useMagpieHTTPServer()) {
+                // Getting the newly created data flow server path to show the flow graph page
+                httpserverUrl = MagpieHttpServer.createAndStartDataFlowHttpServer(server, result);
+              }
+              /*
+               * The message with link to view flow graph
+               */
+              String title = "View flow diagram: " + httpserverUrl;
+              CodeAction dataFlowView =
+                  CodeActionGenerator.generateCommandAction(
+                      title, httpserverUrl, d, CodeActionCommand.openURLFromMB.name());
+              server.addCodeAction(url, d.getRange(), dataFlowView);
+            }
             if (result.repair() != null) {
               // add code action (quickfix) related to analysis result
               Position fixPos = result.repair().fst;
