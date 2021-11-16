@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 import magpiebridge.command.CodeActionCommand;
 import magpiebridge.command.CodeActionGenerator;
 import magpiebridge.core.analysis.configuration.MagpieHttpServer;
-import magpiebridge.core.dataflow.FlowAnalysisResult;
+import magpiebridge.core.analysis.dataflow.FlowAnalysisResult;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
 import org.eclipse.lsp4j.CodeAction;

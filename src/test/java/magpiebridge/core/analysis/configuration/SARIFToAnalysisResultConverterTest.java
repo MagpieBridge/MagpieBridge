@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.core.sarif.AnalysisResultToSARIFConverter;
-import magpiebridge.core.sarif.SARIFToAnalysisResultConverter;
+import magpiebridge.core.analysis.dataflow.sarif.AnalysisResultToSARIFConverter;
+import magpiebridge.core.analysis.dataflow.sarif.SARIFToAnalysisResultConverter;
 import org.junit.Test;
 
 public class SARIFToAnalysisResultConverterTest {

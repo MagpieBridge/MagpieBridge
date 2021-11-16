@@ -1,4 +1,4 @@
-package magpiebridge.core.sarif;
+package magpiebridge.core.analysis.dataflow.sarif;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.Kind;
-import magpiebridge.core.dataflow.FlowAnalysisResult;
-import magpiebridge.core.dataflow.FlowCodePosition;
+import magpiebridge.core.analysis.dataflow.FlowAnalysisResult;
+import magpiebridge.core.analysis.dataflow.FlowCodePosition;
 import magpiebridge.util.JsonFormatHandler;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 

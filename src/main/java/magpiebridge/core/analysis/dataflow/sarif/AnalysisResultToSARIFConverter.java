@@ -1,4 +1,4 @@
-package magpiebridge.core.sarif;
+package magpiebridge.core.analysis.dataflow.sarif;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

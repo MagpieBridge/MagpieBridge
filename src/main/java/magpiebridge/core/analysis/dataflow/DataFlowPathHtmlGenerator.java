@@ -1,4 +1,4 @@
-package magpiebridge.core.dataflow;
+package magpiebridge.core.analysis.dataflow;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.button;
