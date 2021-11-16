@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core.sarif;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -9,17 +9,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.core.FlowAnalysisResult;
-import magpiebridge.core.FlowCodePosition;
 import magpiebridge.core.Kind;
+import magpiebridge.core.dataflow.FlowAnalysisResult;
+import magpiebridge.core.dataflow.FlowCodePosition;
 import magpiebridge.util.JsonFormatHandler;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 /** Converts SARIF JSON to analysis results */
-public class SARIFToAanlysisResultConverter {
+public class SARIFToAnalysisResultConverter {
   private List<AnalysisResult> analysisResults;
 
-  public SARIFToAanlysisResultConverter(JsonObject sarif) throws MalformedURLException {
+  public SARIFToAnalysisResultConverter(JsonObject sarif) throws MalformedURLException {
     this.analysisResults = new ArrayList<AnalysisResult>();
     if (JsonFormatHandler.notNullAndHas(sarif, "runs")) {
       JsonArray runs = sarif.get("runs").getAsJsonArray();

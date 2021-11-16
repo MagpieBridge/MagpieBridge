@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core.dataflow;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -14,8 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.core.FlowAnalysisResult;
-import magpiebridge.core.FlowCodePosition;
 import magpiebridge.core.Kind;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.util.JsonFormatHandler;

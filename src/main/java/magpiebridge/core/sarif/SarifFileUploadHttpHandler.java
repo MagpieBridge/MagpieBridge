@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core.sarif;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -42,8 +42,8 @@ public class SarifFileUploadHttpHandler implements HttpHandler {
         JsonObject sarifJson = (JsonObject) new JsonParser().parse(theString);
         String finalResult = "";
         try {
-          SARIFToAanlysisResultConverter sarifElement =
-              new SARIFToAanlysisResultConverter(sarifJson);
+          SARIFToAnalysisResultConverter sarifElement =
+              new SARIFToAnalysisResultConverter(sarifJson);
           this.magpieServer.consume(sarifElement.getAnalysisResults(), "Sarif File Upload");
           finalResult =
               "SARIF file uploaded successfully. Please check the project to see the result.";

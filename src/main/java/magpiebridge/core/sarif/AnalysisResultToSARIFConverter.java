@@ -1,4 +1,4 @@
-package magpiebridge.util;
+package magpiebridge.core.sarif;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -6,19 +6,20 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
 import java.io.IOException;
 import magpiebridge.core.AnalysisResult;
+import magpiebridge.util.SourceCodeReader;
 
 /**
  * This class converts AnalysisResult to SARIF JSON format. It uses different functions to create
  * different part of SARIF format.
  */
-public class SARIFConverter {
+public class AnalysisResultToSARIFConverter {
   private static final String SARIF_RULES_URL = "https://json.schemastore.org/sarif-2.1.0.json";
   private static final String STATIC_ANALYSIS_TOOL = "MagpieBridge";
   private static final String SARIF_VERSION = "2.1.0";
 
   private AnalysisResult analysisResult;
 
-  public SARIFConverter(AnalysisResult analysisResult) {
+  public AnalysisResultToSARIFConverter(AnalysisResult analysisResult) {
     this.analysisResult = analysisResult;
   }
 
@@ -32,8 +33,8 @@ public class SARIFConverter {
     JsonObject json = new JsonObject();
     JsonArray runs = new JsonArray();
     runs.add(this.getRun());
-    json.addProperty("version", SARIFConverter.SARIF_VERSION);
-    json.addProperty("$schema", SARIFConverter.SARIF_RULES_URL);
+    json.addProperty("version", AnalysisResultToSARIFConverter.SARIF_VERSION);
+    json.addProperty("$schema", AnalysisResultToSARIFConverter.SARIF_RULES_URL);
     json.add("runs", runs);
     return json;
   }
@@ -52,7 +53,7 @@ public class SARIFConverter {
   private JsonObject getTool() {
     JsonObject tool = new JsonObject();
     JsonObject driver = new JsonObject();
-    driver.addProperty("name", SARIFConverter.STATIC_ANALYSIS_TOOL);
+    driver.addProperty("name", AnalysisResultToSARIFConverter.STATIC_ANALYSIS_TOOL);
     tool.add("driver", driver);
 
     return tool;

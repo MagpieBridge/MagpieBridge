@@ -9,6 +9,8 @@ import java.net.URISyntaxException;
 import magpiebridge.core.AnalysisResult;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.core.ServerConfiguration;
+import magpiebridge.core.dataflow.DataFlowPathHttpHandler;
+import magpiebridge.core.sarif.SarifFileUploadHttpHandler;
 
 /**
  * The class creates a HTTP Server running in the same process as the {@link MagpieServer} to handle

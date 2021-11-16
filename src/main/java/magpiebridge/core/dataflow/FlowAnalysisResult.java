@@ -1,7 +1,9 @@
-package magpiebridge.core;
+package magpiebridge.core.dataflow;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.util.collections.Pair;
+import magpiebridge.core.AnalysisResult;
+import magpiebridge.core.Kind;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
 /** This class defines the analysis result from SARIF file */

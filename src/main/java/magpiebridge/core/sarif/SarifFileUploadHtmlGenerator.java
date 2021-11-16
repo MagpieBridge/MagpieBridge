@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core.sarif;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.div;

@@ -1,4 +1,4 @@
-package magpiebridge.core;
+package magpiebridge.core.dataflow;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.classLoader.IMethod.SourcePosition;

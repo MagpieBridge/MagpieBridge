@@ -1,4 +1,4 @@
-package magpiebridge.core.analysis.configuration;
+package magpiebridge.core.dataflow;
 
 import static j2html.TagCreator.body;
 import static j2html.TagCreator.button;
@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import magpiebridge.core.AnalysisResult;
-import magpiebridge.core.FlowCodePosition;
 import magpiebridge.util.SourceCodeReader;
 
 /**
