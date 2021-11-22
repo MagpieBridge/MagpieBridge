@@ -91,6 +91,15 @@
         "code",
         "ideas"
       ]
+    },
+    {
+      "login": "ejardak",
+      "name": "ejardak",
+      "avatar_url": "https://avatars.githubusercontent.com/u/76267846?v=4",
+      "profile": "https://github.com/ejardak",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
