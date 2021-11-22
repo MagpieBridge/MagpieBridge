@@ -232,6 +232,8 @@ public class MagpieTextDocumentService implements TextDocumentService {
       return "c++";
     } else if (uri.endsWith(".c")) {
       return "c";
+    } else if (uri.endsWith(".ll")) {
+      return "ll";
     } else {
       MagpieServer.ExceptionLogger.log("Couldn't infer the language of the source code in " + uri);
       return "unknown";
