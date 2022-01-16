@@ -894,8 +894,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /** Clean up all analysis results. */
   public void cleanUp() {
     for (URL url : diagnostics.keySet()) {
-      client.publishDiagnostics(
-          new PublishDiagnosticsParams(getClientUri(url.toString()), Collections.emptyList()));
+      String clientUri = getClientUri(url.toString());
+      if (clientUri != null) {
+        client.publishDiagnostics(new PublishDiagnosticsParams(clientUri, Collections.emptyList()));
+      }
     }
     this.diagnostics.clear();
     this.codeActions.clear();
