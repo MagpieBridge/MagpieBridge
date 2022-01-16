@@ -197,11 +197,10 @@ public class SourceFileManager {
     } else if (language.equals("javascript") || language.equals("js")) {
       return ".js";
     } else if (language.equals("c")) return ".c";
-      else if (language.equals("typescript") || language.equals("ts")) return ".ts";
-      else if (language.equals("llvm") || language.equals("ll")) {
+    else if (language.equals("typescript") || language.equals("ts")) return ".ts";
+    else if (language.equals("llvm") || language.equals("ll")) {
       return ".ll";
-    }
-      else {
+    } else {
       MagpieServer.ExceptionLogger.log("Unsupported language: " + language);
       return "unknown";
     }
