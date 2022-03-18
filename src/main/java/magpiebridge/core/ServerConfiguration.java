@@ -27,6 +27,12 @@ public class ServerConfiguration {
   private FalsePositiveHandler falsePositiveHandler;
   private ConfusionHandler confusionHandler;
   private SuppressWarningHandler suppressWarningHandler;
+
+  public LanguageExtensionHandler getLanguageExtensionHandler() {
+    return languageExtensionHandler;
+  }
+
+  private LanguageExtensionHandler languageExtensionHandler;
   private long timeOut; // timeout in millisecond
 
   private MagpieMessageLogger logger;
@@ -47,6 +53,7 @@ public class ServerConfiguration {
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
     this.confusionHandler = new DefaultConfusionHandler();
+    this.languageExtensionHandler = new DefaultLanguageExtensionHandler();
     this.timeOut = 0;
     // default no-op logger
     this.logger =
