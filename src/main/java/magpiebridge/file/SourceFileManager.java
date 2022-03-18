@@ -12,10 +12,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import magpiebridge.core.DefaultLanguageExtensionHandler;
 import magpiebridge.core.LanguageExtensionHandler;
 import magpiebridge.core.MagpieServer;
@@ -55,7 +53,10 @@ public class SourceFileManager {
    * @param serverClientUri the server client uri
    * @param languageExtensionHandler a language extension handler
    */
-  public SourceFileManager(String language, Map<String, String> serverClientUri, LanguageExtensionHandler languageExtensionHandler) {
+  public SourceFileManager(
+      String language,
+      Map<String, String> serverClientUri,
+      LanguageExtensionHandler languageExtensionHandler) {
     this.language = language;
     this.versionedFiles = new HashMap<>();
     this.sourceFileModules = new HashMap<>();
@@ -65,7 +66,7 @@ public class SourceFileManager {
   }
 
   public SourceFileManager(String language, Map<String, String> serverClientUri) {
-      this(language, serverClientUri, new DefaultLanguageExtensionHandler());
+    this(language, serverClientUri, new DefaultLanguageExtensionHandler());
   }
 
   /**

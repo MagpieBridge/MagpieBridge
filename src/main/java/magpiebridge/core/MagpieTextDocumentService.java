@@ -4,8 +4,6 @@
 package magpiebridge.core;
 
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -230,7 +228,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
    */
   protected String inferLanguage(String uri) {
     String[] ext = uri.split("\\.");
-    String extension = ext[ext.length -1];
+    String extension = ext[ext.length - 1];
     return server.config.getLanguageExtensionHandler().getLanguageForExtension(extension);
   }
 
