@@ -46,7 +46,7 @@ public class DefaultLanguageExtensionHandler implements LanguageExtensionHandler
       case "javascript":
         return new HashSet(Arrays.asList(new String[] {".js"}));
       case "typescript":
-        return new HashSet(Arrays.asList(new String[] {".typescript"}));
+        return new HashSet(Arrays.asList(new String[] {".ts"}));
       case "c++":
         return new HashSet(Arrays.asList(new String[] {".cpp", ".h"}));
       case "c":
