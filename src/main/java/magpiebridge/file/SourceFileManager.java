@@ -34,7 +34,7 @@ import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 public class SourceFileManager {
 
   /** The language. */
-  public String language;
+  private String language;
   /** Client-side URI mapped to versioned source file. */
   private Map<URI, VersionedSourceFile> versionedFiles;
   /** Client-side URI mapped to source file module. */
