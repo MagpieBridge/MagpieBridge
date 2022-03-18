@@ -3,7 +3,9 @@ package magpiebridge.core;
 import java.util.Set;
 
 /**
- * Map languages to extensions and vice versa
+ * Map languages to extensions and vice versa.
+ *
+ * @author Julian Thome
  */
 public interface LanguageExtensionHandler {
   /**
