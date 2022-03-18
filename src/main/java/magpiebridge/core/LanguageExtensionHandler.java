@@ -2,6 +2,9 @@ package magpiebridge.core;
 
 import java.util.Set;
 
+/**
+ * Map languages to extensions and vice versa
+ */
 public interface LanguageExtensionHandler {
   /**
    * Infer a language based on a file extension
@@ -13,7 +16,7 @@ public interface LanguageExtensionHandler {
   /**
    * Infer a set of extensions that corresponds to a language
    * @param language name of the language
-   * @return Set of extensions that correspond to the language
+   * @return Set of extensions (starting with '.') that correspond to the language
    */
   Set<String> getExtensionsForLanguage(String language);
 }
