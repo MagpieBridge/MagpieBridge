@@ -4,7 +4,7 @@
 
 	<groupId>com.github.magpiebridge</groupId>
 	<artifactId>magpiebridge</artifactId>
-	<version>0.1.4</version>
+	<version>0.1.5-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>magpiebridge</name>
 	<description>A simple solution for your analysis IDE integration</description>
@@ -239,7 +239,7 @@
 		<connection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</connection>
 		<developerConnection>scm:git:git@github.com:MagpieBridge/MagpieBridge.git</developerConnection>
 		<url>https://github.com/MagpieBridge/MagpieBridge/tree/develop</url>
-		<tag>magpiebridge-0.1.4</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<!-- <distributionManagement> <repository> <id>github</id> <name>GitHub 
 		MagpieBridge Apache Maven Packages</name> <url>https://maven.pkg.github.com/MagpieBridge/MagpieBridge</url> 
