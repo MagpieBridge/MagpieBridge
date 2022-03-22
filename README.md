@@ -38,12 +38,12 @@ to meet. We use MagpieBridge as a metaphor for a system that connects arbitrary 
 ## Use MagpieBridge in your Maven project
 You can either 
 
-1. Since version 0.1.0, MagpieBridge is available on Maven Central. Simply paste the following lines into your `pom.xml`.
+1. Since version 0.1.0, MagpieBridge is available on [Maven Central](https://oss.sonatype.org/#nexus-search;quick~magpiebridge). Simply paste the following lines into your `pom.xml`.
 ````
  <dependency>
     <groupId>com.github.magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
 </dependency>
 ````
 

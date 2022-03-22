@@ -10,6 +10,7 @@ import java.util.Set;
 public interface LanguageExtensionHandler {
   /**
    * Infer a language based on a file extension
+   *
    * @param extension file extension (starting with a '.')
    * @return The language that corresponds to the extension
    */
@@ -17,6 +18,7 @@ public interface LanguageExtensionHandler {
 
   /**
    * Infer a set of extensions that corresponds to a language
+   *
    * @param language name of the language
    * @return Set of extensions (starting with '.') that correspond to the language
    */
