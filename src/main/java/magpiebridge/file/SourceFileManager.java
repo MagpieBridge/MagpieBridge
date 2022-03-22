@@ -13,6 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import magpiebridge.core.DefaultLanguageExtensionHandler;
+import magpiebridge.core.LanguageExtensionHandler;
 import magpiebridge.core.MagpieServer;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
@@ -41,18 +44,29 @@ public class SourceFileManager {
 
   private Map<URI, FileState> fileStates;
 
+  private LanguageExtensionHandler languageExtensionHandler;
+
   /**
    * Instantiates a new source file manager.
    *
    * @param language the language
    * @param serverClientUri the server client uri
+   * @param languageExtensionHandler a language extension handler
    */
-  public SourceFileManager(String language, Map<String, String> serverClientUri) {
+  public SourceFileManager(
+      String language,
+      Map<String, String> serverClientUri,
+      LanguageExtensionHandler languageExtensionHandler) {
     this.language = language;
     this.versionedFiles = new HashMap<>();
     this.sourceFileModules = new HashMap<>();
     this.serverClientUri = serverClientUri;
     this.fileStates = new HashMap<>();
+    this.languageExtensionHandler = languageExtensionHandler;
+  }
+
+  public SourceFileManager(String language, Map<String, String> serverClientUri) {
+    this(language, serverClientUri, new DefaultLanguageExtensionHandler());
   }
 
   /**
@@ -190,20 +204,12 @@ public class SourceFileManager {
    * @return the file suffix
    */
   private String getFileSuffix() {
-    if (language.equals("java")) {
-      return ".java";
-    } else if (language.equals("python") || language.equals("py")) {
-      return ".py";
-    } else if (language.equals("javascript") || language.equals("js")) {
-      return ".js";
-    } else if (language.equals("c")) return ".c";
-    else if (language.equals("typescript") || language.equals("ts")) return ".ts";
-    else if (language.equals("llvm") || language.equals("ll")) {
-      return ".ll";
-    } else {
+    Set<String> extensions = languageExtensionHandler.getExtensionsForLanguage(language);
+    if (extensions.isEmpty()) {
       MagpieServer.ExceptionLogger.log("Unsupported language: " + language);
       return "unknown";
     }
+    return extensions.stream().findFirst().get();
   }
 
   /**

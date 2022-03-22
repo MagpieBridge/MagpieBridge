@@ -10,11 +10,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.SourceCodePositionUtils;
@@ -104,7 +100,18 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // update the changed file in file manager
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
-    fileManager.didChange(params);
+
+    if (fileManager == null) {
+      MagpieServer.ExceptionLogger.log("No source file manager for " + language);
+      return;
+    }
+
+    try {
+      fileManager.didChange(params);
+    } catch (Exception e) {
+      // server.cleanUp();
+      MagpieServer.ExceptionLogger.log(e);
+    }
     // TODO. it could be customized to clean all diagnostics.
     // server.cleanUp();
     if (server.config.doAnalysisByIdle()) {
@@ -220,24 +227,9 @@ public class MagpieTextDocumentService implements TextDocumentService {
    * @return the string
    */
   protected String inferLanguage(String uri) {
-    if (uri.endsWith(".java")) {
-      return "java";
-    } else if (uri.endsWith(".py")) {
-      return "python";
-    } else if (uri.endsWith(".js")) {
-      return "javascript";
-    } else if (uri.endsWith(".ts")) {
-      return "typescript";
-    } else if (uri.endsWith(".cpp") || uri.endsWith(".h")) {
-      return "c++";
-    } else if (uri.endsWith(".c")) {
-      return "c";
-    } else if (uri.endsWith(".ll")) {
-      return "ll";
-    } else {
-      MagpieServer.ExceptionLogger.log("Couldn't infer the language of the source code in " + uri);
-      return "unknown";
-    }
+    String[] ext = uri.split("\\.");
+    String extension = ext[ext.length - 1];
+    return server.config.getLanguageExtensionHandler().getLanguageForExtension(extension);
   }
 
   protected void removeCodeLenses(String uri) {
