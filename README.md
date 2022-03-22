@@ -111,6 +111,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/ranjithmasthikatte"><img src="https://avatars2.githubusercontent.com/u/19502082?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ranjith K</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=ranjithmasthikatte" title="Code">💻</a> <a href="#ideas-ranjithmasthikatte" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/ejardak"><img src="https://avatars.githubusercontent.com/u/76267846?v=4?s=100" width="100px;" alt=""/><br /><sub><b>ejardak</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=ejardak" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/challe535"><img src="https://avatars.githubusercontent.com/u/31891184?v=4?s=100" width="100px;" alt=""/><br /><sub><b>challe535</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=challe535" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/julianthome "><img src="https://avatars.githubusercontent.com/u/5645429?v=4" width="100px;" alt=""/><br /><sub><b>julianthome</b></sub></a><br /><a href="https://github.com/MagpieBridge/MagpieBridge/commits?author=julianthome " title="Code">💻</a></td>
   </tr>
 </table>
 
