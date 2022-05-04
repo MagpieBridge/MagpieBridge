@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.util.SourceCodePositionUtils;
 import magpiebridge.util.URIUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.CodeLens;
@@ -227,8 +228,7 @@ public class MagpieTextDocumentService implements TextDocumentService {
    * @return the string
    */
   protected String inferLanguage(String uri) {
-    String[] ext = uri.split("\\.");
-    String extension = ext[ext.length - 1];
+    String extension = "." + FilenameUtils.getExtension(uri);
     return server.config.getLanguageExtensionHandler().getLanguageForExtension(extension);
   }
 
