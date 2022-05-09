@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import magpiebridge.core.MagpieServer;
+import magpiebridge.kotlinParserWrapper.KotlinParserWrapper;
 
 /**
  * Infer the source path from a given project root path. Instead using the Parser from Java JDK
@@ -35,6 +36,17 @@ public class InferSourcePath {
 
   protected static Stream<Path> allJavaFiles(Path dir) {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.java");
+    try {
+      return Files.walk(dir).filter(java -> match.matches(java.getFileName()));
+    } catch (IOException e) {
+      MagpieServer.ExceptionLogger.log(e);
+    }
+    return null;
+  }
+
+  protected static Stream<Path> allKotlinFiles(Path dir) {
+    PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.kt");
+
     try {
       return Files.walk(dir).filter(java -> match.matches(java.getFileName()));
     } catch (IOException e) {
@@ -109,6 +121,49 @@ public class InferSourcePath {
     SourcePaths checker = new SourcePaths();
     Stream<Path> javaFiles = allJavaFiles(workspaceRoot);
     if (javaFiles != null) javaFiles.forEach(checker);
+    return checker.sourceRoots.keySet();
+  }
+
+  public Set<Path> kotlinSourcePath(Path workspaceRoot) {
+    LOG.info("Searching for source roots in " + workspaceRoot);
+    packageNames = new HashSet<String>();
+    classFullQualifiedNames = new HashSet<String>();
+    class SourcePaths implements Consumer<Path> {
+      Map<Path, Integer> sourceRoots = new HashMap<>();
+
+      Optional<Path> infer(Path kotlin) {
+        KotlinParserWrapper kotlinParserWrapper = new KotlinParserWrapper();
+
+        Optional<Path> returnValue = kotlinParserWrapper.parse(kotlin.toAbsolutePath().toString());
+
+        packageNames.addAll(kotlinParserWrapper.getPackageNames());
+        classFullQualifiedNames.addAll(kotlinParserWrapper.getClassFullQualifiedNames());
+
+        return returnValue;
+      }
+
+      @Override
+      public void accept(Path kotlin) {
+        if (kotlin.getFileName().toString().equals("module-info.java")) {
+          return;
+        }
+
+        infer(kotlin)
+            .ifPresent(
+                root -> {
+                  int count = sourceRoots.getOrDefault(root, 0);
+                  if (!root.startsWith(workspaceRoot + File.separator + "target")
+                      && !root.startsWith(
+                          workspaceRoot
+                              + File.separator
+                              + "bin")) // filter generated java files of maven projects.
+                  sourceRoots.put(root, count + 1);
+                });
+      }
+    }
+    SourcePaths checker = new SourcePaths();
+    Stream<Path> kotlinFiles = allKotlinFiles(workspaceRoot);
+    if (kotlinFiles != null) kotlinFiles.forEach(checker);
     return checker.sourceRoots.keySet();
   }
 

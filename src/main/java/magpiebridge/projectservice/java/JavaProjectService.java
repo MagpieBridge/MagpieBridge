@@ -33,14 +33,21 @@ public class JavaProjectService implements IProjectService {
 
   private JavaProjectType projectType;
 
+  private JavaLanguage javaLanguage;
+
   /** Instantiates a new java project service. */
   public JavaProjectService() {
+    this(JavaLanguage.JAVA);
+  }
+
+  public JavaProjectService(JavaLanguage javaLanguage) {
     this.sourcePath = Collections.emptySet();
     this.sourceClassFullQualifiedNames = Collections.emptySet();
     this.classPath = Collections.emptySet();
     this.libraryPath = Collections.emptySet();
     this.externalDependencies = Collections.emptySet();
     this.rootPath = Optional.empty();
+    this.javaLanguage = javaLanguage;
   }
 
   /**
@@ -53,10 +60,18 @@ public class JavaProjectService implements IProjectService {
    */
   public JavaProjectService(
       Set<Path> sourcePath, Set<Path> classPath, Set<String> externalDependencies) {
-    this();
+    this(sourcePath, classPath, externalDependencies, JavaLanguage.JAVA);
+  }
+
+  public JavaProjectService(
+      Set<Path> sourcePath,
+      Set<Path> classPath,
+      Set<String> externalDependencies,
+      JavaLanguage javaLanguage) {
     this.sourcePath = sourcePath;
     this.classPath = classPath;
     this.externalDependencies = externalDependencies;
+    this.javaLanguage = javaLanguage;
   }
 
   /**
@@ -69,7 +84,13 @@ public class JavaProjectService implements IProjectService {
       if (rootPath.isPresent()) {
         // if source path is not specified by the user, infer the source path.
         InferSourcePath infer = new InferSourcePath();
-        this.sourcePath = infer.sourcePath(rootPath.get());
+
+        if (javaLanguage == JavaLanguage.KOTLIN) {
+          this.sourcePath = infer.kotlinSourcePath(rootPath.get());
+        } else {
+          this.sourcePath = infer.sourcePath(rootPath.get());
+        }
+
         this.sourceClassFullQualifiedNames = infer.getClassFullQualifiedNames();
       }
     }
