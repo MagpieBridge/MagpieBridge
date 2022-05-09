@@ -271,7 +271,8 @@ public class InferConfigGradle {
   }
 
   static boolean hasGradleProject(Path workspaceRoot) {
-    return Files.exists(workspaceRoot.resolve("build.gradle"));
+    return Files.exists(workspaceRoot.resolve("build.gradle"))
+        || Files.exists(workspaceRoot.resolve("build.gradle.kts"));
   }
 
   static Set<Path> workspaceClassPath(Path workspaceRoot) {
