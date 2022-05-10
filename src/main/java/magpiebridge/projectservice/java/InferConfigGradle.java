@@ -293,12 +293,19 @@ public class InferConfigGradle {
                             .resolve("build")
                             .resolve("intermediates")
                             .resolve("classes"),
+                        workspaceRoot
+                            .resolve(subproject)
+                            .resolve("build")
+                            .resolve("classes")
+                            .resolve("kotlin")
+                            .resolve("main"),
                         workspaceRoot.resolve(subproject).resolve("build").resolve("classes")));
 
     Stream<Path> rootProjectDirs =
         Stream.of(
             workspaceRoot.resolve("build").resolve("intermediates").resolve("javac"),
             workspaceRoot.resolve("build").resolve("intermediates").resolve("classes"),
+            workspaceRoot.resolve("build").resolve("classes").resolve("kotlin").resolve("main"),
             workspaceRoot.resolve("build").resolve("classes"));
     return Stream.concat(rootProjectDirs, subprojectDirs)
         .filter(Files::exists)
