@@ -34,6 +34,8 @@ public class InferSourcePath {
   private Set<String> packageNames;
   private Set<String> classFullQualifiedNames;
 
+  private HashMap<String, String> classToFileRelation = new HashMap<>();
+
   protected static Stream<Path> allJavaFiles(Path dir) {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.java");
     try {
@@ -48,7 +50,7 @@ public class InferSourcePath {
     PathMatcher match = FileSystems.getDefault().getPathMatcher("glob:*.kt");
 
     try {
-      return Files.walk(dir).filter(java -> match.matches(java.getFileName()));
+      return Files.walk(dir).filter(kotlin -> match.matches(kotlin.getFileName()));
     } catch (IOException e) {
       MagpieServer.ExceptionLogger.log(e);
     }
@@ -78,8 +80,15 @@ public class InferSourcePath {
             packageName = cu.getPackageDeclaration().get().getNameAsString();
             packageNames.add(packageName);
             classFullQualifiedNames.add(packageName + "." + cu.getPrimaryTypeName().get());
+
+            classToFileRelation.put(
+                packageName + "." + cu.getPrimaryTypeName().get(),
+                java.toAbsolutePath().toString());
           } else {
             classFullQualifiedNames.add(cu.getPrimaryTypeName().get());
+
+            classToFileRelation.put(
+                java.toAbsolutePath().toString(), cu.getPrimaryTypeName().get());
           }
         }
         if (packageName.length() == 0) {
@@ -138,6 +147,7 @@ public class InferSourcePath {
 
         packageNames.addAll(kotlinParserWrapper.getPackageNames());
         classFullQualifiedNames.addAll(kotlinParserWrapper.getClassFullQualifiedNames());
+        classToFileRelation.putAll(kotlinParserWrapper.getClassToFileRelation());
 
         return returnValue;
       }
@@ -173,5 +183,9 @@ public class InferSourcePath {
 
   public Set<String> getClassFullQualifiedNames() {
     return this.classFullQualifiedNames;
+  }
+
+  public HashMap<String, String> getClassToFileRelation() {
+    return this.classToFileRelation;
   }
 }

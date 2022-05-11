@@ -2,6 +2,7 @@ package magpiebridge.projectservice.java;
 
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import magpiebridge.core.IProjectService;
@@ -34,6 +35,8 @@ public class JavaProjectService implements IProjectService {
   private JavaProjectType projectType;
 
   private JavaLanguage javaLanguage;
+
+  private HashMap<String, String> classToFileRelation;
 
   /** Instantiates a new java project service. */
   public JavaProjectService() {
@@ -80,6 +83,8 @@ public class JavaProjectService implements IProjectService {
    * @return the source path
    */
   public Set<Path> getSourcePath() {
+    this.classToFileRelation = new HashMap<>();
+
     if (this.sourcePath.isEmpty()) {
       if (rootPath.isPresent()) {
         // if source path is not specified by the user, infer the source path.
@@ -92,9 +97,21 @@ public class JavaProjectService implements IProjectService {
         }
 
         this.sourceClassFullQualifiedNames = infer.getClassFullQualifiedNames();
+
+        this.classToFileRelation.putAll(infer.getClassToFileRelation());
       }
     }
     return sourcePath;
+  }
+
+  public HashMap<String, String> getClassToFileRelation() {
+    if (this.sourcePath.isEmpty()) {
+      getSourcePath();
+    }
+
+    if (classToFileRelation.isEmpty()) return new HashMap<>();
+
+    return classToFileRelation;
   }
 
   /**
