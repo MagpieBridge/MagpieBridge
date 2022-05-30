@@ -17,6 +17,8 @@ public class DefaultLanguageExtensionHandler implements LanguageExtensionHandler
         return "java";
       case ".py":
         return "python";
+      case ".ipynb":
+        return "python";
       case ".js":
         return "javascript";
       case ".ts":

@@ -103,4 +103,12 @@ public class SourceCodeInfo {
       };
     } else return null;
   }
+
+  public SourceCodeInfo replaceURL(URL newUrl) {
+    return new SourceCodeInfo(newUrl, range, code);
+  }
+
+  public SourceCodeInfo replaceRange(Range newRange) {
+    return new SourceCodeInfo(url, newRange, code);
+  }
 }
