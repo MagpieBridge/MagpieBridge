@@ -28,8 +28,8 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.DocumentColorParams;
 import org.eclipse.lsp4j.Hover;
+import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.TextDocumentItem;
-import org.eclipse.lsp4j.TextDocumentPositionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
@@ -165,15 +165,15 @@ public class MagpieTextDocumentService implements TextDocumentService {
   }
 
   @Override
-  public CompletableFuture<Hover> hover(TextDocumentPositionParams position) {
+  public CompletableFuture<Hover> hover(HoverParams params) {
     return CompletableFuture.supplyAsync(
         () -> {
           Hover hover = new Hover();
           try {
-            String uri = position.getTextDocument().getUri();
+            String uri = params.getTextDocument().getUri();
             String decodedUri = URLDecoder.decode(uri, "UTF-8");
             URL url = new URI(URIUtils.checkURI(decodedUri)).toURL();
-            Position lookupPos = SourceCodePositionUtils.lookupPos(position.getPosition(), url);
+            Position lookupPos = SourceCodePositionUtils.lookupPos(params.getPosition(), url);
             hover = server.findHover(lookupPos);
           } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             MagpieServer.ExceptionLogger.log(e);
