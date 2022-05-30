@@ -23,6 +23,7 @@ public class ServerConfiguration {
   private boolean doAnalysisBySave;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
+  private boolean showSarifFileUploadPage;
   private boolean addDefaultActions;
   private FalsePositiveHandler falsePositiveHandler;
   private ConfusionHandler confusionHandler;
@@ -49,6 +50,7 @@ public class ServerConfiguration {
     this.reportFalsePositive = false;
     this.reportConfusion = false;
     this.showConfigurationPage = false;
+    this.showSarifFileUploadPage = false;
     this.addDefaultActions = false;
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
@@ -159,6 +161,14 @@ public class ServerConfiguration {
       boolean showConfigurationPage, boolean addDefaultActions) {
     this.showConfigurationPage = showConfigurationPage;
     this.addDefaultActions = addDefaultActions;
+    return this;
+  }
+  /**
+   * @param showSarifFileUploadPage
+   * @return
+   */
+  public ServerConfiguration setShowSarifFileUploadPage(boolean showSarifFileUploadPage) {
+    this.showSarifFileUploadPage = showSarifFileUploadPage;
     return this;
   }
 
@@ -301,5 +311,9 @@ public class ServerConfiguration {
 
   public boolean useMagpieHTTPServer() {
     return this.useMagpieHTTPServer;
+  }
+
+  public boolean showSarifFileUploadPage() {
+    return this.showSarifFileUploadPage;
   }
 }

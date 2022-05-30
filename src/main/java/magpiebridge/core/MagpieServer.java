@@ -317,17 +317,20 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.
+   * @see
+   * org.eclipse.lsp4j.services.LanguageClientAware#connect(org.eclipse.lsp4j.
    * services.LanguageClient)
    */
   @Override
   public void connect(LanguageClient client) {
     this.client = (MagpieClient) client;
   }
+
   /*
    * (non-Javadoc)
    *
-   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j. InitializeParams)
+   * @see org.eclipse.lsp4j.services.LanguageServer#initialize(org.eclipse.lsp4j.
+   * InitializeParams)
    */
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
@@ -384,6 +387,10 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
     if (config.showConfigurationPage()) {
       createAndStartLocalHttpServer();
     }
+
+    if (config.showSarifFileUploadPage()) {
+      createAndStartSarifFileUploadHttpServer();
+    }
   }
 
   protected void createAndStartLocalHttpServer() {
@@ -391,6 +398,19 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       initAnalysisConfiguration();
       if (config.useMagpieHTTPServer()) {
         this.httpserverUrl = MagpieHttpServer.createAndStartLocalHttpServer(this);
+      }
+      OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
+    } catch (IOException | URISyntaxException e) {
+      MagpieServer.ExceptionLogger.log(e);
+      e.printStackTrace();
+    }
+  }
+
+  protected void createAndStartSarifFileUploadHttpServer() {
+    try {
+      initAnalysisConfiguration();
+      if (config.showSarifFileUploadPage()) {
+        this.httpserverUrl = MagpieHttpServer.createAndStartSarifFileUploadHttpServer(this);
       }
       OpenURLCommand.showHTMLinClientOrBroswer(this, client, httpserverUrl);
     } catch (IOException | URISyntaxException e) {
@@ -727,6 +747,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public SuppressWarningHandler getSuppressWarningHandler() {
     return this.suppressWarningHandler;
   }
+
   /** @return the {@link ConfusionHandler} configured for Server. */
   public ConfusionHandler getConfusionHandler() {
     return this.confusionHandler;
@@ -757,6 +778,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
   public Optional<VersionControlService> getVersionControlService() {
     return this.versionControlService;
   }
+
   /**
    * Adds the given code action for the given url and range.
    *
