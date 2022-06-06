@@ -88,18 +88,18 @@ public class AnalysisResultConsumerFactory {
             if (result instanceof FlowAnalysisResult && result.related() != null) {
               String httpserverUrl = "";
               server.initAnalysisConfiguration();
-              if (server.config.useMagpieHTTPServer()) {
+              if (server.config.showDataFlowGraph()) {
                 // Getting the newly created data flow server path to show the flow graph page
                 httpserverUrl = MagpieHttpServer.createAndStartDataFlowHttpServer(server, result);
+                /*
+                 * The message with link to data-view flow graph
+                 */
+                String title = "View data-flow graph: " + httpserverUrl;
+                CodeAction dataFlowView =
+                    CodeActionGenerator.generateCommandAction(
+                        title, httpserverUrl, d, CodeActionCommand.openURLFromMB.name());
+                server.addCodeAction(url, d.getRange(), dataFlowView);
               }
-              /*
-               * The message with link to view flow graph
-               */
-              String title = "View flow diagram: " + httpserverUrl;
-              CodeAction dataFlowView =
-                  CodeActionGenerator.generateCommandAction(
-                      title, httpserverUrl, d, CodeActionCommand.openURLFromMB.name());
-              server.addCodeAction(url, d.getRange(), dataFlowView);
             }
             if (result.repair() != null) {
               // add code action (quickfix) related to analysis result

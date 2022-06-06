@@ -20,7 +20,7 @@ import magpiebridge.util.JsonFormatHandler;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 
-/** The class handles HTTP requests of the flow graph page. */
+/** The class handles HTTP requests of the data-flow graph page. */
 public class DataFlowPathHttpHandler implements HttpHandler {
 
   private MagpieServer magpieServer;
@@ -63,7 +63,7 @@ public class DataFlowPathHttpHandler implements HttpHandler {
                   errorPosition,
                   "Affected line",
                   null,
-                  DiagnosticSeverity.Error,
+                  DiagnosticSeverity.Information,
                   null,
                   code);
           flowResults.add(flowResult);

@@ -28,6 +28,7 @@ public class ServerConfiguration {
   private FalsePositiveHandler falsePositiveHandler;
   private ConfusionHandler confusionHandler;
   private SuppressWarningHandler suppressWarningHandler;
+  private boolean showDataFlowGraph;
 
   public LanguageExtensionHandler getLanguageExtensionHandler() {
     return languageExtensionHandler;
@@ -169,6 +170,19 @@ public class ServerConfiguration {
    */
   public ServerConfiguration setShowSarifFileUploadPage(boolean showSarifFileUploadPage) {
     this.showSarifFileUploadPage = showSarifFileUploadPage;
+    return this;
+  }
+
+  /**
+   * Set up the server to start a page showing data-flow graph of a data-flow analysis result as
+   * code action.
+   *
+   * @param showDataFlowGraph true, if data-flow graph of each {@link
+   *     magpiebridge.core.analysis.dataflow.FlowAnalysisResult} can be viewed as a code action
+   * @return the server configuration.
+   */
+  public ServerConfiguration setShowDataFlowGraph(boolean showDataFlowGraph) {
+    this.showDataFlowGraph = showDataFlowGraph;
     return this;
   }
 
@@ -315,5 +329,9 @@ public class ServerConfiguration {
 
   public boolean showSarifFileUploadPage() {
     return this.showSarifFileUploadPage;
+  }
+
+  public boolean showDataFlowGraph() {
+    return this.showDataFlowGraph;
   }
 }

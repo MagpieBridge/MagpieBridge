@@ -431,7 +431,7 @@ public class InferConfig {
     return Collections.emptyList();
   }
 
-  private static String getMvnCommand() {
+  public static String getMvnCommand() {
     String mvnCommand = "mvn";
     if (File.separatorChar == '\\') {
       // handle windows
@@ -483,5 +483,12 @@ public class InferConfig {
       }
     }
     return this.projectType;
+  }
+
+  public Process mvnCommand(String cmd) throws IOException {
+    return new ProcessBuilder()
+        .directory(workspaceRoot.toFile())
+        .command(getMvnCommand(), cmd)
+        .start();
   }
 }

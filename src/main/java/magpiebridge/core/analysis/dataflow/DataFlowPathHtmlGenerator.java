@@ -53,7 +53,7 @@ public class DataFlowPathHtmlGenerator {
   }
 
   private static ContainerTag generetaH1Title() {
-    return h3("Welcome to MagpieBridge Data Flow Page!");
+    return h3("Welcome to MagpieBridge Data-Flow Page!");
   }
 
   private static ContainerTag sidebarHeader() {

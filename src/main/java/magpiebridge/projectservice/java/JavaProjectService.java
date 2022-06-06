@@ -1,10 +1,14 @@
 package magpiebridge.projectservice.java;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import magpiebridge.core.IProjectService;
+import magpiebridge.util.FileUtils;
 
 /**
  * The Class JavaProjectService provides the configuration information of a java project.
@@ -33,6 +37,12 @@ public class JavaProjectService implements IProjectService {
 
   private JavaProjectType projectType;
 
+  private Map<String, Path> signatureToSourceFile;
+
+  private Set<Path> javaFiles;
+
+  private InferConfig infer;
+
   /** Instantiates a new java project service. */
   public JavaProjectService() {
     this.sourcePath = Collections.emptySet();
@@ -41,6 +51,8 @@ public class JavaProjectService implements IProjectService {
     this.libraryPath = Collections.emptySet();
     this.externalDependencies = Collections.emptySet();
     this.rootPath = Optional.empty();
+    this.signatureToSourceFile = new HashMap<>();
+    this.javaFiles = Collections.emptySet();
   }
 
   /**
@@ -97,7 +109,9 @@ public class JavaProjectService implements IProjectService {
     if (this.classPath.isEmpty()) {
       // if class path is not specified by the user, infer the source path.
       if (rootPath.isPresent()) {
-        InferConfig infer = new InferConfig(rootPath.get(), externalDependencies);
+        if (infer == null) {
+          infer = new InferConfig(rootPath.get(), externalDependencies);
+        }
         this.classPath = infer.classPath();
         this.libraryPath = infer.libraryClassPath();
       }
@@ -113,7 +127,9 @@ public class JavaProjectService implements IProjectService {
   public Set<Path> getLibraryPath() {
     if (this.libraryPath.isEmpty()) {
       if (rootPath.isPresent()) {
-        InferConfig infer = new InferConfig(rootPath.get(), externalDependencies);
+        if (infer == null) {
+          infer = new InferConfig(rootPath.get(), externalDependencies);
+        }
         this.classPath = infer.classPath();
         this.libraryPath = infer.libraryClassPath();
       }
@@ -170,9 +186,42 @@ public class JavaProjectService implements IProjectService {
   @Override
   public String getProjectType() {
     if (projectType == null) {
-      InferConfig infer = new InferConfig(rootPath.get(), externalDependencies);
+      if (infer == null) {
+        infer = new InferConfig(rootPath.get(), externalDependencies);
+      }
       projectType = infer.getProjectType();
     }
     return this.projectType.toString();
+  }
+
+  /**
+   * Get the source file path from class signature.
+   *
+   * @param classSignature
+   * @return
+   * @throws IOException
+   */
+  public Optional<Path> getSourceFilePath(String classSignature) throws IOException {
+    if (javaFiles.isEmpty() && rootPath.isPresent()) {
+      javaFiles = FileUtils.collectFilePathWithExtension(rootPath.get(), ".java");
+    }
+    if (this.signatureToSourceFile.containsKey(classSignature)) {
+      return Optional.of(signatureToSourceFile.get(classSignature));
+    }
+    String postfix = classSignature.replace(".", "/") + ".java";
+    for (Path f : javaFiles) {
+      if (f.toAbsolutePath().endsWith(postfix)) {
+        this.signatureToSourceFile.put(classSignature, f);
+        return Optional.of(f);
+      }
+    }
+    return Optional.empty();
+  }
+
+  public Process mvnCommand(String cmd) throws IOException {
+    if (infer == null) {
+      infer = new InferConfig(rootPath.get(), externalDependencies);
+    }
+    return infer.mvnCommand(cmd);
   }
 }
