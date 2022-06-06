@@ -22,10 +22,6 @@ For soot users, you can find an IRConverter under  [https://github.com/MagpieBri
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/goal.PNG"  width="800">
 </p> 
 
-## Upcoming Development 
-- supporting visualization of data-flow path
-- supporting parse SARIF and display result 
-
 ## Cite the research paper
 For scientific usage, please **cite the paper** [[BibTex](https://drops.dagstuhl.de/opus/volltexte/2019/10813/)].
 
@@ -43,7 +39,7 @@ You can either
  <dependency>
     <groupId>com.github.magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 </dependency>
 ````
 
