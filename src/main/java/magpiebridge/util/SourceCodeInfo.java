@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.util.Objects;
 import org.eclipse.lsp4j.Range;
 
 /**
@@ -21,9 +22,37 @@ public class SourceCodeInfo {
   public String code; // line of source code
   public URL url;
 
+  @Override
+  public String toString() {
+    return "SourceCodeInfo{"
+        + "code='"
+        + code
+        + "\n"
+        + "url="
+        + url
+        + "\n"
+        + "range="
+        + range
+        + "\n"
+        + '}';
+  }
+
   public SourceCodeInfo(Range range, String code) {
     this.range = range;
     this.code = code;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    SourceCodeInfo that = (SourceCodeInfo) o;
+    return range.equals(that.range) && code.equals(that.code) && url.equals(that.url);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(range, code, url);
   }
 
   public SourceCodeInfo(URL url, Range range, String code) {

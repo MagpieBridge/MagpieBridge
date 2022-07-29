@@ -28,3 +28,5 @@ infer-out/
 eclipse-java-google-style.xml
 
 .DS_Store
+
+src/test/resources/DemoProjectNpm/package-lock.json

@@ -12,7 +12,7 @@ import javax.crypto.NoSuchPaddingException;
  */
 public class ConstraintErrorExample {
 	public static void main(String...args) throws NoSuchAlgorithmException, NoSuchPaddingException {
-		Cipher instance = Cipher.getInstance("AES/ECB/PKCS5Padding");  
+		Cipher instance = Cipher.getInstance("AES/ECB/PKCS5Padding");  // this is a comment
 	}
 }
 

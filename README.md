@@ -10,7 +10,7 @@
 ## What is MagpieBridge?
 MagpieBridge is a framework for integrating Static Analyses into IDEs and Editors with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/specification). MagpieBridge is not limited to LSP, it also leverages the HTTP to allow displaying web pages inside an IDE. This enables a new level of supporting visualization and [customizable UI](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-5.-MagpieServer-Configuration-Explained) for user to interact with.
 MagpieBridge is a bridge between program analyses and developer tools. MagpieBridge offers an extensible implementation of a language server---`MagpieServer` which runs analysis; a default TextDocumentService--`MagpieTextDocumentService` which handles common LSP requests; a default WorkspaceService--`MagpieWorkspaceService` which handles different kinds of code actions and many other useful APIs for static analysis; and resuable [Project Services](https://github.com/MagpieBridge/MagpieBridge/wiki/Tutorial-10.-ProjectService-Explained) that resolve project scope (source code path, library code path, class path etc.) which can be consumed by whole program analyses. Find more information in the following:
-
+- A [tutorial](https://2022.ecoop.org/details/pride-2022/8/MagpieBridge-Tutorial-Given-By-the-Organizers)(slides attached on the page) at PRIDE 2022. 
 - There is a [talk](https://youtu.be/6MLlOEsPW1k) at SOAP 2020 about MagpieBridge, the slides of the talk can be found [here](https://github.com/linghuiluo/linghuiluo.github.io/blob/master/soap-talk.pdf).
 - Tutorials on our [wiki](https://github.com/MagpieBridge/MagpieBridge/wiki) page. 
 - The paper [MagpieBridge: A General Approach to Integrating Static Analyses into IDEs and Editors](https://drops.dagstuhl.de/opus/volltexte/2019/10813/pdf/LIPIcs-ECOOP-2019-21.pdf) (ECOOP 2019).
@@ -21,10 +21,6 @@ For soot users, you can find an IRConverter under  [https://github.com/MagpieBri
 <p align="center">
 <img src="https://github.com/MagpieBridge/MagpieBridge/blob/develop/doc/goal.PNG"  width="800">
 </p> 
-
-## Upcoming Development 
-- supporting visualization of data-flow path
-- supporting parse SARIF and display result 
 
 ## Cite the research paper
 For scientific usage, please **cite the paper** [[BibTex](https://drops.dagstuhl.de/opus/volltexte/2019/10813/)].
@@ -43,7 +39,7 @@ You can either
  <dependency>
     <groupId>com.github.magpiebridge</groupId>
     <artifactId>magpiebridge</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 </dependency>
 ````
 
