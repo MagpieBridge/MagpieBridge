@@ -101,20 +101,19 @@ public class MagpieTextDocumentService implements TextDocumentService {
     // update the changed file in file manager
     String language = inferLanguage(params.getTextDocument().getUri());
     SourceFileManager fileManager = server.getSourceFileManager(language);
-
     if (fileManager == null) {
       MagpieServer.ExceptionLogger.log("No source file manager for " + language);
       return;
     }
-
     try {
       fileManager.didChange(params);
+      if (server.config.doAnalysisByChange()) {
+        server.cleanUp();
+        this.server.doAnalysis(language, true);
+      }
     } catch (Exception e) {
-      // server.cleanUp();
       MagpieServer.ExceptionLogger.log(e);
     }
-    // TODO. it could be customized to clean all diagnostics.
-    // server.cleanUp();
     if (server.config.doAnalysisByIdle()) {
       // cancel the task running the analysis
       restartTimer();

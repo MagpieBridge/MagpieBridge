@@ -628,11 +628,15 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
       a = analysis.getRight();
     }
     if (a != null) {
-      this.forwardMessageToClient(
-          new MessageParams(MessageType.Info, a.source() + " started analyzing the code."));
+      if (config.isVerbose()) {
+        this.forwardMessageToClient(
+            new MessageParams(MessageType.Info, a.source() + " started analyzing the code."));
+      }
       a.analyze(fileManager.getSourceFileModules().values(), this, rerun);
-      this.forwardMessageToClient(
-          new MessageParams(MessageType.Info, a.source() + " finished analyzing the code."));
+      if (config.isVerbose()) {
+        this.forwardMessageToClient(
+            new MessageParams(MessageType.Info, a.source() + " finished analyzing the code."));
+      }
     }
   }
 

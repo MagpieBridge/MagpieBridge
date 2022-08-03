@@ -21,6 +21,7 @@ public class ServerConfiguration {
   private boolean doAnalysisByOpen;
   private boolean doAnalysisByFirstOpen;
   private boolean doAnalysisBySave;
+  private boolean doAnalysisByChange;
   private boolean doAnalysisByIdle;
   private boolean showConfigurationPage;
   private boolean showSarifFileUploadPage;
@@ -29,6 +30,7 @@ public class ServerConfiguration {
   private ConfusionHandler confusionHandler;
   private SuppressWarningHandler suppressWarningHandler;
   private boolean showDataFlowGraph;
+  private boolean verbose;
 
   public LanguageExtensionHandler getLanguageExtensionHandler() {
     return languageExtensionHandler;
@@ -47,6 +49,7 @@ public class ServerConfiguration {
     this.useMagpieHTTPServer = true;
     this.doAnalysisByOpen = false;
     this.doAnalysisByIdle = false;
+    this.doAnalysisByChange = false;
     this.supportWarningSuppression = false;
     this.reportFalsePositive = false;
     this.reportConfusion = false;
@@ -70,6 +73,7 @@ public class ServerConfiguration {
           @Override
           public void cleanUp() {}
         };
+    this.verbose = false;
   }
 
   public boolean reportFalsePositive() {
@@ -223,18 +227,34 @@ public class ServerConfiguration {
   }
 
   /**
+   * Set up the server to run analysis whenever a source file is changed.
+   *
+   * @param doAnalysisByChange true, if the server runs the analysis whenever a source file is
+   *     changed. The default value is false.
+   * @return the server configuration
+   */
+  public ServerConfiguration setDoAnalysisByChange(boolean doAnalysisByChange) {
+    this.doAnalysisByChange = doAnalysisByChange;
+    if (this.doAnalysisByChange) this.doAnalysisByIdle = false;
+    return this;
+  }
+
+  /**
    * Set up the server to run analysis when the user has been idle (doing nothing in the editor) for
    * the given time period; and all changed source files have been saved.
    *
    * @param doAnalysisByIdle true, if the server runs the analysis when the user is idle. The
-   *     default value is false. When this parameter is set to true, the doAnalysisBySave option
-   *     will be automatically set to false.
+   *     default value is false. When this parameter is set to true, the doAnalysisBySave and
+   *     doAnalysisByChange option will be automatically set to false.
    * @param timeOut the time to wait for idle
    * @return the server configuration
    */
   public ServerConfiguration setDoAnalysisByIdle(boolean doAnalysisByIdle, long timeOut) {
     this.doAnalysisByIdle = doAnalysisByIdle;
-    if (this.doAnalysisByIdle) this.doAnalysisBySave = false;
+    if (this.doAnalysisByIdle) {
+      this.doAnalysisBySave = false;
+      this.doAnalysisByChange = false;
+    }
     this.timeOut = timeOut;
     return this;
   }
@@ -275,6 +295,17 @@ public class ServerConfiguration {
     return this;
   }
 
+  /**
+   * Set up the server to send more notifications in the client regarding what's going on.
+   *
+   * @param verbose true if the server should send notifications. The default value is false.
+   * @return the ServerConfiguration with option set up
+   */
+  public ServerConfiguration setVerbose(boolean verbose) {
+    this.verbose = verbose;
+    return this;
+  }
+
   public MagpieMessageLogger getMagpieMessageLogger() {
     return this.logger;
   }
@@ -293,6 +324,10 @@ public class ServerConfiguration {
 
   public boolean doAnalysisByIdle() {
     return this.doAnalysisByIdle;
+  }
+
+  public boolean doAnalysisByChange() {
+    return this.doAnalysisByChange;
   }
 
   public long timeOut() {
@@ -333,5 +368,9 @@ public class ServerConfiguration {
 
   public boolean showDataFlowGraph() {
     return this.showDataFlowGraph;
+  }
+
+  public boolean isVerbose() {
+    return this.verbose;
   }
 }
