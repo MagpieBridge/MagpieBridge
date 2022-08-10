@@ -4,7 +4,10 @@
 package magpiebridge.command;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import magpiebridge.core.MagpieServer;
 import magpiebridge.core.MagpieWorkspaceService;
 import org.eclipse.lsp4j.CodeAction;
@@ -20,6 +23,15 @@ import org.eclipse.lsp4j.Range;
  * @author Linghui Luo
  */
 public class CodeActionGenerator {
+  private static Map<CodeActionCommand, String> commandNames = new HashMap<>();
+
+  public static String getUniqueCommandName(CodeActionCommand command) {
+    if (commandNames.containsKey(command)) return commandNames.get(command);
+    UUID uuid = UUID.randomUUID();
+    String name = command.name() + "-" + uuid.toString();
+    commandNames.put(command, name);
+    return name;
+  }
 
   /**
    * Generate a CodeAction which is a {@link CodeActionCommand#fixFromMB} command and it replaces
@@ -43,7 +55,9 @@ public class CodeActionGenerator {
     args.add(range);
     args.add(replaceText);
     args.add(diag);
-    codeAction.setCommand(new Command(title, CodeActionCommand.fixFromMB.name(), args));
+    codeAction.setCommand(
+        new Command(
+            title, CodeActionGenerator.getUniqueCommandName(CodeActionCommand.fixFromMB), args));
     return codeAction;
   }
 

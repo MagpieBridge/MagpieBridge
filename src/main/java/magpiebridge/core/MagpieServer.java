@@ -677,7 +677,7 @@ public class MagpieServer implements AnalysisConsumer, LanguageServer, LanguageC
    * @param source the source
    */
   @Override
-  public void consume(Collection<AnalysisResult> results, String source) {
+  public void consume(Collection<? extends AnalysisResult> results, String source) {
     Map<String, List<Diagnostic>> publishDiags = new HashMap<>();
     for (AnalysisResult result : results) {
       URL serverURL = result.position().getURL();

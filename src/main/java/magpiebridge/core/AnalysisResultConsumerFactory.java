@@ -97,7 +97,10 @@ public class AnalysisResultConsumerFactory {
                 String title = "View data-flow graph: " + httpserverUrl;
                 CodeAction dataFlowView =
                     CodeActionGenerator.generateCommandAction(
-                        title, httpserverUrl, d, CodeActionCommand.openURLFromMB.name());
+                        title,
+                        httpserverUrl,
+                        d,
+                        CodeActionGenerator.getUniqueCommandName(CodeActionCommand.openURLFromMB));
                 server.addCodeAction(url, d.getRange(), dataFlowView);
               }
             }
@@ -139,7 +142,11 @@ public class AnalysisResultConsumerFactory {
               String title = "Suppress this warning";
               CodeAction suppressWarning =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.suppressWarningFromMB.name());
+                      title,
+                      clientUri,
+                      d,
+                      CodeActionGenerator.getUniqueCommandName(
+                          CodeActionCommand.suppressWarningFromMB));
               server.addCodeAction(url, d.getRange(), suppressWarning);
             }
 
@@ -148,7 +155,10 @@ public class AnalysisResultConsumerFactory {
               String title = "Report false alarm";
               CodeAction reportFalsePositive =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportFPFromMB.name());
+                      title,
+                      clientUri,
+                      d,
+                      CodeActionGenerator.getUniqueCommandName(CodeActionCommand.reportFPFromMB));
               server.addCodeAction(url, d.getRange(), reportFalsePositive);
             }
             if (server.config.reportConfusion()) {
@@ -156,7 +166,11 @@ public class AnalysisResultConsumerFactory {
               String title = "I don't understand this warning";
               CodeAction reportConfusion =
                   CodeActionGenerator.generateCommandAction(
-                      title, clientUri, d, CodeActionCommand.reportConfusionFromMB.name());
+                      title,
+                      clientUri,
+                      d,
+                      CodeActionGenerator.getUniqueCommandName(
+                          CodeActionCommand.reportConfusionFromMB));
               server.addCodeAction(url, d.getRange(), reportConfusion);
             }
           } catch (MalformedURLException | UnsupportedEncodingException e) {
@@ -233,7 +247,10 @@ public class AnalysisResultConsumerFactory {
             CodeLens codeLens = new CodeLens();
             if (result.repair() != null) {
               Location loc = SourceCodePositionUtils.getLocationFrom(result.repair().fst);
-              codeLens.setCommand(new Command("fix", CodeActionCommand.fixFromMB.name()));
+              codeLens.setCommand(
+                  new Command(
+                      "fix",
+                      CodeActionGenerator.getUniqueCommandName(CodeActionCommand.fixFromMB)));
               codeLens
                   .getCommand()
                   .setArguments(Arrays.asList(clientUri, loc.getRange(), result.repair().snd));

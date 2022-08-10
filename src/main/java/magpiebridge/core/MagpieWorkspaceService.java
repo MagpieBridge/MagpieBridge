@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import magpiebridge.command.CodeActionCommand;
+import magpiebridge.command.CodeActionGenerator;
 import magpiebridge.command.FixCommand;
 import magpiebridge.command.OpenURLCommand;
-import magpiebridge.command.ReportConfusionCommand;
 import magpiebridge.command.ReportFalsePositiveCommand;
 import magpiebridge.command.SuppressWarningCommand;
 import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
@@ -45,11 +45,17 @@ public class MagpieWorkspaceService implements WorkspaceService {
 
   /** Add default commands, see {@link CodeActionCommand}. */
   protected void addDefaultCommands() {
-    this.commands.put(CodeActionCommand.fixFromMB.name(), new FixCommand());
-    this.commands.put(CodeActionCommand.reportFPFromMB.name(), new ReportFalsePositiveCommand());
-    this.commands.put(CodeActionCommand.reportConfusionFromMB.name(), new ReportConfusionCommand());
-    this.commands.put(CodeActionCommand.openURLFromMB.name(), new OpenURLCommand());
-    this.commands.put(CodeActionCommand.suppressWarningFromMB.name(), new SuppressWarningCommand());
+    this.commands.put(
+        CodeActionGenerator.getUniqueCommandName(CodeActionCommand.fixFromMB), new FixCommand());
+    this.commands.put(
+        CodeActionGenerator.getUniqueCommandName(CodeActionCommand.reportFPFromMB),
+        new ReportFalsePositiveCommand());
+    this.commands.put(
+        CodeActionGenerator.getUniqueCommandName(CodeActionCommand.openURLFromMB),
+        new OpenURLCommand());
+    this.commands.put(
+        CodeActionGenerator.getUniqueCommandName(CodeActionCommand.suppressWarningFromMB),
+        new SuppressWarningCommand());
   }
 
   /**
@@ -79,7 +85,8 @@ public class MagpieWorkspaceService implements WorkspaceService {
     return CompletableFuture.supplyAsync(
         () -> {
           String command = params.getCommand();
-          if (command.equals(CodeActionCommand.fixFromMB.name())) {
+          if (command.equals(
+              CodeActionGenerator.getUniqueCommandName(CodeActionCommand.fixFromMB))) {
             List<Object> args = params.getArguments();
             JsonPrimitive juri = (JsonPrimitive) args.get(0);
             JsonObject jrange = (JsonObject) args.get(1);
@@ -97,7 +104,8 @@ public class MagpieWorkspaceService implements WorkspaceService {
             changes.put(uri, Collections.singletonList(tEdit));
             WorkspaceEdit edit = new WorkspaceEdit(changes);
             server.client.applyEdit(new ApplyWorkspaceEditParams(edit));
-          } else if (command.equals(CodeActionCommand.reportFPFromMB.name())) {
+          } else if (command.equals(
+              CodeActionGenerator.getUniqueCommandName(CodeActionCommand.reportFPFromMB))) {
             server.forwardMessageToClient(
                 new MessageParams(MessageType.Info, "False alarm was reported."));
             List<Object> args = params.getArguments();
@@ -110,10 +118,12 @@ public class MagpieWorkspaceService implements WorkspaceService {
               MagpieServer.ExceptionLogger.log(e);
               e.printStackTrace();
             }
-          } else if (command.equals(CodeActionCommand.reportConfusionFromMB.name())) {
+          } else if (command.equals(
+              CodeActionGenerator.getUniqueCommandName(CodeActionCommand.reportConfusionFromMB))) {
             server.forwardMessageToClient(
                 new MessageParams(MessageType.Info, "Thank you for your feedback!"));
-          } else if (command.equals(CodeActionCommand.suppressWarningFromMB.name())) {
+          } else if (command.equals(
+              CodeActionGenerator.getUniqueCommandName(CodeActionCommand.suppressWarningFromMB))) {
             List<Object> args = params.getArguments();
             JsonPrimitive uri = (JsonPrimitive) args.get(0);
             JsonObject jdiag = (JsonObject) args.get(1);

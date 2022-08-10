@@ -2,7 +2,7 @@
 \.classpath
 
 \.project
-
+build-jar-with-dependency.sh
 \.settings/
 
 *.class

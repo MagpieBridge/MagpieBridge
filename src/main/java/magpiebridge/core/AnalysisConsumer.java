@@ -17,5 +17,5 @@ public interface AnalysisConsumer {
    * @param results analysis results
    * @param source where the results come from
    */
-  void consume(Collection<AnalysisResult> results, String source);
+  void consume(Collection<? extends AnalysisResult> results, String source);
 }
