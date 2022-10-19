@@ -31,7 +31,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<wala.version>1.5.4</wala.version>
-		<lsp4j.version>0.14.0</lsp4j.version>
+		<lsp4j.version>0.17.0</lsp4j.version>
 		<javaparser.version>3.13.0</javaparser.version>
 		<commonio.version>2.7</commonio.version>
 		<commonslang3.version>3.9</commonslang3.version>
