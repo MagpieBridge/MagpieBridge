@@ -177,7 +177,7 @@ public class SourceFileManager {
   public void generateSourceFileModule(URI clientUri, VersionedSourceFile versionedFile) {
     SourceFileModule sourceFile = null;
     try {
-      File file = File.createTempFile("temp", getFileSuffix());
+      File file = Files.createTempFile("temp", getFileSuffix()).toFile();
       file.deleteOnExit();
       String text = versionedFile.getText();
       TemporaryFile.stringToFile(file, text);
