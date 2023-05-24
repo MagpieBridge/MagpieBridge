@@ -8,6 +8,8 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+
+import magpiebridge.core.ConfigurableLanguageExtensionHandler;
 import magpiebridge.file.SourceFileManager;
 import magpiebridge.file.VersionedSourceFile;
 import org.junit.Test;
@@ -16,7 +18,7 @@ public class SourceFileManagerTest {
 
   @Test
   public void testGenerateSourceFileModule() {
-    SourceFileManager m = new SourceFileManager("java", new HashMap<>());
+    SourceFileManager m = new SourceFileManager("java", new HashMap<>(), ConfigurableLanguageExtensionHandler.withDefaultMappings());
     String uri =
         "file:///E:/MagpieBridge/src/test/resources/CogniCryptDemoExample/src/main/java/example/ConstraintErrorExample.java";
     String text =

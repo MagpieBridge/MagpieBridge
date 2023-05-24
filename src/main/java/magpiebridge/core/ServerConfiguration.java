@@ -30,10 +30,6 @@ public class ServerConfiguration {
   private SuppressWarningHandler suppressWarningHandler;
   private boolean showDataFlowGraph;
 
-  public LanguageExtensionHandler getLanguageExtensionHandler() {
-    return languageExtensionHandler;
-  }
-
   private LanguageExtensionHandler languageExtensionHandler;
   private long timeOut; // timeout in millisecond
 
@@ -56,7 +52,7 @@ public class ServerConfiguration {
     this.suppressWarningHandler = new DefaultSupressWarningHandler();
     this.falsePositiveHandler = new DefaultFalsePositiveHandler();
     this.confusionHandler = new DefaultConfusionHandler();
-    this.languageExtensionHandler = new DefaultLanguageExtensionHandler();
+    this.languageExtensionHandler = ConfigurableLanguageExtensionHandler.withDefaultMappings();
     this.timeOut = 0;
     // default no-op logger
     this.logger =
@@ -70,6 +66,21 @@ public class ServerConfiguration {
           @Override
           public void cleanUp() {}
         };
+  }
+
+  public LanguageExtensionHandler getLanguageExtensionHandler() {
+    return languageExtensionHandler;
+  }
+
+  /**
+   * Set a {@link LanguageExtensionHandler} that determines the mapping between analysis languages and corresponding file extensions.
+   *
+   * @param handler the handler that determines the mapping
+   * @return the server configuration
+   */
+  public ServerConfiguration setLanguageExtensionHandler(LanguageExtensionHandler handler) {
+    this.languageExtensionHandler = handler;
+    return this;
   }
 
   public boolean reportFalsePositive() {

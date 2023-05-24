@@ -14,7 +14,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import magpiebridge.core.DefaultLanguageExtensionHandler;
 import magpiebridge.core.LanguageExtensionHandler;
 import magpiebridge.core.MagpieServer;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
@@ -63,10 +62,6 @@ public class SourceFileManager {
     this.serverClientUri = serverClientUri;
     this.fileStates = new HashMap<>();
     this.languageExtensionHandler = languageExtensionHandler;
-  }
-
-  public SourceFileManager(String language, Map<String, String> serverClientUri) {
-    this(language, serverClientUri, new DefaultLanguageExtensionHandler());
   }
 
   /**
